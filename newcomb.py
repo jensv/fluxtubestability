@@ -9,8 +9,8 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 import numpy as np
-from scipy import interpolate
-from scipy import integrate
+import scipy.interpolate as interpolate
+import scipy.integrate as integrate
 
 
 def f_eq(r, k, m, b_z, b_theta):
@@ -154,7 +154,23 @@ def g_eq_18(r, k, m, b_z, b_theta, p_prime):
     return term1 + term2 + term3
 
 def splines(r, b_theta, b_z, p_prime):
-    """
+    r"""
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    Notes
+    -----
+
+    Reference
+    ---------
+
+    Example
+    -------
+
     """
     b_theta_spl = interpolate.InterpolatedUnivariateSpline(r, b_theta, k=3)
     b_z_spl = interpolate.InterpolatedUnivariateSpline(r, b_z, k=3)
@@ -164,14 +180,108 @@ def splines(r, b_theta, b_z, p_prime):
 def newcomb_h():
     pass
 
-def newcomb_der(y):
+def newcomb_der(t, y):
+    r"""
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    Notes
+    -----
+
+    Reference
+    ---------
+
+    Example
+    -------
+
     """
+    y_prime[0] = y[1]
+    y_prime[1] = y[0]*g_eq_18(t, k, m, b_z, b_theta, p_prime)
+    return y_prime
+
+def newcomb_der_divide_f(t, y):
+    r"""
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    Notes
+    -----
+
+    Reference
+    ---------
+
+    Example
+    -------
+
     """
+    y_prime[0] = y[1]/f_eq(t, k, m, b_z, b_theta)
+    y_prime[1] = y[0]*(g_eq_18(t, k, m, b_z, b_theta, p_prime)
+                       / f_eq(t, k, m, b_z, b_theta))
+    return y_prime
 
 
-def newcomb_der_divide_h():
-    """
-    """
+def newcomb_int(divide_f, atol, rtol, rmax, dr, splines):
+    r"""
+    Integrate Newcomb's Euler Lagrange equation as two odes.
 
-def newcomb_int():
-    pass
+    Parameters
+    ----------
+    divide_f: bool
+              determines which newcomb_der is used
+    atol: float
+          absolute tolerance
+    rtol: float
+          relative tolerance
+    rmax: float
+          maxium radius at which to integrate
+    dr: float
+        radial step-size
+
+    Returns
+    -------
+    xi: ndarray of floats (2,M)
+        xi and derivative of xi.
+
+    Notes
+    -----
+    The seperation of the Euler-lagrange equation is based on Alan Glasser's
+    cyl code.
+    Newcomb's condition states that at each singularity f=0 the integration
+    should start from 0.
+
+    Reference
+    ---------
+    Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
+    Equation (23)
+    Alan Glasser (unknown) Cyl code
+    """
+    xi = []
+    if divide_f:
+        xi_int = integrate.ode(newcomb_der_divide_f)
+    else:
+        xi_int = integrate.ode(newcomb_der)
+
+    xi_int.set_integrator('lsoda', atol, rtol)
+    xi_int.set_initial_value()
+    xi_int.set_f_params(f, g)
+
+    while xi_int.successful() and xi_int.t < r_max-dr:
+        xi_int.integrate(xi_int.t + dr)
+        xi.append = xi
+        crossing_condition(xi)
+    return np.array(xi)
+
+def
+
+def crossing_condition(xi):
+    """
+    """
+    return xi[len(xi)-2]*xi[len(xi)-1] < 0
