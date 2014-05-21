@@ -4,10 +4,21 @@ Created on Mon May 19 10:03:00 2014
 
 @author: Jens von der Linden
 """
+
+#Python 3.x compatability
 from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
+from future.builtins.disabled import (apply, cmp, coerce, execfile,
+                                      file, long, raw_input, reduce, reload,
+                                      unicode, xrange, StandardError)
+from future.types import bytes, dict, int, range, str
+from future.builtins.misc import (ascii, chr, hex, input, next,
+                                  oct, open, round, super)
+from future.builtins.iterators import filter, map, zip
+
+#regular imports
 import numpy as np
 import scipy.interpolate as interpolate
 import scipy.integrate as integrate
@@ -180,7 +191,7 @@ def splines(r, b_theta, b_z, p_prime):
 def newcomb_h():
     pass
 
-def newcomb_der(t, y):
+def newcomb_der(t, y, equil_dict):
     r"""
 
     Parameters
@@ -199,11 +210,13 @@ def newcomb_der(t, y):
     -------
 
     """
+    [v for ]
     y_prime[0] = y[1]
     y_prime[1] = y[0]*g_eq_18(t, k, m, b_z, b_theta, p_prime)
     return y_prime
 
-def newcomb_der_divide_f(t, y):
+
+def newcomb_der_divide_f(t, y, equil_dict):
     r"""
 
     Parameters
@@ -279,7 +292,6 @@ def newcomb_int(divide_f, atol, rtol, rmax, dr, splines):
         crossing_condition(xi)
     return np.array(xi)
 
-def
 
 def crossing_condition(xi):
     """
