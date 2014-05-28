@@ -22,6 +22,10 @@ from future.builtins.iterators import filter, map, zip
 import numpy as np
 import scipy.interpolate as interpolate
 import scipy.integrate as integrate
+import dict_convenience as dc
+sys.path.append("C:\Users\jensv_000\Dropbox\You_Lab\SpyderProjects\Scripts")
+import dict_convenience
+import equil_solver
 
 
 def f_eq(r, k, m, b_z, b_theta):
@@ -164,7 +168,8 @@ def g_eq_18(r, k, m, b_z, b_theta, p_prime):
     term3 = 2*k**2*r/f_denom(r, k, m)**2*(k**2*r**2*b_z**2-m**2*b_theta**2)
     return term1 + term2 + term3
 
-def splines(r, b_theta, b_z, p_prime):
+
+def splines(a=1, points=500, q0=1.0, k=1, b_z0=1):
     r"""
 
     Parameters
@@ -183,13 +188,13 @@ def splines(r, b_theta, b_z, p_prime):
     -------
 
     """
-    b_theta_spl = interpolate.InterpolatedUnivariateSpline(r, b_theta, k=3)
-    b_z_spl = interpolate.InterpolatedUnivariateSpline(r, b_z, k=3)
-    p_prime_spl = interpolate.InterpolatedUnivaraiteSpline(r, p_prime, k=3)
-    return b_theta_spl, b_z_spl, p_prime_spl
+    equilibrium = equil_solver.Parabolic_nu2(a, points, q0, k, b_z0)
+    return equilibrium.get_splines()
+
 
 def newcomb_h():
     pass
+
 
 def newcomb_der(t, y, equil_dict):
     r"""
@@ -210,7 +215,6 @@ def newcomb_der(t, y, equil_dict):
     -------
 
     """
-    [v for ]
     y_prime[0] = y[1]
     y_prime[1] = y[0]*g_eq_18(t, k, m, b_z, b_theta, p_prime)
     return y_prime
@@ -235,6 +239,7 @@ def newcomb_der_divide_f(t, y, equil_dict):
     -------
 
     """
+
     y_prime[0] = y[1]/f_eq(t, k, m, b_z, b_theta)
     y_prime[1] = y[0]*(g_eq_18(t, k, m, b_z, b_theta, p_prime)
                        / f_eq(t, k, m, b_z, b_theta))
@@ -291,6 +296,54 @@ def newcomb_int(divide_f, atol, rtol, rmax, dr, splines):
         xi.append = xi
         crossing_condition(xi)
     return np.array(xi)
+
+
+def suydam():
+    r"""
+    Parameters
+    ----------
+    Returns
+    -------
+    Notes
+    -----
+    Reference
+    ---------
+    Example
+    -------
+    """
+    return r/8*Bz*(qprime/q)**2+pprime
+
+
+def check_suydam():
+    r"""
+    Parameters
+    ----------
+    Returns
+    -------
+    Notes
+    -----
+    Reference
+    ---------
+    Example
+    -------
+    """
+    pass
+
+
+def check_sing():
+    r"""
+    Parameters
+    ----------
+    Returns
+    -------
+    Notes
+    -----
+    Reference
+    ---------
+    Example
+    -------
+    """
+    return k*r*Bz + m*B_theta
 
 
 def crossing_condition(xi):
