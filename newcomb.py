@@ -23,7 +23,7 @@ import numpy as np
 import scipy.interpolate as interpolate
 import scipy.integrate as integrate
 import dict_convenience as dc
-sys.path.append("C:\Users\jensv_000\Dropbox\You_Lab\SpyderProjects\Scripts")
+sys.path.append("../Scripts")
 import dict_convenience
 import equil_solver
 
