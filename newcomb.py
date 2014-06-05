@@ -5,20 +5,17 @@ Created on Mon May 19 10:03:00 2014
 @author: Jens von der Linden
 """
 
-#Python 3.x compatability
+
 from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
-from future.builtins.disabled import (apply, cmp, coerce, execfile,
-                                      file, long, raw_input, reduce, reload,
-                                      unicode, xrange, StandardError)
-from future.types import bytes, dict, int, range, str
-from future.builtins.misc import (ascii, chr, hex, input, next,
-                                  oct, open, round, super)
-from future.builtins.iterators import filter, map, zip
+from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                             int, map, next, oct, open, pow, range, round,
+                             str, super, zip)
+"""Python 3.x compatability"""
 
-#regular imports
+
 import numpy as np
 import scipy.interpolate as interpolate
 import scipy.integrate as integrate
@@ -34,25 +31,31 @@ def f_eq(r, k, m, b_z, b_theta):
 
     Parameters
     ----------
-    r: ndarray of floats
-       radius
+    r : ndarray of floats
+        radius
 
-    k: float
-       axial periodicity number
+    k : float
+        axial periodicity number
 
-    m: float
-       azimuthal periodicity number
+    m : float
+        azimuthal periodicity number
 
-    b_z: ndarray of floats
-         axial magnetic field
+    b_z : ndarray of floats
+        axial magnetic field
 
-    b_theta: ndarray of floats
-             azimuthal mangetic field
+    b_theta : ndarray of floats
+        azimuthal mangetic field
 
     Returns
     -------
-    f: ndarray of floats
-       f from Newcomb's paper
+    f : ndarray of floats
+        f from Newcomb's paper
+
+    Notes
+    -----
+    Implements equation:
+    :math:`f = \frac{r (k r B_{z}+ m B_{\theta})^2}{k^{2} r^{2} + m^{2}}`
+
 
     Reference
     ---------
@@ -68,19 +71,23 @@ def f_denom(r, k, m):
 
     Parameters
     ----------
-    r: ndarray of floats
-       radius
+    r : ndarray of floats
+        radius
 
-    k: float
-       axial periodicity number
+    k : float
+        axial periodicity number
 
-    m: float
-       azimuthal periodicity number
+    m : float
+        azimuthal periodicity number
 
     Returns
     -------
-    f_denom: ndarray of floats
+    f_denom : ndarray of floats
        denominator of f from Newcomb's paper
+
+    Notes
+    -----
+    f denominator :math:`k^{2}r^{2}+m^{2}`
 
     Reference
     ---------
@@ -96,25 +103,29 @@ def f_num_wo_r(r, k, m, b_z, b_theta):
 
     Parameters
     ----------
-    r: ndarray of floats
-       radius
+    r : ndarray of floats
+        radius
 
-    k: float
-       axial periodicity number
+    k : float
+        axial periodicity number
 
-    m: float
-       azimuthal periodicity number
+    m : float
+        azimuthal periodicity number
 
-    b_z: ndarray of floats
-         axial magnetic field
+    b_z : ndarray of floats
+        axial magnetic field
 
-    b_theta: ndarray of floats
-             azimuthal mangetic field
+    b_theta : ndarray of floats
+        azimuthal mangetic field
 
     Returns
     -------
-    f_num_wo_r: ndarray of floats
-       numerator of f without r from Newcomb's paper
+    f_num_wo_r : ndarray of floats
+        numerator of f without r from Newcomb's paper
+
+    Notes
+    -----
+    f numerator without r: :math:`(k r B_{z}+m B_{\theta})^{2}`
 
     Reference
     ---------
@@ -130,28 +141,31 @@ def g_eq_18(r, k, m, b_z, b_theta, p_prime):
 
     Parameters
     ----------
-    r: ndarray of floats
-       radius
+    r : ndarray of floats
+        radius
 
-    k: float
-       axial periodicity number
+    k : float
+        axial periodicity number
 
-    m: float
-       azimuthal periodicity number
+    m : float
+        azimuthal periodicity number
 
-    b_z: ndarray of floats
-         axial magnetic field
+    b_z : ndarray of floats
+        axial magnetic field
 
-    b_theta: ndarray of floats
-             azimuthal mangetic field
+    b_theta : ndarray of floats
+        azimuthal mangetic field
 
-    p_prime: ndarray of floats
-
+    p_prime : ndarray of floats
+        pressure prime
 
     Returns
     -------
-    g: ndarray of floats
-       g from Newcomb's paper
+    g : ndarray of floats
+        g from Newcomb's paper
+
+    Notes
+    -----
 
     Reference
     ---------
@@ -196,7 +210,7 @@ def newcomb_h():
     pass
 
 
-def newcomb_der(t, y, equil_dict):
+def newcomb_der(t, y, k, m, b_z, b_theta, p_prime):
     r"""
 
     Parameters
@@ -215,12 +229,13 @@ def newcomb_der(t, y, equil_dict):
     -------
 
     """
+    y_prime = np.zeros(2)
     y_prime[0] = y[1]
     y_prime[1] = y[0]*g_eq_18(t, k, m, b_z, b_theta, p_prime)
     return y_prime
 
 
-def newcomb_der_divide_f(t, y, equil_dict):
+def newcomb_der_divide_f(t, y, k, m, b_z, b_theta, p_prime):
     r"""
 
     Parameters
@@ -239,14 +254,14 @@ def newcomb_der_divide_f(t, y, equil_dict):
     -------
 
     """
-
+    y_prime = np.zeros(2)
     y_prime[0] = y[1]/f_eq(t, k, m, b_z, b_theta)
     y_prime[1] = y[0]*(g_eq_18(t, k, m, b_z, b_theta, p_prime)
                        / f_eq(t, k, m, b_z, b_theta))
     return y_prime
 
 
-def newcomb_int(divide_f, atol, rtol, rmax, dr, splines):
+def newcomb_int(divide_f, atol, rtol, rmax, dr, params):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two odes.
 
@@ -281,6 +296,8 @@ def newcomb_int(divide_f, atol, rtol, rmax, dr, splines):
     Equation (23)
     Alan Glasser (unknown) Cyl code
     """
+    (k, m, b_z, b_theta, p_prime) = dc.retrieve(params, ['k', 'm', 'b_z',
+                                                         'b_theta', 'p_prime'])
     xi = []
     if divide_f:
         xi_int = integrate.ode(newcomb_der_divide_f)
@@ -289,7 +306,7 @@ def newcomb_int(divide_f, atol, rtol, rmax, dr, splines):
 
     xi_int.set_integrator('lsoda', atol, rtol)
     xi_int.set_initial_value()
-    xi_int.set_f_params(f, g)
+    xi_int.set_f_params(k, m, b_z, b_theta, p_prime)
 
     while xi_int.successful() and xi_int.t < r_max-dr:
         xi_int.integrate(xi_int.t + dr)
@@ -298,52 +315,95 @@ def newcomb_int(divide_f, atol, rtol, rmax, dr, splines):
     return np.array(xi)
 
 
-def suydam():
+def suydam(r, b_z, qprime, q, pprime):
+    r"""
+    Returns suydam condition.
+
+    Parameters
+    ----------
+    r : ndarray
+        radial test points
+
+    b_z : spline
+        axial magnetic field
+
+    qprime : spline
+        derivative of safety factor
+
+    q : spline
+        safety factor
+
+    pprime : spline
+        derivative of pressure
+
+    Returns
+    -------
+    suydam : ndarray
+
+
+    Notes
+    -----
+    Returned expression can be checked for elements <=0.
+
+    .. math:: \frac{r}{8}\frac{B_{z}}{\mu_{0}}\frac{q'}{q}^2
+
+    Reference
+    ---------
+    Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
+
+    Example
+    -------
+
+    """
+    return r/8*b_z*(qprime/q)**2+pprime
+
+
+def check_suydam(r, qprime, q, pprime):
     r"""
     Parameters
     ----------
+
     Returns
     -------
+
     Notes
     -----
+
     Reference
     ---------
+
     Example
     -------
+
     """
-    return r/8*Bz*(qprime/q)**2+pprime
+    if ((suydam(r, qprime, q, pprime) <= 0).sum() == 0):
+        return (False, np.array([]))
+    else:
+        return (True, r[(suydam(r, qprime, q, pprime) <= 0)])
 
 
-def check_suydam():
+def check_sing(r, k, b_z, m, b_theta, tol):
     r"""
     Parameters
     ----------
+
     Returns
     -------
+
     Notes
     -----
+
     Reference
     ---------
+
     Example
     -------
-    """
-    pass
 
-
-def check_sing():
-    r"""
-    Parameters
-    ----------
-    Returns
-    -------
-    Notes
-    -----
-    Reference
-    ---------
-    Example
-    -------
     """
-    return k*r*Bz + m*B_theta
+    if ((np.abs(k*r*b_z + m*b_theta) <= tol).sum() == 0):
+        return (False, np.array([]))
+    else:
+        return (True, r[np.abs(k*r*b_z + m*b_theta) <= tol])
 
 
 def crossing_condition(xi):
