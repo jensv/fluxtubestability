@@ -62,7 +62,6 @@ def f_eq(r, k, m, b_z, b_theta):
     Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
     Equation (16)
     """
-    f_eq()
     return r*f_num_wo_r(r, k, m, b_z, b_theta)/f_denom(r, k, m)
 
 
@@ -267,13 +266,20 @@ def newcomb_der_divide_f(t, y, k, m, b_z, b_theta, p_prime):
 
     """
     y_prime = np.zeros(2)
-    y_prime[0] = y[1]/f_eq(t, k, m, b_z, b_theta)
-    y_prime[1] = y[0]*(g_eq_18(t, k, m, b_z, b_theta, p_prime)
-                       / f_eq(t, k, m, b_z, b_theta))
+    if f_eq(t, k, m, b_z, b_theta) == 0.:
+        y_prime[0] = 0.
+    else:
+       y_prime[0] = y[1]/f_eq(t, k, m, b_z, b_theta)
+    if g_eq_18(t, k, m, b_z, b_theta, p_prime) == 0.:
+        y_prime[1] = 0.
+    else:
+        y_prime[1] = y[0]*(g_eq_18(t, k, m, b_z, b_theta, p_prime)
+                           / f_eq(t, k, m, b_z, b_theta))
     return y_prime
 
 
-def newcomb_int(divide_f, r_max, dr, params, atol=None, rtol=None):
+def newcomb_int(divide_f, r_max, dr, params, r_init, xi_init, atol=None,
+                rtol=None):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two odes.
 
@@ -311,6 +317,7 @@ def newcomb_int(divide_f, r_max, dr, params, atol=None, rtol=None):
     (k, m, b_z, b_theta, p_prime) = dc.retrieve(params, ['k', 'm', 'b_z',
                                                          'b_theta', 'pprime'])
     xi = []
+    rs = []
     if divide_f:
         xi_int = integrate.ode(newcomb_der_divide_f)
     else:
@@ -320,14 +327,15 @@ def newcomb_int(divide_f, r_max, dr, params, atol=None, rtol=None):
         xi_int.set_integrator('lsoda')
     else:
         xi_int.set_integrator('lsoda', atol, rtol)
-    xi_int.set_initial_value([0, 0], 0)
+    xi_int.set_initial_value(xi_init, r_init)
     xi_int.set_f_params(k, m, b_z, b_theta, p_prime)
 
     while xi_int.successful() and xi_int.t < r_max-dr:
         xi_int.integrate(xi_int.t + dr)
         xi.append(xi_int.y)
+        rs.append(xi_int.t)
         #crossing_condition(xi)
-    return np.array(xi)
+    return (np.array(xi), np.array(rs))
 
 
 def suydam(r, b_z, q_prime, q, p_prime):
@@ -339,16 +347,16 @@ def suydam(r, b_z, q_prime, q, p_prime):
     r : ndarray
         radial test points
 
-    b_z : spline
+    b_z : scipy spline
         axial magnetic field
 
-    qprime : spline
+    qprime : scipy spline
         derivative of safety factor
 
-    q : spline
+    q : scipy spline
         safety factor
 
-    pprime : spline
+    pprime : scipy spline
         derivative of pressure
 
     Returns
@@ -369,6 +377,50 @@ def suydam(r, b_z, q_prime, q, p_prime):
     Jardin (2010) Computational Mehtods in Plasma Physics. eq (8.84)
     """
     return r/8*b_z*(q_prime/q)**2+p_prime
+
+
+def xi_init(r, k, m, b_z, b_theta):
+    r"""
+    Returns initial condition for r close to zero.
+
+    Parameters
+    ----------
+    r : float
+        radial position
+
+    k : float
+        axial periodicity number
+
+    m : float
+        azimuthal periodicity number
+
+    b_z : scipy spline
+        axial magnetic field
+
+    b_theta : scipy spline
+        azimuthal magnetic field
+
+    Returns
+    -------
+    xi : ndarray
+         newcomb's xi
+
+    Notes
+    -----
+    Implements initial condition Alan used in his code.
+
+    .. math ::
+        u(0) &= r^{m - 1} \\
+        u(1) &= u(0) \frac{(k B_{z} r + m B_{\theta})^{2}}{m^{2}} (m-1)
+
+    Reference
+    ---------
+    Alan Glasser's newcomb.f code.
+    """
+    xi = np.zeros(2)
+    xi[0] = r**(m - 1)
+    xi[1] = xi[0]*((k*b_z(r)*r + m*b_theta(r))/m)**2*(m - 1)
+    return xi
 
 
 def check_suydam(r, q_prime, q, p_prime):
