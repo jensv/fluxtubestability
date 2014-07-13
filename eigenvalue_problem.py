@@ -14,8 +14,8 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              str, super, zip)
 """Python 3.x compatability above"""
 
-"""Numba jit accelerate
-from numbapro import jit, float64, void"""
+"""Numba jit accelerate"""
+"""from numbapro import jit, float64, void"""
 
 import scipy.integrate as inte
 import scipy.special as spec
@@ -98,6 +98,7 @@ def jardin_f(params, r):
     r"""
     """
     k, m, b_theta, b_z = dc.retrieve(params, ('k', 'm', 'b_theta', 'b_z'))
+    print(str(r)+' '+str(b_theta(r))+' '+str(k)+' '+str(b_z(r)))
     return m/r*b_theta(r)-k*b_z(r)
 
 """@jit(float64(void, float64, float64, float64, float64))"""
