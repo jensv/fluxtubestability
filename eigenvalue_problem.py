@@ -63,7 +63,7 @@ def xi_initial_condition(params, r_init):
      rho) = dc.retrieve(params, ('mu0', 'n', 'm', 'constant', 'omega_sq',
                                  'b_theta', 'q', 'rho'))
     r = r_init
-    xi = np.zeros(2)
+    xi = np.zeros(2, dtype=complex)
     xi[0] = constant*r
     xi[1] = (1 / m*(b_theta(r)**2 / (mu0*r)*(2*(m - n*q(r)) - (m - n*q(r))**2)
              + rho(r)*omega_sq)*xi[0])
@@ -77,8 +77,25 @@ def xi_integrate_boundary():
 """@jit(float64[:](float64, float64[:], void))"""
 def xi_der(r, xi_vec, params):
     r"""
+    Return vector of :math:`\binom{\frac{d(r\xi)}{dr}}{\frac{dP}{dr}}`
+
+    Parameters
+    ----------
+    r: float
+       radial postion
+    xi_vec: list (2)
+            vector of integrated quantities
+    params: dict
+            plasma and geometry paramters
+    Returns
+    -------
+    xi_d: list
+          derivative vector
+    Reference
+    ---------
+    Jardin equations (8.59) & (8.60)
     """
-    xi_d = np.zeros(2)
+    xi_d = np.zeros(2, dtype=complex)
     if r == 0:
         xi_d[0] = 0
         xi_d[1] = 0
@@ -96,8 +113,22 @@ def xi_der(r, xi_vec, params):
 """@jit(float64(void, float64))"""
 def jardin_f(params, r):
     r"""
+    Returns f function
+    Parameters
+    ----------
+    params: dict
+            plasma & geometry parameters
+    r:
+    Returns
+    -------
+    Notes
+    -----
+    Reference
+    ---------
+    Jardin equations (8.61)
     """
     k, m, b_theta, b_z = dc.retrieve(params, ('k', 'm', 'b_theta', 'b_z'))
+    k =
     print(str(r)+' '+str(b_theta(r))+' '+str(k)+' '+str(b_z(r)))
     return m/r*b_theta(r)-k*b_z(r)
 
