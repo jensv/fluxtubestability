@@ -3,6 +3,8 @@
 Created on Wed Jul 02 15:56:41 2014
 
 @author: Jens von der Linden
+
+Implements
 """
 
 from __future__ import print_function
@@ -74,12 +76,14 @@ def xi_der():
 
 def f(r, k, m, b_z, b_theta):
     r"""
+
     """
     return k*b_z + m*b_theta/r
 
 
 def g(r, k, m, b_z, b_theta):
     r"""
+
     """
     return m*b_z / r - k*b_theta
 
@@ -105,13 +109,13 @@ def omega_g_sq(v_sound_sq, v_alfven_sq, omega_a_sq):
 def omega_f_sq(k_0_sq, v_sound_sq, v_alfven_sq, alpha_sq):
     r"""
     """
-    return 0.5*k_0_sq*(v_sound_sq + v_alfven_sq*(1 + (1 - alpha**2)**0.5)
+    return 0.5*k_0_sq*(v_sound_sq + v_alfven_sq)*(1 + (1 - alpha**2)**0.5)
 
 
 def omega_s_sq(k_0_sq_e, v_sound_sq_e, v_alfven_sq_e, alpha_sq_e):
     r"""
     """
-    return 0.5*k_0_sq*(v_sound_sq + v_alfven_sq*(1 - (1 - alpha**2)**0.5)
+    return 0.5*k_0_sq*(v_sound_sq + v_alfven_sq)*(1 - (1 - alpha**2)**0.5)
 
 
 def alpha_sq(k_0_sq, v_sound_sq, v_alfven_sq, omega_a_sq):
