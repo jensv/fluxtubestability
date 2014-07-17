@@ -118,7 +118,7 @@ def omega_a_sq(f, rho):
     return f**2 / rho
 
 
-def omega_f0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure):
+def omega_f0_sq(r, k, m, gamma, f, b_theta, b_z, rho, pressure):
     r"""
     Returns f0 frequency squared.
 
@@ -166,7 +166,7 @@ def omega_f0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure):
     return 0.5*k_0_sq*(v_sound_sq + v_alfven_sq)*(1 + (1 - alpha)**0.5)
 
 
-def omega_s0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure):
+def omega_s0_sq(r, k, m, gamma, f, b_theta, b_z, rho, pressure):
     r"""
     Returns s0 frequency squared.
 
@@ -550,8 +550,10 @@ def chi_der(r, y, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
     f_ev = f(r, k, m, b_theta, b_z)
     omega_a_sq_ev = omega_a_sq(f_ev, rho)
     omega_s_sq_ev = omega_sound_sq(gamma, f_ev, b_theta, b_z, rho, pressure)
-    omega_s0_sq_ev = omega_s0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure)
-    omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure)
+    omega_s0_sq_ev = omega_s0_sq(r, k, m, gamma, f_ev, b_theta, b_z, rho,
+                                 pressure)
+    omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, f_ev, b_theta, b_z, rho,
+                                 pressure)
     n_ev = n_freq(gamma, b_theta, b_z, pressure, rho, omega_sq, omega_a_sq_ev,
                   omega_s_sq_ev)
     d_ev = d_freq(rho, omega_sq, omega_s0_sq_ev, omega_f0_sq_ev)
@@ -632,8 +634,10 @@ def chi_init(r_init, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
     g_ev = g(r, k, m, b_theta, b_z)
     omega_a_sq_ev = omega_a_sq(f_ev, rho)
     omega_s_sq_ev = omega_sound_sq(gamma, f_ev, b_theta, b_z, rho, pressure)
-    omega_s0_sq_ev = omega_s0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure)
-    omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure)
+    omega_s0_sq_ev = omega_s0_sq(r, k, m, gamma, f_ev, b_theta, b_z, rho,
+                                 pressure)
+    omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, f_ev, b_theta, b_z, rho,
+                                 pressure)
     n_ev = n_freq(gamma, b_theta, b_z, pressure, rho, omega_sq, omega_a_sq_ev,
                   omega_s_sq_ev)
     d_ev = d_freq(rho, omega_sq, omega_s0_sq_ev, omega_f0_sq_ev)
@@ -642,7 +646,7 @@ def chi_init(r_init, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
     Pi_term1 = -n_ev/(r*d_ev)*chi_prime
     Pi_term2 = 2*b_theta**2/r**2
     Pi_term31 = -2*k*b_theta*g_ev/(r**2*d_ev)
-    Pi_term32 = (gamma*pressure + b_sq)*rho*omega_sq - gamma*pressure*f**2
+    Pi_term32 = (gamma*pressure + b_sq)*rho*omega_sq - gamma*pressure*f_ev**2
     Pi_init = Pi_term1 + (Pi_term2 + Pi_term31*Pi_term32)*chi_init
     xi_init = np.array([chi_init, Pi_init])
     return xi_init
