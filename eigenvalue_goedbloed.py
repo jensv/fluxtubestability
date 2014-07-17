@@ -22,10 +22,8 @@ import sys
 sys.path.append("../Scripts")
 import dict_convenience as dc
 
-def xi_der():
 
-
-def f(r, k, m, b_z, b_theta):
+def f(r, k, m, b_theta, b_z):
     r"""
     Returns F(r).
 
@@ -58,7 +56,7 @@ def f(r, k, m, b_z, b_theta):
     return k*b_z + m*b_theta/r
 
 
-def g(r, k, m, b_z, b_theta):
+def g(r, k, m, b_theta, b_z):
     r"""
     Returns G(r).
 
@@ -120,7 +118,7 @@ def omega_a_sq(f, rho):
     return f**2 / rho
 
 
-def omega_f0_sq(r, m, k, gamma, b_theta, b_z, rho, pressure):
+def omega_f0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure):
     r"""
     Returns f0 frequency squared.
 
@@ -151,7 +149,6 @@ def omega_f0_sq(r, m, k, gamma, b_theta, b_z, rho, pressure):
     Notes
     -----
 
-    Goedbloed has mu0 set to 1.
 
     References
     ----------
@@ -163,13 +160,13 @@ def omega_f0_sq(r, m, k, gamma, b_theta, b_z, rho, pressure):
     v_sound_sq = gamma*pressure / rho
     v_alfven_sq = b_sq / rho
     alpha = (4.*gamma*pressure*f**2 /
-             ((m**2/r**2+k**2)*(gamma*pressure + b_sq)**2)
-    if alpha > 1.:
-        print "Warning: omega_f0 is complex"
+             ((m**2/r**2+k**2)*(gamma*pressure + b_sq)**2))
+    if alpha > 1:
+        print("Warning: omega_f0 is complex")
     return 0.5*k_0_sq*(v_sound_sq + v_alfven_sq)*(1 + (1 - alpha)**0.5)
 
 
-def omega_s0_sq(r, m, k, gamma, b_theta, b_z, rho, pressure):
+def omega_s0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure):
     r"""
     Returns s0 frequency squared.
 
@@ -200,8 +197,6 @@ def omega_s0_sq(r, m, k, gamma, b_theta, b_z, rho, pressure):
     Notes
     -----
 
-    Goedbloed has mu0 set to 1.
-
     References
     ----------
     Goedbloed (2010) Principles of MHD Equation (9.37)
@@ -211,9 +206,9 @@ def omega_s0_sq(r, m, k, gamma, b_theta, b_z, rho, pressure):
     v_sound_sq = gamma*pressure / rho
     v_alfven_sq = b_sq / rho
     alpha = (4.*gamma*pressure*f**2 /
-             ((m**2/r**2+k**2)*(gamma*pressure + b_sq)**2)
-    if alpha > 1.:
-        print "Warning: omega_s0 is complex"
+             ((m**2/r**2+k**2)*(gamma*pressure + b_sq)**2))
+    if alpha > 1:
+        print("Warning: omega_s0 is complex")
     return 0.5*k_0_sq*(v_sound_sq + v_alfven_sq)*(1 - (1 - alpha)**0.5)
 
 
@@ -238,18 +233,16 @@ def omega_sound_sq(gamma, f, b_theta, b_z, rho, pressure):
 
     Returns
     -------
-    omega_s0_sq: float
-        s0 frequency squared
+    omega_sound_sq: float
+        sonic frequency squared
 
     Notes
     -----
 
-    Goedbloed has mu0 set to 1.
 
     References
     ----------
     Goedbloed (2010) Principles of MHD Equation (9.37)
-
     """
     b_sq = b_theta**2 + b_z**2
     return gamma*pressure/(gamma*pressure+b_sq) * f**2/rho
@@ -258,26 +251,162 @@ def omega_sound_sq(gamma, f, b_theta, b_z, rho, pressure):
 def n_freq(gamma, b_theta, b_z, pressure, rho, omega_sq, omega_alfven_sq,
            omega_sound_sq):
     r"""
+    Returns n in the Chi equation set.
+
+    Paramters
+    ---------
+    gamma: float
+           gamma from equation of state
+    b_z: float
+        axial magnetic field evaluated at r
+    b_theta: float
+        azimuthal magnetic field evaluated at r
+    rho: float
+        density evaluated at r
+    omega_sq: float
+        eigenvalue
+    omega_alfven_sq: float
+        Alfven frequency evaluated at r
+    omega_sound_sq: float
+        Sonic frequency evaluated at r
+    Returns
+    -------
+    n_freq: float
+        n calculated from frequencies
+
+    Notes
+    -----
+    Goedbloed gives two equivalent expressions for n. Both are implemented for
+    testing purposes.
+
+
+    References
+    ----------
+    Goedbloed (2010) Principles of MHD Equation (9.36)
     """
     b_sq = b_theta**2 + b_z**2
     return (rho**2*(gamma*pressure + b_sq)*(omega_sq - omega_alfven_sq)
-            *(omega_sq - omega_sound_sq))
+            * (omega_sq - omega_sound_sq))
 
 
 def d_freq(rho, omega_sq, omega_s0_sq, omega_f0_sq):
     r"""
+    Returns d in the Chi equation set.
+
+    Paramters
+    ---------
+    gamma: float
+           gamma from equation of state
+    b_z: float
+        axial magnetic field evaluated at r
+    b_theta: float
+        azimuthal magnetic field evaluated at r
+    rho: float
+        density evaluated at r
+    omega_sq: float
+        eigenvalue
+    omega_s0_sq: float
+        s0 frequency evaluated at r
+    omega_d0_sq: float
+        f0 frequency evaluated at r
+    Returns
+    -------
+    d_freq: float
+        d calculated from frequencies
+
+    Notes
+    -----
+    Goedbloed gives two equivalent expressions for d. Both are implemented for
+    testing purposes.
+
+
+    References
+    ----------
+    Goedbloed (2010) Principles of MHD Equation (9.36)
     """
     return rho**2*(omega_sq - omega_s0_sq)*(omega_sq - omega_f0_sq)
 
 
 def n_fb(gamma, f, b_theta, b_z, pressure, rho, omega_sq):
     r"""
-    """
-    return (rho*omega_sq - f**2)*((gamma*rho + b_sq)
-                                  *rho*omega_sq - gamma*pressure*f**2)
+    Returns n in the Chi equation set.
 
-def d_fb(r, m, k, gamma, f, b_theta, b_z, rho, pressure, omega_sq ):
+    Paramters
+    ---------
+    gamma: float
+           gamma from equation of state
+    f: float
+        F(r) evaluated at r
+    b_theta: float
+        axial magnetic field evaluated at r
+    b_z: float
+        azimuthal magnetic field evaluated at r
+    pressure: float
+        pressure evaluated at r
+    rho: float
+        density evaluated at r
+    omega_sq: float
+        eigenvalue
+    Returns
+    -------
+    n_fb: float
+        n calculated from f and B
+
+    Notes
+    -----
+    Goedbloed gives two equivalent expressions for d. Both are implemented for
+    testing purposes.
+
+
+    References
+    ----------
+    Goedbloed (2010) Principles of MHD Equation (9.32)
+    """
+    b_sq = b_theta**2 + b_z**2
+    return (rho*omega_sq - f**2)*((gamma*rho + b_sq)
+                                  * rho*omega_sq - gamma*pressure*f**2)
+
+
+def d_fb(r, k, m, gamma, f, b_theta, b_z, rho, pressure, omega_sq):
     r"""
+    Returns d in the Chi equation set.
+
+    Paramters
+    ---------
+    r: float
+       radius
+    k: float
+       radial periodicity number
+    m: float
+       azimnuthal periodicity number
+    gamma: float
+        gamma from equation of state
+    f: float
+        F(r) evaluated at r
+    b_theta: float
+        azimuthal magnetic field evaluated at r
+    b_z: float
+        axial magnetic field evaluated at r
+    rho: float
+        density evaluated at r
+    pressure: float
+        pressure evaluated at r
+    omega_sq: float
+        eigenvalue
+    Returns
+    -------
+    d_fb: float
+        d calculated from f and B
+
+    Notes
+    -----
+    Goedbloed gives two equivalent expressions for d. Both are implemented for
+    testing purposes.
+
+
+    References
+    ----------
+    Goedbloed (2010) Principles of MHD Equation (9.30)
     """
     b_sq = b_theta**2 + b_z**2
     term1 = rho**2*omega_sq**2
@@ -286,8 +415,43 @@ def d_fb(r, m, k, gamma, f, b_theta, b_z, rho, pressure, omega_sq ):
     return term1 + term2 + term3
 
 
-def c(r, m, k, gamma, f, b_theta, b_z, rho, pressure, omega_sq):
+def c(r, k, m, gamma, f, b_theta, b_z, rho, pressure, omega_sq):
     r"""
+    Returns c from the Chi equation set.
+
+    Paramters
+    ---------
+    r: float
+       radius
+    k: float
+       radial periodicity number
+    m: float
+       azimnuthal periodicity number
+    gamma: float
+        gamma from equation of state
+    f: float
+        F(r) evaluated at r
+    b_theta: float
+        azimuthal magnetic field evaluated at r
+    b_z: float
+        axial magnetic field evaluated at r
+    rho: float
+        density evaluated at r
+    pressure: float
+        pressure evaluated at r
+    omega_sq: float
+        eigenvalue
+    Returns
+    -------
+    c: float
+        c
+
+    Notes
+    -----
+
+    References
+    ----------
+    Goedbloed (2010) Principles of MHD Equation (9.42)
     """
     b_sq = b_theta**2 + b_z**2
     term1 = 2.*b_theta**2/r**2*rho**4*omega_sq**2
@@ -296,10 +460,48 @@ def c(r, m, k, gamma, f, b_theta, b_z, rho, pressure, omega_sq):
     return term1 + term21*term22
 
 
-def e(r, m, k, gamma, f, n, b_theta, b_theta_prime, b_z, rho, pressure,
+def e(r, k, m, gamma, f, n, b_theta, b_theta_prime, b_z, rho, pressure,
       omega_sq):
     r"""
+    Returns e from the Chi equation set.
+
+    Paramters
+    ---------
+    r: float
+       radius
+    k: float
+       radial periodicity number
+    m: float
+       azimnuthal periodicity number
+    gamma: float
+        gamma from equation of state
+    f: float
+        F(r) evaluated at r
+    b_theta: float
+        azimuthal magnetic field evaluated at r
+    b_theta_prime: float
+        derivative of azimuthal field evaluated at r
+    b_z: float
+        axial magnetic field evaluated at r
+    rho: float
+        density evaluated at r
+    pressure: float
+        pressure evaluated at r
+    omega_sq: float
+        eigenvalue
+    Returns
+    -------
+    e: float
+        e
+
+    Notes
+    -----
+
+    References
+    ----------
+    Goedbloed (2010) Principles of MHD Equation (9.42)
     """
+    b_sq = b_theta**2 + b_z**2
     term1 = -n/r*((rho*omega_sq-f**2)/r + b_theta_prime/r**2 - 2*b_theta/r**3)
     term2 = -4.*b_theta**4/r**4*rho**2*omega_sq**2
     term31 = 4.*b_theta**2*f**2/r**4
@@ -309,6 +511,35 @@ def e(r, m, k, gamma, f, n, b_theta, b_theta_prime, b_z, rho, pressure,
 
 def chi_der(r, y, c, d, e, n):
     r"""
+    Returns derivatives calculated from Chi equation set for the scipy
+    integrators
+
+    Paramters
+    ---------
+    r: float
+       radius (must be here for integrator to work)
+    y: float
+       integrands (must be here for integrator to work)
+    c: float
+       c from chi equation
+    d: float
+       d from chi equation
+    e: float
+       e from chi equation
+    n: float
+       n from chi equation
+    Returns
+    -------
+    chi_der: float
+
+
+    Notes
+    -----
+    This function is meant to be used by the scipy integrators.
+
+    References
+    ----------
+    Goedbloed (2010) Principles of MHD Equation
     """
     chi = y[0]
     Pi = y[1]
@@ -317,9 +548,46 @@ def chi_der(r, y, c, d, e, n):
     chi = np.array([chi_prime, Pi_prime])
     return chi
 
-def chi_init(r_init, m, k, gamma, d, f, g, b_theta, b_z, rho, pressure,
+def chi_init(r_init, k, m, gamma, d, f, g, b_theta, b_z, rho, pressure,
              omega_sq):
     r"""
+    Returns e from the Chi equation set.
+
+    Paramters
+    ---------
+    r: float
+       radius
+    k: float
+       radial periodicity number
+    m: float
+       azimnuthal periodicity number
+    gamma: float
+        gamma from equation of state
+    f: float
+        F(r) evaluated at r
+    b_theta: float
+        azimuthal magnetic field evaluated at r
+    b_theta_prime: float
+        derivative of azimuthal field evaluated at r
+    b_z: float
+        axial magnetic field evaluated at r
+    rho: float
+        density evaluated at r
+    pressure: float
+        pressure evaluated at r
+    omega_sq: float
+        eigenvalue
+    Returns
+    -------
+    e: float
+        e
+
+    Notes
+    -----
+
+    References
+    ----------
+    Goedbloed (2010) Principles of MHD Equation (9.42)
     """
     r = r_init
     if m == 0:
@@ -342,12 +610,14 @@ def chi_init(r_init, m, k, gamma, d, f, g, b_theta, b_z, rho, pressure,
 
 def chi_boundary_wall():
     r"""
+    Returns e from the Chi equation set.
     """
     xi_boundary = 0
     return xi_boundary
 
 def chi_boundary_vacuum():
     r"""
+    Returns e from the Chi equation set.
     """
     pass
 
