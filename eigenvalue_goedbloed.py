@@ -548,10 +548,11 @@ def chi_der(r, y, c, d, e, n):
     chi = np.array([chi_prime, Pi_prime])
     return chi
 
-def chi_init(r_init, k, m, gamma, d, f, g, b_theta, b_z, rho, pressure,
+def chi_init(r_init, k, m, gamma, d, f, g, n, b_theta, b_z, rho, pressure,
              omega_sq):
     r"""
-    Returns e from the Chi equation set.
+    Returns initial condition for the Chi vector. Derived with a frobenius
+    expansion.
 
     Paramters
     ---------
@@ -565,6 +566,11 @@ def chi_init(r_init, k, m, gamma, d, f, g, b_theta, b_z, rho, pressure,
         gamma from equation of state
     f: float
         F(r) evaluated at r
+    g: float
+       G(r) evaluated at rsublim
+    n: float
+       n from chi equation
+    Returns
     b_theta: float
         azimuthal magnetic field evaluated at r
     b_theta_prime: float
@@ -587,7 +593,7 @@ def chi_init(r_init, k, m, gamma, d, f, g, b_theta, b_z, rho, pressure,
 
     References
     ----------
-    Goedbloed (2010) Principles of MHD Equation (9.42)
+    Goedbloed (2010) Principles of MHD Equation
     """
     r = r_init
     if m == 0:
@@ -610,14 +616,14 @@ def chi_init(r_init, k, m, gamma, d, f, g, b_theta, b_z, rho, pressure,
 
 def chi_boundary_wall():
     r"""
-    Returns e from the Chi equation set.
+    Returns xi at wall boundary.
     """
     xi_boundary = 0
     return xi_boundary
 
 def chi_boundary_vacuum():
     r"""
-    Returns e from the Chi equation set.
+    Returns chi at a vacuum boundary.
     """
     pass
 
