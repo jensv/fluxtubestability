@@ -509,7 +509,8 @@ def e(r, k, m, gamma, f, n, b_theta, b_theta_prime, b_z, rho, pressure,
     return term1 + term2 + term31*term32
 
 
-def chi_der(r, y, c, d, e, n):
+def chi_der(r, y, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
+            pressure_spl, omega_sq):
     r"""
     Returns derivatives calculated from Chi equation set for the scipy
     integrators
@@ -541,15 +542,33 @@ def chi_der(r, y, c, d, e, n):
     ----------
     Goedbloed (2010) Principles of MHD Equation
     """
+    b_theta = b_theta_spl(r)
+    b_theta_prime = b_theta_spl.derivatives(r)[0]
+    b_z = b_z_spl(r)
+    pressure = pressure_spl(r)
+    rho = rho_spl(r)
+    f_ev = f(r, k, m, b_theta, b_z)
+    omega_a_sq_ev = omega_a_sq(f_ev, rho)
+    omega_s_sq_ev = omega_sound_sq(gamma, f_ev, b_theta, b_z, rho, pressure)
+    omega_s0_sq_ev = omega_s0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure)
+    omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure)
+    n_ev = n_freq(gamma, b_theta, b_z, pressure, rho, omega_sq, omega_a_sq_ev,
+                  omega_s_sq_ev)
+    d_ev = d_freq(rho, omega_sq, omega_s0_sq_ev, omega_f0_sq_ev)
+    c_ev = (r, k, m, gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
+    e_ev = (r, k, m, gamma, f_ev, n_ev, b_theta, b_theta_prime, b_z, rho,
+            pressure, omega_sq)
+
     chi = y[0]
     Pi = y[1]
-    chi_prime = -r/n*(c*chi + d*Pi)
-    Pi_prime = -r/n*(e*chi - c*Pi)
+    chi_prime = -r/n_ev*(c_ev*chi + d_ev*Pi)
+    Pi_prime = -r/n_ev*(e_ev*chi - c_ev*Pi)
     chi = np.array([chi_prime, Pi_prime])
     return chi
 
-def chi_init(r_init, k, m, gamma, d, f, g, n, b_theta, b_z, rho, pressure,
-             omega_sq):
+
+def chi_init(r_init, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
+             pressure_spl, omega_sq):
     r"""
     Returns initial condition for the Chi vector. Derived with a frobenius
     expansion.
@@ -604,12 +623,27 @@ def chi_init(r_init, k, m, gamma, d, f, g, n, b_theta, b_z, rho, pressure,
         if abs(m) == 1:
             chi_prime = 0
             chi_prime = abs(m)*r**(abs(m)-1)
+
+    b_theta = b_theta_spl(r)
+    b_z = b_z_spl(r)
+    pressure = pressure_spl(r)
+    rho = rho_spl(r)
+    f_ev = f(r, k, m, b_theta, b_z)
+    g_ev = g(r, k, m, b_theta, b_z)
+    omega_a_sq_ev = omega_a_sq(f_ev, rho)
+    omega_s_sq_ev = omega_sound_sq(gamma, f_ev, b_theta, b_z, rho, pressure)
+    omega_s0_sq_ev = omega_s0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure)
+    omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, b_theta, b_z, rho, pressure)
+    n_ev = n_freq(gamma, b_theta, b_z, pressure, rho, omega_sq, omega_a_sq_ev,
+                  omega_s_sq_ev)
+    d_ev = d_freq(rho, omega_sq, omega_s0_sq_ev, omega_f0_sq_ev)
+
     b_sq = b_theta**2 + b_z**2
-    Pi_term1 = -n/(r*d)*chi_prime
+    Pi_term1 = -n_ev/(r*d_ev)*chi_prime
     Pi_term2 = 2*b_theta**2/r**2
-    Pi_term31 = -2*k*b_theta*g/(r**2*d)
+    Pi_term31 = -2*k*b_theta*g_ev/(r**2*d_ev)
     Pi_term32 = (gamma*pressure + b_sq)*rho*omega_sq - gamma*pressure*f**2
-    Pi_init = Pi_term1 + (Pi_term2 + Pi_term31*Pi_term32)*chi
+    Pi_init = Pi_term1 + (Pi_term2 + Pi_term31*Pi_term32)*chi_init
     xi_init = np.array([chi_init, Pi_init])
     return xi_init
 
@@ -621,9 +655,40 @@ def chi_boundary_wall():
     xi_boundary = 0
     return xi_boundary
 
+
 def chi_boundary_vacuum():
     r"""
     Returns chi at a vacuum boundary.
     """
     pass
 
+
+def chi_integrate(params, r_init, dr, r_max, atol=None, rtol=None):
+    r"""
+    """
+    chi = []
+
+    k = params['k']
+    m = params['m']
+    gamma = params['gamma']
+    b_theta_spl = params['b_theta']
+    b_z_spl = params['b_z']
+    rho_spl = params['rho']
+    pressure_spl = params['pressure']
+    omega_sq = params['omega_sq']
+
+    chi_int = inte.ode(chi_der)
+    if atol is None or rtol is None:
+        chi_int.set_integrator('lsode')
+    else:
+        chi_int.set_integrator('lsode', atol, rtol)
+    chi_int.set_initial_value(chi_init(r_init, k, m, gamma, b_theta_spl,
+                                       b_z_spl, rho_spl, pressure_spl,
+                                       omega_sq))
+    chi_int.set_f_params(k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
+                         pressure_spl, omega_sq)
+    while chi_int.successful() and chi_int.t < r_max-dr:
+        chi_int.integrate(chi_int.t + dr)
+        chi.append(chi_int.y)
+        print((chi_int.successful(), chi_int.t))
+    return np.array(chi)
