@@ -88,7 +88,8 @@ class Parabolic_nu2(Equil_solver):
                 + 5*j0**2*r**8/48 - j0**2*r**10/60)
 
     def rho(self, r):
-        return self.pressure(r)/self.temp
+        return np.ones(r.size)
+        #return self.pressure(r)/self.temp
 
     def q(self, r):
         q_to_return = r*self.k*self.b_z(r)/self.b_theta(r)
