@@ -369,7 +369,7 @@ def n_fb(gamma, f, b_theta, b_z, pressure, rho, omega_sq):
     Goedbloed (2010) Principles of MHD Equation (9.32)
     """
     b_sq = b_theta**2 + b_z**2
-    return (rho*omega_sq - f**2)*((gamma*rho + b_sq)
+    return (rho*omega_sq - f**2)*((gamma*pressure + b_sq)
                                   * rho*omega_sq - gamma*pressure*f**2)
 
 
@@ -417,7 +417,7 @@ def d_fb(r, k, m, gamma, f, b_theta, b_z, rho, pressure, omega_sq):
     b_sq = b_theta**2 + b_z**2
     term1 = rho**2*omega_sq**2
     term2 = -(m**2/r**2 + k**2)*(gamma*pressure + b_sq)*rho*omega_sq
-    term3 = (m**2/r**2 + k**2)*gamma*rho*f**2
+    term3 = (m**2/r**2 + k**2)*gamma*pressure*f**2
     return term1 + term2 + term3
 
 
@@ -462,7 +462,7 @@ def c(r, k, m, gamma, f, b_theta, b_z, rho, pressure, omega_sq):
     b_sq = b_theta**2 + b_z**2
     term1 = -2.*b_theta**2/r**2*rho**2*omega_sq**2
     term21 = 2.*m*b_theta*f/r**3
-    term22 = ((gamma*pressure + b_sq)*rho*omega_sq - gamma*rho*f**2)
+    term22 = ((gamma*pressure + b_sq)*rho*omega_sq - gamma*pressure*f**2)
     return term1 + term21*term22
 
 
@@ -512,7 +512,7 @@ def e(r, k, m, gamma, f, n, b_theta, b_theta_prime, b_z, rho, pressure,
     term1 = -n/r*((rho*omega_sq-f**2)/r + derivative)
     term2 = -4.*b_theta**4/r**4*rho**2*omega_sq**2
     term31 = 4.*b_theta**2*f**2/r**4
-    term32 = ((gamma*pressure + b_sq)*rho*omega_sq - gamma*rho*f**2)
+    term32 = ((gamma*pressure + b_sq)*rho*omega_sq - gamma*pressure*f**2)
     return term1 + term2 + term31*term32
 
 
