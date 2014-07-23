@@ -254,7 +254,7 @@ def omega_sound_sq(gamma, f, b_theta, b_z, rho, pressure):
     return gamma*pressure/(gamma*pressure+b_sq) * f**2/rho
 
 
-def n_freq(gamma, b_theta, b_z, pressure, rho, omega_sq, omega_alfven_sq,
+def n_freq(gamma, b_theta, b_z, rho, pressure, omega_sq, omega_alfven_sq,
            omega_sound_sq):
     r"""
     Returns n in the Chi equation set.
@@ -333,7 +333,7 @@ def d_freq(rho, omega_sq, omega_s0_sq, omega_f0_sq):
     return rho**2*(omega_sq - omega_s0_sq)*(omega_sq - omega_f0_sq)
 
 
-def n_fb(gamma, f, b_theta, b_z, pressure, rho, omega_sq):
+def n_fb(gamma, f, b_theta, b_z, rho, pressure, omega_sq):
     r"""
     Returns n in the Chi equation set.
 
@@ -347,10 +347,10 @@ def n_fb(gamma, f, b_theta, b_z, pressure, rho, omega_sq):
         axial magnetic field evaluated at r
     b_z: float
         azimuthal magnetic field evaluated at r
-    pressure: float
-        pressure evaluated at r
     rho: float
         density evaluated at r
+    pressure: float
+        pressure evaluated at r
     omega_sq: float
         eigenvalue
     Returns
@@ -562,8 +562,9 @@ def chi_der(r, y, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
                                  pressure)
     omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, f_ev, b_theta, b_z, rho,
                                  pressure)
-    n_ev = n_fb(gamma, f_ev, b_theta, b_z, pressure, rho, omega_sq)
-    d_ev = d_fb(r, k, m, gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
+    n_ev = n_fb(gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
+    #d_ev = d_freq(r, k, m, gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
+    d_ev = d_freq(rho, omega_sq, omega_s0_sq_ev, omega_f0_sq_ev)
     c_ev = c(r, k, m, gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
     e_ev = e(r, k, m, gamma, f_ev, n_ev, b_theta, b_theta_prime, b_z, rho,
              pressure, omega_sq)
@@ -649,8 +650,9 @@ def chi_init(r_init, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
                                  pressure)
     omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, f_ev, b_theta, b_z, rho,
                                  pressure)
-    n_ev = n_fb(gamma, f_ev, b_theta, b_z, pressure, rho, omega_sq)
-    d_ev = d_fb(r, k, m, gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
+    n_ev = n_fb(gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
+    #d_ev = d_fb(r, k, m, gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
+    d_ev = d_freq(rho, omega_sq, omega_s0_sq_ev, omega_f0_sq_ev)
 
     b_sq = b_theta**2 + b_z**2
     Pi_term1 = -n_ev/(r*d_ev)*chi_prime
