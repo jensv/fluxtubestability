@@ -161,7 +161,10 @@ def omega_f0_sq(r, k, m, gamma, f, b_theta, b_z, rho, pressure):
     v_alfven_sq = b_sq / rho
     alpha = (4.*gamma*pressure*f**2 /
              ((m**2/r**2+k**2)*(gamma*pressure + b_sq)**2))
-    if alpha > 1:
+    if type(alpha) == np.ndarray:
+        if alpha.any() > 1:
+            print("Warning: omega_f0 is complex")
+    elif alpha > 1:
         print("Warning: omega_f0 is complex")
     return 0.5*k_0_sq*(v_sound_sq + v_alfven_sq)*(1 + (1 - alpha)**0.5)
 
@@ -207,8 +210,11 @@ def omega_s0_sq(r, k, m, gamma, f, b_theta, b_z, rho, pressure):
     v_alfven_sq = b_sq / rho
     alpha = (4.*gamma*pressure*f**2 /
              ((m**2/r**2+k**2)*(gamma*pressure + b_sq)**2))
-    if alpha > 1:
-        print("Warning: omega_s0 is complex")
+    if type(alpha) == np.ndarray:
+        if alpha.any() > 1:
+            print("Warning: omega_s0 is complex")
+    elif alpha > 1:
+        print("Warning: omega_f0 is complex")
     return 0.5*k_0_sq*(v_sound_sq + v_alfven_sq)*(1 - (1 - alpha)**0.5)
 
 
@@ -556,9 +562,8 @@ def chi_der(r, y, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
                                  pressure)
     omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, f_ev, b_theta, b_z, rho,
                                  pressure)
-    n_ev = n_freq(gamma, b_theta, b_z, pressure, rho, omega_sq, omega_a_sq_ev,
-                  omega_s_sq_ev)
-    d_ev = d_freq(rho, omega_sq, omega_s0_sq_ev, omega_f0_sq_ev)
+    n_ev = n_fb(gamma, f_ev, b_theta, b_z, pressure, rho, omega_sq)
+    d_ev = d_fb(r, k, m, gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
     c_ev = c(r, k, m, gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
     e_ev = e(r, k, m, gamma, f_ev, n_ev, b_theta, b_theta_prime, b_z, rho,
              pressure, omega_sq)
@@ -567,6 +572,9 @@ def chi_der(r, y, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
     Pi = y[1]
     chi_prime = -r/n_ev*(c_ev*chi + d_ev*Pi)
     Pi_prime = -r/n_ev*(e_ev*chi - c_ev*Pi)
+    print("chi prime "+str(chi_prime))
+    print("n_ev "+str(n_ev)+" c_ev "+str(c_ev)+" d_ev "+str(d_ev))
+    print("c_cev*chi "+str(c_ev*chi)+" d_ev*Pi "+str(d_ev*Pi))
     chi = np.array([chi_prime, Pi_prime])
     return chi
 
@@ -625,7 +633,7 @@ def chi_init(r_init, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
     else:
         chi_init = r**abs(m)
         if abs(m) == 1:
-            chi_prime = 1.
+            chi_prime = 1.0
         else:
             chi_prime = abs(m)*r**(abs(m)-1)
 
@@ -641,9 +649,8 @@ def chi_init(r_init, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
                                  pressure)
     omega_f0_sq_ev = omega_f0_sq(r, k, m, gamma, f_ev, b_theta, b_z, rho,
                                  pressure)
-    n_ev = n_freq(gamma, b_theta, b_z, pressure, rho, omega_sq, omega_a_sq_ev,
-                  omega_s_sq_ev)
-    d_ev = d_freq(rho, omega_sq, omega_s0_sq_ev, omega_f0_sq_ev)
+    n_ev = n_fb(gamma, f_ev, b_theta, b_z, pressure, rho, omega_sq)
+    d_ev = d_fb(r, k, m, gamma, f_ev, b_theta, b_z, rho, pressure, omega_sq)
 
     b_sq = b_theta**2 + b_z**2
     Pi_term1 = -n_ev/(r*d_ev)*chi_prime
