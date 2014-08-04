@@ -508,11 +508,11 @@ def e(r, k, m, gamma, f, n, b_theta, b_theta_prime, b_z, rho, pressure,
     Goedbloed (2010) Principles of MHD Equation (9.42)
     """
     b_sq = b_theta**2 + b_z**2
-    derivative = (2.*b_theta*b_theta_prime)/r**2 - (2.*b_theta)/r**3
+    derivative = (2.*b_theta*b_theta_prime)/r**2 - (2.*b_theta**2)/r**3
     term1 = -n/r*((rho*omega_sq-f**2)/r + derivative)
-    term2 = -4.*b_theta**4/r**4*rho**2*omega_sq**2
+    term2 = -4.*b_theta**4/r**4*rho**2*omega_sq**2 - 4.*rho*omega_sq*f**2*b_theta**4/r**4
     term31 = 4.*b_theta**2*f**2/r**4
-    term32 = ((gamma*pressure + b_sq)*rho*omega_sq - gamma*pressure*f**2)
+    term32 = ((gamma*pressure + b_z)*rho*omega_sq - gamma*pressure*f**2)
     return term1 + term2 + term31*term32
 
 
@@ -549,7 +549,7 @@ def chi_der(r, y, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
     ----------
     Goedbloed (2010) Principles of MHD Equation
     """
-    print('r requested {0:.16f}',format(r))
+    #print('r requested {0:.16f}',format(r))
     b_theta = b_theta_spl(r)
     b_theta_prime = b_theta_spl.derivative(n=1)(r)
     b_z = b_z_spl(r)
@@ -573,9 +573,9 @@ def chi_der(r, y, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
     Pi = y[1]
     chi_prime = -r/n_ev*(c_ev*chi + d_ev*Pi)
     Pi_prime = -r/n_ev*(e_ev*chi - c_ev*Pi)
-    print("chi prime "+str(chi_prime))
-    print("n_ev "+str(n_ev)+" c_ev "+str(c_ev)+" d_ev "+str(d_ev))
-    print("c_cev*chi "+str(c_ev*chi)+" d_ev*Pi "+str(d_ev*Pi))
+    #print("chi prime "+str(chi_prime))
+    #print("n_ev "+str(n_ev)+" c_ev "+str(c_ev)+" d_ev "+str(d_ev))
+    #print("c_cev*chi "+str(c_ev*chi)+" d_ev*Pi "+str(d_ev*Pi))
     chi = np.array([chi_prime, Pi_prime])
     return chi
 
@@ -637,7 +637,6 @@ def chi_init(r_init, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
             chi_prime = 1.0
         else:
             chi_prime = abs(m)*r**(abs(m)-1)
-
     b_theta = b_theta_spl(r)
     b_z = b_z_spl(r)
     pressure = pressure_spl(r)
@@ -660,6 +659,7 @@ def chi_init(r_init, k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
     Pi_term31 = -2*k*b_theta*g_ev/(r**2*d_ev)
     Pi_term32 = (gamma*pressure + b_sq)*rho*omega_sq - gamma*pressure*f_ev**2
     Pi_init = Pi_term1 + (Pi_term2 + Pi_term31*Pi_term32)*chi_init
+    #Pi_init = 1./m*(2.*b_theta/r*f_ev - rho*omega_sq - f_ev**2)*chi_init
     xi_init = np.array([chi_init, Pi_init])
     return xi_init
 
@@ -683,7 +683,7 @@ def xi_boundary(params, r):
     return factor*num / den*pressure(a)
 
 
-def chi_integrate(params, r_init, dr, r_max, atol=None, rtol=None):
+def chi_integrate(params, r_init, dr, r_max, atol=None, rtol=None, max_step=None):
     r"""
     """
     chi = []
@@ -699,7 +699,7 @@ def chi_integrate(params, r_init, dr, r_max, atol=None, rtol=None):
 
     chi_int = inte.ode(chi_der)
     if atol is None or rtol is None:
-        chi_int.set_integrator('lsoda')
+        chi_int.set_integrator('lsoda', max_step=max_step)
     else:
         chi_int.set_integrator('lsoda', atol, rtol)
     chi_int.set_initial_value(chi_init(r_init, k, m, gamma, b_theta_spl,
@@ -708,8 +708,8 @@ def chi_integrate(params, r_init, dr, r_max, atol=None, rtol=None):
     chi_int.set_f_params(k, m, gamma, b_theta_spl, b_z_spl, rho_spl,
                          pressure_spl, omega_sq)
     while chi_int.successful() and chi_int.t < r_max-dr:
-        print('point'+str(chi_int.t))
+        #print('point'+str(chi_int.t))
         chi_int.integrate(chi_int.t + dr)
         chi.append(chi_int.y)
-        print((chi_int.successful(), chi_int.t))
+        #print((chi_int.successful(), chi_int.t))
     return np.array(chi)
