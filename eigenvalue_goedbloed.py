@@ -19,7 +19,6 @@ import scipy.integrate as inte
 import scipy.special as spec
 import numpy as np
 import sys
-sys.path.append("../Scripts")
 import copy
 
 
