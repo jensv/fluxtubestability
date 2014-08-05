@@ -18,14 +18,11 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 import numpy as np
 import scipy.interpolate as interpolate
 import scipy.integrate as integrate
-import dict_convenience as dc
 import sys
-sys.path.append("../Scripts")
-import dict_convenience
 import equil_solver
 
 
-def f_eq(r, k, m, b_z, b_theta):
+def newcomb_f(r, k, m, b_z, b_theta):
     r"""
     Return f from Newcomb's paper.
 
@@ -62,7 +59,8 @@ def f_eq(r, k, m, b_z, b_theta):
     Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
     Equation (16)
     """
-    return r*f_num_wo_r(r, k, m, b_z, b_theta)/f_denom(r, k, m)
+    params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
+    return r*f_num_wo_r(**params)/f_denom(**params)
 
 
 def f_denom(r, k, m):
@@ -135,7 +133,51 @@ def f_num_wo_r(r, k, m, b_z, b_theta):
     return (k*r*b_z(r) + m*b_theta(r))**2
 
 
-def g_eq_18(r, k, m, b_z, b_theta, p_prime):
+def jardin_g_8_80(r, k, m, b_z, b_theta, p_prime, q):
+    r"""
+    """
+    term1 = (2*k**2+r**2)/(k**2+r**2+m**2)*p_prime
+    term2 = b_theta**2/r*(m-k*q)**2*(k**2*r**2+m**2-1.)/(k**2*r**2+m**2)
+    term3 = 2*k**2*r*b_theta**2/(k**2*r**2+m**2)**2*(k**2*q**2-m**2)
+    return term1 + term2 + term3
+
+
+def jardin_g_8_79(r, k, m, b_theta, b_theta_prime, q, q_prime):
+    r"""
+    """
+    term1 = 1./r*b_theta**2/(k**2*r**2+m**2)
+    term2 = b_theta**2/r*(m - k*q)
+    term3 = 2.*b_theta/r*(r*b_theta_prime + b_theta)
+    der_term1 = -2.*k**2*r*b_theta**2/(k**2*r**2 + m**2)**2*(k**2*q**2 - m**2)
+    der_term2 = 2.*k**2*b_theta**2/(k**2*r**2 + m**2)*q*q_prime
+    der_term3 = 2.*b_theta_prime/(k**2*r**2 + m**2)*(k**2*q**2 - m**2)*b_theta
+    return term1 + term2 - term3 - der_term1 - der_term2 - der_term3
+
+
+def newcomb_g_17(r, k, m, b_z, b_theta, b_theta_prime, b_z, b_z_prime):
+    r"""
+    """
+    term1 = 1./r*(k*r*b_z - m*b_theta)**2/(k**2*r**2 + m**2)
+    term2 = 1./r*(k*r*b_z - m*b_theta)**2
+    term3 = 2.*b_theta/r*(r*b_theta_prime + b_theta)
+    der_term1 = -2.*k**2*r/(k**2*r**2 + m**2)**2*(k**2*r**2*b_z**2 -
+                                                  m**2*b_theta**2)
+    der_term2 = 1./(k**2*r**2 + m**2)*(2.*k**2*r**2*b_z*b_z_prime +
+                                       2.*k**2*r*b_z**2 -
+                                       2.*m**2*b_theta*b_theta_prime)
+    return term1 + term2 - term3 - der_term1 - der_term2
+
+
+def goedbloed_f_0(r, k, m, b_z, b_theta):
+    r"""
+    """
+
+
+def goedbloed_g_0(r, k, m, b_z, b_theta, pressure_prime):
+    r"""
+    """
+
+def newcomb_g_18(r, k, m, b_z, b_theta, p_prime):
     r"""
     Return g from Newcomb's paper.
 
