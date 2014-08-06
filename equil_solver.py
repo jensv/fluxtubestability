@@ -53,7 +53,7 @@ class Parabolic_nu2(Equil_solver):
         r = self.r
         self.j0 = self.get_j0()
         param_points = {'j_z': self.j_z(r), 'b_theta': self.b_theta(r),
-                        'b_z': self.b_z(r), 'pprime': self.pprime(r),
+                        'b_z': self.b_z(r), 'p_prime': self.pprime(r),
                         'pressure': self.pressure(r), 'q': self.q(r),
                         'rho': self.rho(r),
                         'd_b_theta_over_r': None}
