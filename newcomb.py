@@ -250,34 +250,6 @@ def newcomb_g_18(r, k, m, b_z, b_theta, p_prime):
              (k**2*r**2*b_z(r)**2-m**2*b_theta(r)**2))
     return term1 + term2 + term3
 
-
-def splines(a=1, points=500, q0=1.0, k=1, b_z0=1):
-    r"""
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-
-    Notes
-    -----
-
-    Reference
-    ---------
-
-    Example
-    -------
-
-    """
-    equilibrium = equil_solver.Parabolic_nu2(a, points, q0, k, b_z0)
-    return equilibrium.get_splines()
-
-
-def newcomb_h():
-    pass
-
-
 #def singularity_xi()
 
 
@@ -306,7 +278,7 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl):
               'b_theta': b_theta_spl(r), 'p_prime': p_prime_spl(r),
               'q': q_spl(r)}
     if np.allclose(jardin_f(**params), 0., atol=10E-5):
-        print('singularity at r=' + r)
+        print('singularity at r=' + str(r))
     y_prime[0] = y[1]
     y_prime[1] = y[0]*jardin_g_8_80(**params) / jardin_f(**params)
     return y_prime
