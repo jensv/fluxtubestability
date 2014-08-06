@@ -334,7 +334,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z, b_theta, p_prime, q):
     y_prime = np.zeros(2)
     params = {'r': r, 'k': k, 'm': m, 'b_z_spl': b_z, 'b_theta_spl': b_theta,
               'p_prime_spl': p_prime, 'q_spl': q}
-    if np.allclose(f_eq(**params), 0., atol=10E-5):
+    if np.allclose(f_jardin_f(**params), 0., atol=10E-5):
         print('singularity at r=' + r)
         y_prime[0] = 0.
     else:
@@ -342,7 +342,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z, b_theta, p_prime, q):
     if g_eq_18(**parmas) == 0.:
         y_prime[1] = 0.
     else:
-       y_prime[1] = y[0]*(g_eq_18(**params)/f_eq(**parms))
+       y_prime[1] = y[0]*(g_eq_18(**params)/jardin_f(**parms))
     return y_prime
 
 
