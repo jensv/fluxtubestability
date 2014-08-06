@@ -132,7 +132,7 @@ def f_num_wo_r(r, k, m, b_z, b_theta):
     return (k*r*b_z(r) + m*b_theta(r))**2
 
 
-def jardin_f_8_78(r, m, k, b_theta, q):
+def jardin_f(r, m, k, b_theta, q):
     r"""
     """
     return r*b_theta**2*(m - k*q)**2/(k**2*r**2 + m**2)
@@ -159,7 +159,7 @@ def jardin_g_8_79(r, k, m, b_theta, b_theta_prime, q, q_prime):
     return term1 + term2 - term3 - der_term1 - der_term2 - der_term3
 
 
-def newcomb_g_17(r, k, m, b_z, b_theta, b_theta_prime, b_z, b_z_prime):
+def newcomb_g_17(r, k, m, b_theta, b_theta_prime, b_z, b_z_prime):
     r"""
     """
     term1 = 1./r*(k*r*b_z - m*b_theta)**2/(k**2*r**2 + m**2)
@@ -278,7 +278,10 @@ def newcomb_h():
     pass
 
 
-def newcomb_der(t, y, k, m, b_z, b_theta, p_prime):
+#def singularity_xi()
+
+
+def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl):
     r"""
 
     Parameters
@@ -298,12 +301,18 @@ def newcomb_der(t, y, k, m, b_z, b_theta, p_prime):
 
     """
     y_prime = np.zeros(2)
+
+    params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
+              'b_theta': b_theta_spl(r), 'p_prime': p_prime_spl(r),
+              'q': q_spl(r)}
+    if np.allclose(f_eq(**params), 0., atol=10E-5):
+        print('singularity at r=' + r)
     y_prime[0] = y[1]
-    y_prime[1] = y[0]*g_eq_18(t, k, m, b_z, b_theta, p_prime) / jardin_f()
+    y_prime[1] = y[0]*jardin_g_8_80(**params) / jardin_f(**params)
     return y_prime
 
 
-def newcomb_der_divide_f(t, y, k, m, b_z, b_theta, p_prime):
+def newcomb_der_divide_f(r, y, k, m, b_z, b_theta, p_prime, q):
     r"""
 
     Parameters
@@ -323,15 +332,17 @@ def newcomb_der_divide_f(t, y, k, m, b_z, b_theta, p_prime):
 
     """
     y_prime = np.zeros(2)
-    if f_eq(t, k, m, b_z, b_theta) == 0.:
+    params = {'r': r, 'k': k, 'm': m, 'b_z_spl': b_z, 'b_theta_spl': b_theta,
+              'p_prime_spl': p_prime, 'q_spl': q}
+    if np.allclose(f_eq(**params), 0., atol=10E-5):
+        print('singularity at r=' + r)
         y_prime[0] = 0.
     else:
-       y_prime[0] = y[1]/f_eq(t, k, m, b_z, b_theta)
-    if g_eq_18(t, k, m, b_z, b_theta, p_prime) == 0.:
+        y_prime[0] = y[1]/f_eq(**params)
+    if g_eq_18(**parmas) == 0.:
         y_prime[1] = 0.
     else:
-        y_prime[1] = y[0]*(g_eq_18(t, k, m, b_z, b_theta, p_prime)
-                           / f_eq(t, k, m, b_z, b_theta))
+       y_prime[1] = y[0]*(g_eq_18(**params)/f_eq(**parms))
     return y_prime
 
 
@@ -371,27 +382,27 @@ def newcomb_int(divide_f, r_max, dr, params, r_init, xi_init, atol=None,
     Equation (23)
     Alan Glasser (unknown) Cyl code
     """
-    (k, m, b_z, b_theta, p_prime) = dc.retrieve(params, ['k', 'm', 'b_z',
-                                                         'b_theta', 'pprime'])
+    (k, m, b_z_spl, b_theta_spl,
+     p_prime_spl, q_spl) = map(params.get, ['k', 'm', 'b_z', 'b_theta',
+                                            'pprime', 'q'])
     xi = []
     rs = []
     if divide_f:
-        xi_int = integrate.ode(newcomb_der_divide_f)
+        xi_int = inte.ode(newcomb_der_divide_f)
     else:
-        xi_int = integrate.ode(newcomb_der)
+        xi_int = inte.ode(newcomb_der)
 
     if not (atol and rtol):
         xi_int.set_integrator('lsoda')
     else:
         xi_int.set_integrator('lsoda', atol, rtol)
-    xi_int.set_initial_value(xi_init, r_init)
-    xi_int.set_f_params(k, m, b_z, b_theta, p_prime)
-
+    xi_int.set_initial_value(xi_init, t=r_init)
+    xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl)
     while xi_int.successful() and xi_int.t < r_max-dr:
         xi_int.integrate(xi_int.t + dr)
         xi.append(xi_int.y)
         rs.append(xi_int.t)
-        #crossing_condition(xi)
+
     return (np.array(xi), np.array(rs))
 
 
@@ -484,8 +495,9 @@ def xi_init(r, k, m, b_z, b_theta):
     r"""
     """
     xi = np.zeros(2)
+    params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
     xi[0] = r**(m - 1)
-    xi[1] = jardin_g_8_80()*xi[0]/f
+    xi[1] = jardin_g_8_80(**params)*xi[0]/jardin_f(**params)
 
 
 def check_suydam(r, q_prime, q, p_prime):
