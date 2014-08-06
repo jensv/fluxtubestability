@@ -16,10 +16,9 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 
 import numpy as np
-import scipy.interpolate as interpolate
-import scipy.integrate as integrate
-import sys
+import scipy.integrate as inte
 import equil_solver
+import eigenvalue_goedbloed as eg
 
 
 def newcomb_f(r, k, m, b_z, b_theta):
@@ -133,6 +132,12 @@ def f_num_wo_r(r, k, m, b_z, b_theta):
     return (k*r*b_z(r) + m*b_theta(r))**2
 
 
+def jardin_f_8_78(r, m, k, b_theta, q):
+    r"""
+    """
+    return r*b_theta**2*(m - k*q)**2/(k**2*r**2 + m**2)
+
+
 def jardin_g_8_80(r, k, m, b_z, b_theta, p_prime, q):
     r"""
     """
@@ -171,11 +176,21 @@ def newcomb_g_17(r, k, m, b_z, b_theta, b_theta_prime, b_z, b_z_prime):
 def goedbloed_f_0(r, k, m, b_z, b_theta):
     r"""
     """
+    params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta':b_theta}
+    f = eg.f(**params)
+    return r**3*f**2/(m**2 + k**2*r**2)
 
 
 def goedbloed_g_0(r, k, m, b_z, b_theta, pressure_prime):
     r"""
     """
+    params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
+    f = eg.f(**params)
+    term1 = 2.*k**2*r**2/(m**2 + k**2*r**2)*pressure_prime
+    term2 = (m**2 + k**2*r**2 - 1)/(m**2 + k**2*r**2)*r*f**2
+    term3 = 2.*k**2*r**3*(m*b_theta/r - k*b_z)/(m**2 + k**2*r**2)**2*f
+    return term1 + term2 - term3
+
 
 def newcomb_g_18(r, k, m, b_z, b_theta, p_prime):
     r"""
@@ -284,7 +299,7 @@ def newcomb_der(t, y, k, m, b_z, b_theta, p_prime):
     """
     y_prime = np.zeros(2)
     y_prime[0] = y[1]
-    y_prime[1] = y[0]*g_eq_18(t, k, m, b_z, b_theta, p_prime)
+    y_prime[1] = y[0]*g_eq_18(t, k, m, b_z, b_theta, p_prime) / jardin_f()
     return y_prime
 
 
@@ -421,7 +436,7 @@ def suydam(r, b_z, q_prime, q, p_prime):
     return r/8*b_z*(q_prime/q)**2+p_prime
 
 
-def xi_init(r, k, m, b_z, b_theta):
+def xi_init_glasser(r, k, m, b_z, b_theta):
     r"""
     Returns initial condition for r close to zero.
 
@@ -463,6 +478,14 @@ def xi_init(r, k, m, b_z, b_theta):
     xi[0] = r**(m - 1)
     xi[1] = xi[0]*((k*b_z(r)*r + m*b_theta(r))/m)**2*(m - 1)
     return xi
+
+
+def xi_init(r, k, m, b_z, b_theta):
+    r"""
+    """
+    xi = np.zeros(2)
+    xi[0] = r**(m - 1)
+    xi[1] = jardin_g_8_80()*xi[0]/f
 
 
 def check_suydam(r, q_prime, q, p_prime):
