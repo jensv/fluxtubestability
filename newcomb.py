@@ -305,7 +305,7 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl):
     params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
               'b_theta': b_theta_spl(r), 'p_prime': p_prime_spl(r),
               'q': q_spl(r)}
-    if np.allclose(f_eq(**params), 0., atol=10E-5):
+    if np.allclose(jardin_f(**params), 0., atol=10E-5):
         print('singularity at r=' + r)
     y_prime[0] = y[1]
     y_prime[1] = y[0]*jardin_g_8_80(**params) / jardin_f(**params)
