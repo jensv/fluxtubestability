@@ -132,7 +132,7 @@ def f_num_wo_r(r, k, m, b_z, b_theta):
     return (k*r*b_z(r) + m*b_theta(r))**2
 
 
-def jardin_f(r, m, k, b_theta, q):
+def jardin_f(r, m, k, b_theta, q, b_z, p_prime):
     r"""
     """
     return r*b_theta**2*(m - k*q)**2/(k**2*r**2 + m**2)
@@ -346,7 +346,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z, b_theta, p_prime, q):
     return y_prime
 
 
-def newcomb_int(divide_f, r_max, dr, params, r_init, xi_init, atol=None,
+def newcomb_int(divide_f, r_init, dr, r_max, params, atol=None,
                 rtol=None):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two odes.
@@ -384,7 +384,10 @@ def newcomb_int(divide_f, r_max, dr, params, r_init, xi_init, atol=None,
     """
     (k, m, b_z_spl, b_theta_spl,
      p_prime_spl, q_spl) = map(params.get, ['k', 'm', 'b_z', 'b_theta',
-                                            'pprime', 'q'])
+                                            'p_prime', 'q'])
+    init_params = {'r': r_init, 'k': k, 'm': m, 'b_z': b_z_spl(r_init),
+                   'b_theta': b_theta_spl(r_init),
+                   'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init)}
     xi = []
     rs = []
     if divide_f:
@@ -396,7 +399,7 @@ def newcomb_int(divide_f, r_max, dr, params, r_init, xi_init, atol=None,
         xi_int.set_integrator('lsoda')
     else:
         xi_int.set_integrator('lsoda', atol, rtol)
-    xi_int.set_initial_value(xi_init, t=r_init)
+    xi_int.set_initial_value(xi_init(**init_params), t=r_init)
     xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl)
     while xi_int.successful() and xi_int.t < r_max-dr:
         xi_int.integrate(xi_int.t + dr)
@@ -491,13 +494,15 @@ def xi_init_glasser(r, k, m, b_z, b_theta):
     return xi
 
 
-def xi_init(r, k, m, b_z, b_theta):
+def xi_init(r, k, m, b_z, b_theta, p_prime, q):
     r"""
     """
-    xi = np.zeros(2)
-    params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
-    xi[0] = r**(m - 1)
-    xi[1] = jardin_g_8_80(**params)*xi[0]/jardin_f(**params)
+    y = np.zeros(2)
+    params = {'r': r, 'k': k, 'm': m, 'b_theta': b_theta, 'q': q,
+              'p_prime': p_prime, 'b_z': b_z}
+    y[0] = r**(m - 1)
+    y[1] = jardin_g_8_80(**params)*y[0]/jardin_f(**params)
+    return y
 
 
 def check_suydam(r, q_prime, q, p_prime):
