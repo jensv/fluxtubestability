@@ -93,8 +93,8 @@ class TestParabolic(object):
         r = np.linspace(0, 1, 100)
         f_params = {'r': r, 'k': d1(k), 'm': d1(m),
                     'b_z': b_z(r), 'b_theta': b_theta(r), 'q': q(r)}
-        assert_allclose(f.jardin_f_8_78(**f_params),
-                        f.goedbloed_f_9_106(**f_params))
+        assert_allclose(f.goedbloed_f_9_106(**f_params),
+                        f.newcomb_f_16(**f_params))
 
     def test_jardin_g_8_79_and_8_80(self):
         r"""
