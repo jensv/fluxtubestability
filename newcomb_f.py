@@ -11,9 +11,10 @@ from __future__ import absolute_import
 from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              int, map, next, oct, open, pow, range, round,
                              str, super, zip)
-"""Python 3.x compatability"""
+"""Python 3.x compatibility"""
 
 import eigenvalue_goedbloed as eg
+
 
 def newcomb_f_16(r, k, m, b_z, b_theta, q):
     r"""

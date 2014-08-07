@@ -13,7 +13,7 @@ from __future__ import absolute_import
 from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              int, map, next, oct, open, pow, range, round,
                              str, super, zip)
-"""Python 3.x compatability above"""
+"""Python 3.x compatibility above"""
 
 import scipy.integrate as inte
 import scipy.special as spec
