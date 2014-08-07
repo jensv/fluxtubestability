@@ -41,18 +41,25 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     """
     y_prime = np.zeros(2)
 
-    params_f = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
-                'b_theta': b_theta_spl(r), 'p_prime': p_prime_spl(r),
-                'q': q_spl(r)}
-    params_g = {'r': r, 'k': k, 'm': m, 'b_z'}
-    if np.allclose(f_func(**params), 0., atol=10E-5):
+    g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
+                'b_z_prime': b_z_spl.derivative()(r),
+                'b_theta': b_theta_spl(r),
+                'b_theta_prime': b_theta_spl(r).derivative()(r)
+                'p_prime': p_prime_spl(r), 'q': q_spl(r),
+                'q_prime': q_spl.derivtive()(r)}
+
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
+                'b_theta': b_theta_spl(r), 'q': q_spl(r)}
+
+    if np.allclose(f_func(**f_params), 0., atol=10E-5):
         print('singularity at r=' + str(r))
     y_prime[0] = y[1]
-    y_prime[1] = y[0]*g_func(**params) / f_func(**params)
+    y_prime[1] = y[0]*g_func(**g_params) / f_func(**f_params)
     return y_prime
 
 
-def newcomb_der_divide_f(r, y, k, m, b_z, b_theta, p_prime, q):
+def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
+                         f_func, g_func):
     r"""
 
     Parameters
@@ -72,17 +79,23 @@ def newcomb_der_divide_f(r, y, k, m, b_z, b_theta, p_prime, q):
 
     """
     y_prime = np.zeros(2)
-    params = {'r': r, 'k': k, 'm': m, 'b_z_spl': b_z, 'b_theta_spl': b_theta,
-              'p_prime_spl': p_prime, 'q_spl': q}
-    if np.allclose(f_jardin_f(**params), 0., atol=10E-5):
-        print('singularity at r=' + r)
-        y_prime[0] = 0.
-    else:
-        y_prime[0] = y[1]/f_eq(**params)
-    if g_eq_18(**parmas) == 0.:
-        y_prime[1] = 0.
-    else:
-       y_prime[1] = y[0]*(g_eq_18(**params)/jardin_f(**parms))
+
+    g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
+                'b_z_prime': b_z_spl.derivative()(r),
+                'b_theta': b_theta_spl(r),
+                'b_theta_prime': b_theta_spl.derivative()(r)
+                'p_prime': p_prime_spl(r), 'q': q_spl(r),
+                'q_prime': q_spl.derivtive()(r)}
+
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
+                'b_theta': b_theta_spl(r), 'q': q_spl(r)}
+
+    if np.allclose(f_func(**f_params), 0., atol=10E-5):
+        print('singularity at r=' + str(r))
+
+    y_prime[0] = y[1]/f_func(**f_params)
+
+    y_prime[1] = y[0]*(g_func(**g_params)/f_func(**f_parms))
     return y_prime
 
 
@@ -125,9 +138,14 @@ def newcomb_int(divide_f, r_init, dr, r_max, params, atol=None,
     (k, m, b_z_spl, b_theta_spl,
      p_prime_spl, q_spl) = map(params.get, ['k', 'm', 'b_z', 'b_theta',
                                             'p_prime', 'q'])
+
     init_params = {'r': r_init, 'k': k, 'm': m, 'b_z': b_z_spl(r_init),
+                   'b_z_prime': b_z_spl.derivative()(r_init),
                    'b_theta': b_theta_spl(r_init),
-                   'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init)}
+                   'b_theta_prime': b_theta_spl.derivative()(r_init)
+                   'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init),
+                   'q_prime': q_spl.derivtive()(r_init)}
+
     xi = []
     rs = []
     if divide_f:
@@ -234,14 +252,21 @@ def xi_init_glasser(r, k, m, b_z, b_theta):
     return xi
 
 
-def xi_init(r, k, m, b_z, b_theta, p_prime, q):
+def xi_init(r, y, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
+            p_prime, q, q_prime, f_func, g_func):
     r"""
     """
     y = np.zeros(2)
-    params = {'r': r, 'k': k, 'm': m, 'b_theta': b_theta, 'q': q,
-              'p_prime': p_prime, 'b_z': b_z}
+
+    g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_z_prime': b_z_prime,
+                'b_theta': b_theta, 'b_theta_prime': b_theta_prime,
+                'p_prime': p_prime, 'q': q, 'q_prime': q_prime}
+
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z,
+                'b_theta': b_theta, 'q': q}
+
     y[0] = r**(m - 1)
-    y[1] = jardin_g_8_80(**params)*y[0]/jardin_f(**params)
+    y[1] = g_func(**g_params)*y[0]/f_func(**f_params)
     return y
 
 
