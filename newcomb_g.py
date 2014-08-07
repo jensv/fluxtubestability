@@ -5,11 +5,20 @@ Created on Wed Aug 06 14:39:57 2014
 @author: Jens von der Linden
 """
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                             int, map, next, oct, open, pow, range, round,
+                             str, super, zip)
+"""Python 3.x compatibility"""
+
 import eigenvalue_goedbloed as eg
 from newcomb_f import f_denom, f_num_wo_r
 
 
-def jardin_g_8_80(r, k, m, b_z, b_theta, b_theta_prime, p_prime, q, q_prime):
+def jardin_g_8_80(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
+                  q_prime):
     r"""
     """
     term1 = (2*k**2+r**2)/(k**2+r**2+m**2)*p_prime
@@ -18,7 +27,8 @@ def jardin_g_8_80(r, k, m, b_z, b_theta, b_theta_prime, p_prime, q, q_prime):
     return term1 + term2 + term3
 
 
-def jardin_g_8_7(r, k, m, b_z, b_theta, b_theta_prime, p_prime, q, q_prime):
+def jardin_g_8_7(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
+                 q_prime):
     r"""
     """
     term1 = 1./r*b_theta**2/(k**2*r**2+m**2)
@@ -32,8 +42,8 @@ def jardin_g_8_7(r, k, m, b_z, b_theta, b_theta_prime, p_prime, q, q_prime):
     return term1 + term2 - term3 - der_term1 - der_term2 - der_term3
 
 
-def newcomb_g_17(r, k, m, b_z, b_theta, b_theta_prime, b_z_prime, p_prime,
-                 q, q_prime):
+def newcomb_g_17(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
+                 q_prime):
     r"""
     """
     term1 = 1./r*(k*r*b_z - m*b_theta)**2/(k**2*r**2 + m**2)
@@ -47,7 +57,8 @@ def newcomb_g_17(r, k, m, b_z, b_theta, b_theta_prime, b_z_prime, p_prime,
     return term1 + term2 - term3 - der_term1 - der_term2
 
 
-def goedbloed_g_0(r, k, m, b_z, b_theta, b_theta_prime, p_prime, q, q_prime):
+def goedbloed_g_0(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
+                  q_prime):
     r"""
     """
     params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
@@ -58,7 +69,8 @@ def goedbloed_g_0(r, k, m, b_z, b_theta, b_theta_prime, p_prime, q, q_prime):
     return term1 + term2 - term3
 
 
-def newcomb_g_18(r, k, m, b_z, b_theta, b_theta_prime, p_prime, q, q_prime):
+def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
+                 q_prime):
     r"""
     Return g from Newcomb's paper.
 
