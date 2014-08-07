@@ -12,7 +12,7 @@ from __future__ import absolute_import
 from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              int, map, next, oct, open, pow, range, round,
                              str, super, zip)
-"""Python 3.x compatability"""
+"""Python 3.x compatibility"""
 
 
 import numpy as np
@@ -44,7 +44,7 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     params_f = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'p_prime': p_prime_spl(r),
                 'q': q_spl(r)}
-    params_g =
+    params_g = {'r': r, 'k': k, 'm': m, 'b_z'}
     if np.allclose(f_func(**params), 0., atol=10E-5):
         print('singularity at r=' + str(r))
     y_prime[0] = y[1]
