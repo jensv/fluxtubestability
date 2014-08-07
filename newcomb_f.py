@@ -139,4 +139,4 @@ def f_num_wo_r(r, k, m, b_z, b_theta):
     Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
     Equation (16)
     """
-    return (k*r*b_z(r) + m*b_theta(r))**2
+    return (k*r*b_z + m*b_theta)**2
