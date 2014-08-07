@@ -44,7 +44,7 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_z_prime': b_z_spl.derivative()(r),
                 'b_theta': b_theta_spl(r),
-                'b_theta_prime': b_theta_spl(r).derivative()(r)
+                'b_theta_prime': b_theta_spl(r).derivative()(r),
                 'p_prime': p_prime_spl(r), 'q': q_spl(r),
                 'q_prime': q_spl.derivtive()(r)}
 
@@ -83,7 +83,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_z_prime': b_z_spl.derivative()(r),
                 'b_theta': b_theta_spl(r),
-                'b_theta_prime': b_theta_spl.derivative()(r)
+                'b_theta_prime': b_theta_spl.derivative()(r),
                 'p_prime': p_prime_spl(r), 'q': q_spl(r),
                 'q_prime': q_spl.derivtive()(r)}
 
@@ -95,7 +95,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
     y_prime[0] = y[1]/f_func(**f_params)
 
-    y_prime[1] = y[0]*(g_func(**g_params)/f_func(**f_parms))
+    y_prime[1] = y[0]*(g_func(**g_params)/f_func(**f_params))
     return y_prime
 
 
@@ -142,7 +142,7 @@ def newcomb_int(divide_f, r_init, dr, r_max, params, atol=None,
     init_params = {'r': r_init, 'k': k, 'm': m, 'b_z': b_z_spl(r_init),
                    'b_z_prime': b_z_spl.derivative()(r_init),
                    'b_theta': b_theta_spl(r_init),
-                   'b_theta_prime': b_theta_spl.derivative()(r_init)
+                   'b_theta_prime': b_theta_spl.derivative()(r_init),
                    'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init),
                    'q_prime': q_spl.derivtive()(r_init)}
 
@@ -270,7 +270,7 @@ def xi_init(r, y, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
     return y
 
 
-def check_suydam(r, q_prime, q, p_prime):
+def check_suydam(r, b_z, q_prime, q, p_prime):
     r"""
     Parameters
     ----------
@@ -288,10 +288,10 @@ def check_suydam(r, q_prime, q, p_prime):
     -------
 
     """
-    if ((suydam(r, q_prime, q, p_prime) <= 0).sum() == 0):
+    if (suydam(r, b_z, q_prime, q, p_prime) <= 0).sum() == 0:
         return (False, np.array([]))
     else:
-        return (True, r[(suydam(r, q_prime, q, p_prime) <= 0)])
+        return (True, r[(suydam(r, b_z, q_prime, q, p_prime) <= 0)])
 
 
 def check_sing(r, k, b_z, m, b_theta, tol):
@@ -312,7 +312,7 @@ def check_sing(r, k, b_z, m, b_theta, tol):
     -------
 
     """
-    if ((np.abs(k*r*b_z + m*b_theta) <= tol).sum() == 0):
+    if (np.abs(k*r*b_z + m*b_theta) <= tol).sum() == 0:
         return (False, np.array([]))
     else:
         return (True, r[np.abs(k*r*b_z + m*b_theta) <= tol])
