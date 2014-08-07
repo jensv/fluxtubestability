@@ -27,7 +27,7 @@ def jardin_g_8_80(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
     return term1 + term2 + term3
 
 
-def jardin_g_8_7(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
+def jardin_g_8_79(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
                  q_prime):
     r"""
     """
