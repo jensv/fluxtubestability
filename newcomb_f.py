@@ -5,6 +5,14 @@ Created on Wed Aug 06 13:43:55 2014
 @author: Jens von der Linden
 """
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                             int, map, next, oct, open, pow, range, round,
+                             str, super, zip)
+"""Python 3.x compatability"""
+
 import eigenvalue_goedbloed as eg
 
 def newcomb_f_16(r, k, m, b_z, b_theta, q):
