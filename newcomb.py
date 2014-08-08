@@ -44,9 +44,9 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_z_prime': b_z_spl.derivative()(r),
                 'b_theta': b_theta_spl(r),
-                'b_theta_prime': b_theta_spl(r).derivative()(r),
+                'b_theta_prime': b_theta_spl.derivative()(r),
                 'p_prime': p_prime_spl(r), 'q': q_spl(r),
-                'q_prime': q_spl.derivtive()(r)}
+                'q_prime': q_spl.derivative()(r)}
 
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
