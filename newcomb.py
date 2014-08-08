@@ -254,7 +254,7 @@ def xi_init_glasser(r, k, m, b_z, b_theta):
     return xi
 
 
-def xi_init(r, y, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
+def xi_init(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
             p_prime, q, q_prime, f_func, g_func):
     r"""
     """
