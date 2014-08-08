@@ -31,7 +31,7 @@ def jardin_g_8_79(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
                  q_prime):
     r"""
     """
-    term1 = 1./r*b_theta**2/(k**2*r**2+m**2)
+    term1 = 1./r*b_theta**2/(k**2*r**2+m**2)*(k*q + m)**2
     term2 = b_theta**2/r*(m - k*q)
     term3 = 2.*b_theta/r*(r*b_theta_prime + b_theta)
     der_term1 = -2.*k**2*r*b_theta**2/(k**2*r**2 + m**2)**2*(k**2*q**2 -
