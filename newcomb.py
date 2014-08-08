@@ -100,7 +100,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
 
 def newcomb_int(divide_f, r_init, dr, r_max, params, atol=None,
-                rtol=None):
+                rtol=None, f_func, g_func):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two odes.
 
@@ -144,7 +144,8 @@ def newcomb_int(divide_f, r_init, dr, r_max, params, atol=None,
                    'b_theta': b_theta_spl(r_init),
                    'b_theta_prime': b_theta_spl.derivative()(r_init),
                    'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init),
-                   'q_prime': q_spl.derivtive()(r_init)}
+                   'q_prime': q_spl.derivtive()(r_init), 'f_func': f_func,
+                   'g_func': g_func}
 
     xi = []
     rs = []
@@ -158,7 +159,8 @@ def newcomb_int(divide_f, r_init, dr, r_max, params, atol=None,
     else:
         xi_int.set_integrator('lsoda', atol, rtol)
     xi_int.set_initial_value(xi_init(**init_params), t=r_init)
-    xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl)
+    xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
+                        g_func)
     while xi_int.successful() and xi_int.t < r_max-dr:
         xi_int.integrate(xi_int.t + dr)
         xi.append(xi_int.y)
