@@ -144,7 +144,7 @@ def newcomb_int(divide_f, r_init, dr, r_max, params, atol=None,
                    'b_theta': b_theta_spl(r_init),
                    'b_theta_prime': b_theta_spl.derivative()(r_init),
                    'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init),
-                   'q_prime': q_spl.derivtive()(r_init), 'f_func': f_func,
+                   'q_prime': q_spl.derivative()(r_init), 'f_func': f_func,
                    'g_func': g_func}
 
     xi = []
