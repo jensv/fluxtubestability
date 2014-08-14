@@ -118,7 +118,7 @@ def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
     -----
     Equation (17) is harder to implement due to derivative of Newcomb f.
     """
-    term1 = 2.*k**2*r**2/(f_denom(r, k, m)) * p_prime
+    term1 = 2.*k**2*r**2/(f_denom(r, k, m))*p_prime
     term2 = (1./r*f_num_wo_r(r, k, m, b_z, b_theta)*(k**2*r**2+m**2-1.) /
              f_denom(r, k, m))
     term3 = (2.*k**2*r/f_denom(r, k, m)**2 *
