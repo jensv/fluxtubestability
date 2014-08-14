@@ -709,7 +709,6 @@ def chi_integrate(params, r_init, dr, r_max, atol=None, rtol=None, max_step=None
     int_params['rho_spl'] = params['rho']
     int_params['pressure_spl'] = params['pressure']
 
-
     chi_int = inte.ode(chi_der)
     if atol is None or rtol is None:
         chi_int.set_integrator('lsoda', max_step=max_step)
