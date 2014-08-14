@@ -51,10 +51,10 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
 
-    if np.allclose(f_func(**f_params), 0., atol=10E-5):
+    if np.allclose(f_func(**f_params), 0., atol=1E-10):
         print('singularity at r=' + str(r))
-    y_prime[0] = y[1]
-    y_prime[1] = y[0]*g_func(**g_params) / f_func(**f_params)
+    y_prime[0] = y[1] / f_func(**f_params)
+    y_prime[1] = y[0]*g_func(**g_params)
     return y_prime
 
 
@@ -100,7 +100,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
 
 def newcomb_int(divide_f, r_init, dr, r_max, params, f_func, g_func, atol=None,
-                rtol=None):
+                rtol=None, reverse=False):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two odes.
 
@@ -161,10 +161,17 @@ def newcomb_int(divide_f, r_init, dr, r_max, params, f_func, g_func, atol=None,
     xi_int.set_initial_value(xi_init(**init_params), t=r_init)
     xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
                         g_func)
-    while xi_int.successful() and xi_int.t < r_max-dr:
-        xi_int.integrate(xi_int.t + dr)
-        xi.append(xi_int.y)
-        rs.append(xi_int.t)
+
+    if not reverse:
+        while xi_int.successful() and xi_int.t < r_max-dr:
+            xi_int.integrate(xi_int.t + dr)
+            xi.append(xi_int.y)
+            rs.append(xi_int.t)
+    else:
+        while xi_int.successful() and xi_int.t > r_max+dr:
+            xi_int.integrate(xi_int.t + dr)
+            xi.append(xi_int.y)
+            rs.append(xi_int.t)
 
     return (np.array(xi), np.array(rs))
 
@@ -267,8 +274,19 @@ def xi_init(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z,
                 'b_theta': b_theta, 'q': q}
 
-    y[0] = r**(m - 1)
-    y[1] = g_func(**g_params)*y[0]/f_func(**f_params)
+    if r >= 0.99:
+
+        y[0] = 0.
+        y[1] = 0.
+
+    else:
+
+        if m == 0:
+            y[0] = r
+        else:
+            y[0] = r**(abs(m) - 1)
+        y[1] = g_func(**g_params)*y[0]
+
     return y
 
 
