@@ -102,6 +102,45 @@ class Parabolic_nu2(Equil_solver):
         return b_over_r.derivative()
 
 
+class Newcomb_constant_pressure(Equil_solver):
+    """
+    Creates splines describing the constant pressure profile at the end of
+    Newcomb's 1960 paper.
+    """
+
+    def __init__(self, a=0.1, r_0i=0.5, k=1, b_z0=0.1, b_thetai=0.1):
+        self.r = np.linspace(a, r_0i, points)
+        self.k = k
+        self.b_z0 = b_z0
+        self.b_thetai = b_thetai
+        self.temp = temp
+        r = self.r
+        param_points = {'j_z': self.j_z(r), 'b_theta': self.b_theta(r),
+                        'b_z': self.b_z(r), 'p_prime': self.pprime(r),
+                        'pressure': self.pressure(r), 'q': self.q(r),
+                        'rho': self.rho(r)}
+        self.set_splines(param_points)
+
+    def get_j_z(self, r):
+        return np.zeros(r.size)
+
+    def b_theta(self, r):
+        return self.b_thetai*self.r_0i/r
+
+    def b_z(self, r):
+        np.ones(r.size)*self.b_z0
+
+    def pprime(self, r):
+        np.ones(r.size)
+
+    def rho(self, r):
+        np.ones(r.size)
+
+    def q(self, r):
+        q_to_return = r*self.k*self.b_z(r)/self.b_theta(r)
+        return q_to_return
+
+
 class Smoothed_core_skin(Equil_solver):
     pass
 
