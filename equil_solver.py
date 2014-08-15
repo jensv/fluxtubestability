@@ -108,12 +108,12 @@ class Newcomb_constant_pressure(Equil_solver):
     Newcomb's 1960 paper.
     """
 
-    def __init__(self, a=0.1, r_0i=0.5, k=1, b_z0=0.1, b_thetai=0.1):
+    def __init__(self, a=0.1, r_0i=0.5, k=1, b_z0=0.1, b_thetai=0.1,
+                 points=500):
         self.r = np.linspace(a, r_0i, points)
         self.k = k
         self.b_z0 = b_z0
         self.b_thetai = b_thetai
-        self.temp = temp
         r = self.r
         param_points = {'j_z': self.j_z(r), 'b_theta': self.b_theta(r),
                         'b_z': self.b_z(r), 'p_prime': self.pprime(r),
