@@ -12,7 +12,7 @@ import numpy as np
 
 
 def init_geometric_sing(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
-                        p_prime, q, q_prime, g_func):
+                        p_prime, q, q_prime, g_func, *args, **kwargs):
     r"""
     Return xi found from Frobenius method at a geometric singularity (i.e. r=0)
     """
@@ -39,7 +39,7 @@ def init_f_sing():
     pass
 
 
-def init_xi_zero(*args):
+def init_xi_zero(*args, **kwargs):
     r"""
     Return zero xi and xi_prime.
     """
@@ -50,7 +50,25 @@ def init_xi_zero(*args):
 
     return y
 
-def init_r_sing_glasser(r, k, m, b_z, b_theta, *args):
+
+def init_xi_zero_prime(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
+                       p_prime, q, q_prime, g_func, prime, *args, **kwargs):
+    r"""
+    Return zero xi and xi_prime.
+    """
+    y = np.zeros(2)
+
+    g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_z_prime': b_z_prime,
+                'b_theta': b_theta, 'b_theta_prime': b_theta_prime,
+                'p_prime': p_prime, 'q': q, 'q_prime': q_prime}
+
+    y[0] = 0.
+    y[1] = prime * g_func(**g_params)
+
+    return y
+
+
+def init_r_sing_glasser(r, k, m, b_z, b_theta, *args, **kwargs):
     r"""
     Returns initial condition for r close to zero.
 
