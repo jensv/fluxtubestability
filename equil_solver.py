@@ -18,7 +18,7 @@ import sympy as sp
 import scipy.interpolate as interp
 
 
-class Equil_solver(object):
+class EquilSolver(object):
 
     def ___init__(self, a, points):
         self.r = np.linspace(0, a, points)
@@ -42,7 +42,7 @@ class Equil_solver(object):
         return self.splines
 
 
-class Parabolic_nu2(Equil_solver):
+class ParabolicNu2(EquilSolver):
 
     def __init__(self, a=1, points=500, q0=1.0, k=1, b_z0=1, temp=1.0):
         self.r = np.linspace(0, a, points)
@@ -102,7 +102,7 @@ class Parabolic_nu2(Equil_solver):
         return b_over_r.derivative()
 
 
-class Newcomb_constant_pressure(Equil_solver):
+class NewcombConstantPressure(EquilSolver):
     """
     Creates splines describing the constant pressure profile at the end of
     Newcomb's 1960 paper.
