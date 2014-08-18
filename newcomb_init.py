@@ -49,3 +49,46 @@ def init_xi_zero(*args):
     y[1] = 0.
 
     return y
+
+def init_r_sing_glasser(r, k, m, b_z, b_theta, *args):
+    r"""
+    Returns initial condition for r close to zero.
+
+    Parameters
+    ----------
+    r : float
+        radial position
+
+    k : float
+        axial periodicity number
+
+    m : float
+        azimuthal periodicity number
+
+    b_z : scipy spline
+        axial magnetic field
+
+    b_theta : scipy spline
+        azimuthal magnetic field
+
+    Returns
+    -------
+    xi : ndarray
+         newcomb's xi
+
+    Notes
+    -----
+    Implements initial condition Alan used in his code.
+
+    .. math ::
+        u(0) &= r^{m - 1} \\
+        u(1) &= u(0) \frac{(k B_{z} r + m B_{\theta})^{2}}{m^{2}} (m-1)
+
+    Reference
+    ---------
+    Alan Glasser's newcomb.f code.
+    """
+    xi = np.zeros(2)
+    xi[0] = r**(m - 1)
+    xi[1] = xi[0]*((k*b_z(r)*r + m*b_theta(r))/m)**2*(m - 1)
+    return xi
