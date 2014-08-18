@@ -99,8 +99,8 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     return y_prime
 
 
-def newcomb_int(divide_f, r_init, dr, r_max, params, f_func, g_func, atol=None,
-                rtol=None, reverse=False):
+def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
+                atol=None, rtol=None, reverse=False, divide_f=False):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two odes.
 
@@ -158,7 +158,7 @@ def newcomb_int(divide_f, r_init, dr, r_max, params, f_func, g_func, atol=None,
         xi_int.set_integrator('lsoda')
     else:
         xi_int.set_integrator('lsoda', atol, rtol)
-    xi_int.set_initial_value(xi_init(**init_params), t=r_init)
+    xi_int.set_initial_value(init_func(**init_params), t=r_init)
     xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
                         g_func)
 
