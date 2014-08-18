@@ -111,11 +111,13 @@ class NewcombConstantPressure(EquilSolver):
     def __init__(self, a=0.1, r_0i=0.5, k=1, b_z0=0.1, b_thetai=0.1,
                  points=500):
         self.r = np.linspace(a, r_0i, points)
+        self.a = a
+        self.r_0i = r_0i
         self.k = k
         self.b_z0 = b_z0
         self.b_thetai = b_thetai
         r = self.r
-        param_points = {'j_z': self.j_z(r), 'b_theta': self.b_theta(r),
+        param_points = {'j_z': self.get_j_z(r), 'b_theta': self.b_theta(r),
                         'b_z': self.b_z(r), 'p_prime': self.pprime(r),
                         'pressure': self.pressure(r), 'q': self.q(r),
                         'rho': self.rho(r)}
@@ -128,13 +130,16 @@ class NewcombConstantPressure(EquilSolver):
         return self.b_thetai*self.r_0i/r
 
     def b_z(self, r):
-        np.ones(r.size)*self.b_z0
+        return np.ones(r.size)*self.b_z0
 
     def pprime(self, r):
-        np.ones(r.size)
+        return np.zeros(r.size)
+
+    def pressure(self, r):
+        return np.ones(r.size)
 
     def rho(self, r):
-        np.ones(r.size)
+        return np.ones(r.size)
 
     def q(self, r):
         q_to_return = r*self.k*self.b_z(r)/self.b_theta(r)
