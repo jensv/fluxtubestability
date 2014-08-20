@@ -51,8 +51,8 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
 
-    if np.allclose(f_func(**f_params), 0., atol=1E-10):
-        print('singularity at r=' + str(r))
+    #if np.allclose(f_func(**f_params), 0., atol=1E-10):
+    #    print('singularity at r=' + str(r))
     y_prime[0] = y[1] / f_func(**f_params)
     y_prime[1] = y[0]*g_func(**g_params)
     return y_prime
@@ -100,7 +100,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
 
 def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
-                atol=None, rtol=None, reverse=False, divide_f=False):
+                atol=None, rtol=None, reverse=False, divide_f=False, prime=0.):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two odes.
 
@@ -145,7 +145,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
                    'b_theta_prime': b_theta_spl.derivative()(r_init),
                    'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init),
                    'q_prime': q_spl.derivative()(r_init), 'f_func': f_func,
-                   'g_func': g_func}
+                   'g_func': g_func, 'prime': prime}
 
     xi = []
     rs = []
@@ -162,8 +162,11 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
     xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
                         g_func)
 
+    xi.append(init_func(**init_params))
+    rs.append(r_init)
+
     if not reverse:
-        while xi_int.successful() and xi_int.t < r_max-dr:
+        while xi_int.successful() and xi_int.t < r_max:
             xi_int.integrate(xi_int.t + dr)
             xi.append(xi_int.y)
             rs.append(xi_int.t)
