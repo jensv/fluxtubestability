@@ -17,6 +17,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import numpy as np
 import scipy.integrate as inte
+import scipy.optimize as opt
 
 
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
@@ -178,6 +179,41 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
 
     return (np.array(xi), np.array(rs))
 
+
+def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl):
+    """
+    Return list of singular points.
+    """
+    params = (k, m, b_z_spl, b_theta_spl)
+    r = np.linspace(a, b, points)
+    zero_positions = []
+
+    sign = np.sign(f_relevant_part(r))
+    for i in range(points-1):
+        if sign[i] + sign[i+1] == 0:
+            zero_pos = opt.brentq(f_relevant_part, r[i], r[i+1], args=params)
+            zero = apply(f_relevant_part, (r[i])+params)
+            if numpy.isnan(zero) or abs(zero) > 1e-3:
+                continue
+            else:
+                zero_positions.append(zero_pos)
+    return zero_positions
+
+
+def f_relevant_part(r, k, m, b_z_spl, b_theta_spl):
+    """
+    Return relevant part of f for singularity detection.
+    """
+    b_theta = b_theta_spl(r)
+    b_z = b_z_spl(r)
+    return f_relevant_part_func(r, k, m, b_z, b_theta)
+
+
+def f_relevant_part_func(r, k, m, b_z, b_theta):
+    """
+    Return relevant part of f for singularity detection.
+    """
+    return k*r*b_z + m*b_theta
 
 def suydam(r, b_z, q_prime, q, p_prime):
     r"""
