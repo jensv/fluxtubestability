@@ -146,9 +146,9 @@ class NewcombConstantPressure(EquilSolver):
         return q_to_return
 
 
-class Smoothed_core_skin(Equil_solver):
+class Smoothed_core_skin(EquilSolver):
     pass
 
 
-class Sharp_core_skin(Equil_solver):
+class Sharp_core_skin(EquilSolver):
     pass
