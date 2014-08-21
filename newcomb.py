@@ -188,12 +188,12 @@ def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl):
     r = np.linspace(a, b, points)
     zero_positions = []
 
-    sign = np.sign(f_relevant_part(r))
+    sign = np.sign(f_relevant_part(r, k, m, b_z_spl, b_theta_spl))
     for i in range(points-1):
-        if sign[i] + sign[i+1] == 0:
+        if np.allclose(sign[i] + sign[i+1], 0.):
             zero_pos = opt.brentq(f_relevant_part, r[i], r[i+1], args=params)
-            zero = apply(f_relevant_part, (r[i])+params)
-            if numpy.isnan(zero) or abs(zero) > 1e-3:
+            zero = f_relevant_part(r[i], k, m, b_z_spl, b_theta_spl)
+            if np.isnan(zero) or abs(zero) > 1e-2:
                 continue
             else:
                 zero_positions.append(zero_pos)
@@ -214,6 +214,7 @@ def f_relevant_part_func(r, k, m, b_z, b_theta):
     Return relevant part of f for singularity detection.
     """
     return k*r*b_z + m*b_theta
+
 
 def suydam(r, b_z, q_prime, q, p_prime):
     r"""
@@ -254,7 +255,6 @@ def suydam(r, b_z, q_prime, q, p_prime):
     Jardin (2010) Computational Mehtods in Plasma Physics. eq (8.84)
     """
     return r/8*b_z*(q_prime/q)**2+p_prime
-
 
 
 def check_suydam(r, b_z, q_prime, q, p_prime):
