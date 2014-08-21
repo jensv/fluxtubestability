@@ -39,8 +39,8 @@ def nu_1_2(alpha, beta):
     r"""
     Return exponents of Frobenius solution.
     """
-    nu_1 = 0.5 + 0.5*np.sqrt(1. + 4.*beta/alpha)
-    nu_2 = 0.5 - 0.5*np.sqrt(1. + 4.*beta/alpha)
+    nu_1 = 0.5 + np.sqrt(0.25 + beta/alpha)
+    nu_2 = 0.5 - np.sqrt(0.25 + beta/alpha)
     return nu_1, nu_2
 
 
@@ -48,7 +48,7 @@ def suydam_stable(alpha, beta):
     r"""
     Return Ture or False for suydam_stability.
     """
-    return alpha() + 4.*beta() > 0.
+    return alpha + 4.*beta > 0.
 
 
 def small_solution(r, r_sing, nu_1, nu_2):
