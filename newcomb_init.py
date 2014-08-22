@@ -39,20 +39,8 @@ def init_f_sing():
     pass
 
 
-def init_xi_zero(*args, **kwargs):
-    r"""
-    Return zero xi and xi_prime.
-    """
-    y = np.zeros(2)
-
-    y[0] = 0.
-    y[1] = 0.
-
-    return y
-
-
-def init_xi_zero_prime(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
-                       p_prime, q, q_prime, g_func, prime, *args, **kwargs):
+def init_xi_given(xi, r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
+                  p_prime, q, q_prime, g_func, prime, *args, **kwargs):
     r"""
     Return zero xi and xi_prime.
     """
@@ -62,8 +50,8 @@ def init_xi_zero_prime(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
                 'b_theta': b_theta, 'b_theta_prime': b_theta_prime,
                 'p_prime': p_prime, 'q': q, 'q_prime': q_prime}
 
-    y[0] = 0.
-    y[1] = prime * g_func(**g_params)
+    y[0] = xi[0]
+    y[1] = xi[1] * g_func(**g_params)
 
     return y
 
