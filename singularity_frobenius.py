@@ -55,7 +55,8 @@ def small_solution(r, r_sing, nu_1, nu_2):
     r"""
     Returns xi and xi_der of the small solution close to a singularity.
     """
+    x = np.abs(r - r_sing)
     if nu_1 > nu_2:
-        return ((r-r_sing)**nu_2, nu_2*(r-r_sing)**(nu_2 - 1.))
+        return (x**nu_2, nu_2*x**(nu_2 - 1.))
     else:
-        return ((r-r_sing)**nu_1, nu_1*(r-r_sing)**(nu_1 - 1.))
+        return (x**nu_1, nu_1*x**(nu_1 - 1.))
