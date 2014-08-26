@@ -101,7 +101,8 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
 
 def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
-                atol=None, rtol=None, reverse=False, divide_f=False, prime=0.):
+                atol=None, rtol=None, reverse=False, divide_f=False, prime=0.,
+                xi_init=(None, None)):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two odes.
 
@@ -146,7 +147,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
                    'b_theta_prime': b_theta_spl.derivative()(r_init),
                    'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init),
                    'q_prime': q_spl.derivative()(r_init), 'f_func': f_func,
-                   'g_func': g_func, 'prime': prime}
+                   'g_func': g_func, 'prime': prime, 'xi': xi_init}
 
     xi = []
     rs = []
