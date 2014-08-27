@@ -20,6 +20,19 @@ import scipy.integrate as inte
 import scipy.optimize as opt
 
 
+def internal_stability():
+    """
+    Checks for internal stability accroding to Newcomb's procedure.
+    """
+
+    sings = new.identify_singularties(params['a'], params['r_0i'], points,
+                                      params['k'], params['m'], params['b_z'],
+                                      params['b_theta'])
+    if len(sings) != 0:
+        suydam_result = check_suydam()
+        if len(suydam_result) == :
+            print ""
+
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
                 f_func, g_func):
     r"""
@@ -200,7 +213,6 @@ def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl):
                 zero_positions.append(zero_pos)
     return zero_positions
 
-
 def f_relevant_part(r, k, m, b_z_spl, b_theta_spl):
     """
     Return relevant part of f for singularity detection.
@@ -255,10 +267,10 @@ def suydam(r, b_z, q_prime, q, p_prime):
     eq (5).
     Jardin (2010) Computational Mehtods in Plasma Physics. eq (8.84)
     """
-    return r/8*b_z*(q_prime/q)**2+p_prime
+    return r/8.*b_z*(q_prime/q)**2+p_prime
 
 
-def check_suydam(r, b_z, q_prime, q, p_prime):
+def check_suydam(r, b_z_spl, q_spl, p_prime_spl):
     r"""
     Parameters
     ----------
@@ -276,37 +288,13 @@ def check_suydam(r, b_z, q_prime, q, p_prime):
     -------
 
     """
-    if (suydam(r, b_z, q_prime, q, p_prime) <= 0).sum() == 0:
-        return (False, np.array([]))
-    else:
-        return (True, r[(suydam(r, b_z, q_prime, q, p_prime) <= 0)])
+    b_z = b_z_spl(r)
+    q = q_spl(r)
+    q_prime = q_spl.derivative()(r)
+    p_prime = p_prime_spl(r)
+    zeros_mask = (suydam(r, b_z, q_prime, q, p_prime) <= 0)
+    return r[zeros_mask]
 
 
-def check_sing(r, k, b_z, m, b_theta, tol):
-    r"""
-    Parameters
-    ----------
-
-    Returns
-    -------
-
-    Notes
-    -----
-
-    Reference
-    ---------
-
-    Example
-    -------
-
-    """
-    if (np.abs(k*r*b_z + m*b_theta) <= tol).sum() == 0:
-        return (False, np.array([]))
-    else:
-        return (True, r[np.abs(k*r*b_z + m*b_theta) <= tol])
 
 
-def crossing_condition(xi):
-    """
-    """
-    return xi[len(xi)-2]*xi[len(xi)-1] < 0
