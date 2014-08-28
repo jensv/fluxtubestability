@@ -32,17 +32,10 @@ def init_geometric_sing(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
     return y
 
 
-def init_f_sing():
-    r"""
-    Return xi found from Frobenius method at an f=0 singularity.
-    """
-    pass
-
-
 def init_xi_given(xi, r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
-                  p_prime, q, q_prime, g_func, prime, *args, **kwargs):
+                  p_prime, q, q_prime, g_func, *args, **kwargs):
     r"""
-    Return zero xi and xi_prime.
+    Return y intizlized with given xi and xi_prime.
     """
     y = np.zeros(2)
 
