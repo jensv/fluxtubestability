@@ -331,7 +331,3 @@ def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl):
               'p_prime_spl': p_prime_spl}
     unstable_mask = frob.sings_suydam_stable(**params)
     return r[unstable_mask]
-
-
-
-
