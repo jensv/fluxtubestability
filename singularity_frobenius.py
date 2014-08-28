@@ -19,7 +19,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 import numpy as np
 
 
-def alpha_func(r, b_z, b_z_prime, b_theta, b_theta_prime):
+def alpha_func(r, b_z, b_z_prime, b_theta, b_theta_prime, **kwargs):
     r"""
     Return alpha for Frobenius solution.
     """
@@ -32,7 +32,7 @@ def beta_func(b_z, b_theta, p_prime, **kwargs):
     r"""
     Return beta for Frobenius solution.
     """
-    return 2*b_theta/(b_theta + b_z)**2 * p_prime
+    return 2.*b_theta**2/(b_theta + b_z)**2 * p_prime
 
 
 def nu_1_2(alpha, beta, **kwargs):
@@ -110,6 +110,6 @@ def small_solution(r, r_sing, nu_1, nu_2):
     """
     x = np.abs(r - r_sing)
     if nu_1 > nu_2:
-        return (x**nu_2, nu_2*x**(nu_2 - 1.))
+        return (x**-nu_2, -nu_2*x**(-nu_2 - 1.))
     else:
-        return (x**nu_1, nu_1*x**(nu_1 - 1.))
+        return (x**-nu_1, -nu_1*x**(-nu_1 - 1.))
