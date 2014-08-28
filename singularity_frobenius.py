@@ -28,14 +28,14 @@ def alpha_func(r, b_z, b_z_prime, b_theta, b_theta_prime):
     return r*b_theta**2*b_z**2/(b_theta**2 + b_z**2)*(mu_prime / mu)**2
 
 
-def beta_func(b_z, b_theta, p_prime):
+def beta_func(b_z, b_theta, p_prime, **kwargs):
     r"""
     Return beta for Frobenius solution.
     """
     return 2*b_theta/(b_theta + b_z)**2 * p_prime
 
 
-def nu_1_2(alpha, beta):
+def nu_1_2(alpha, beta, **kwargs):
     r"""
     Return exponents of Frobenius solution.
     """
@@ -44,9 +44,62 @@ def nu_1_2(alpha, beta):
     return nu_1, nu_2
 
 
+def sings_alpha_beta(r, b_z_spl, b_theta_spl, p_prime_spl):
+    r"""
+    """
+    b_z = b_z_spl(r)
+    b_z_prime = b_z_spl.derivative()(r)
+    b_theta = b_theta_spl(r)
+    b_theta_prime = b_theta_spl.derivative()(r)
+    p_prime = p_prime_spl(r)
+    params = {'r': r, 'b_z': b_z, 'b_z_prime': b_z_prime, 'b_theta': b_theta,
+              'b_theta_prime': b_theta_prime, 'p_prime': p_prime}
+    alpha = alpha_func(**params)
+    beta = beta_func(**params)
+    return alpha, beta
+
+
+def sings_suydam_stable(r, b_z_spl, b_theta_spl, p_prime_spl):
+    r"""
+    """
+    alpha, beta = sings_alpha_beta(r, b_z_spl, b_theta_spl, p_prime_spl)
+    return suydam_stable(alpha, beta)
+
+
+def sing_small_solution(r_sing, offset, b_z_spl, b_theta_spl, p_prime_spl):
+    r"""
+    """
+    alpha, beta = sings_alpha_beta(r_sing, b_z_spl, b_theta_spl, p_prime_spl)
+    nu_1, nu_2 = nu_1_2(alpha, beta)
+    return small_solution(r_sing + offset, r_sing, nu_1, nu_2)
+
+
 def suydam_stable(alpha, beta):
     r"""
-    Return Ture or False for suydam_stability.
+    Returns suydam condition.
+
+    Parameters
+    ----------
+    alpha : ndarray
+        radial test points
+
+    beta : scipy spline
+        axial magnetic field
+
+    Returns
+    -------
+    suydam : ndarray
+
+
+    Notes
+    -----
+    Returned expression can be checked for elements <=0.
+
+    Reference
+    ---------
+    Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
+    eq (5).
+    Jardin (2010) Computational Mehtods in Plasma Physics. eq (8.84)
     """
     return alpha + 4.*beta > 0.
 
