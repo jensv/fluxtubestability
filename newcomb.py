@@ -18,20 +18,92 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 import numpy as np
 import scipy.integrate as inte
 import scipy.optimize as opt
+import newcomb_f as f
+import newcomb_g as g
+import newcomb_init as init
+import singularity_frobenius as frob
 
 
-def internal_stability():
+def internal_stability(dr, offset, sing_search_points, params):
     """
     Checks for internal stability accroding to Newcomb's procedure.
     """
+    sing_params = {'a': params['r_0'], 'b': params['a'],
+                   'points': sing_search_points, 'k': params['k'],
+                   'm': params['m'], 'b_z_spl': params['b_z'],
+                   'b_theta_spl': params['b_theta_spl']}
 
-    sings = new.identify_singularties(params['a'], params['r_0i'], points,
-                                      params['k'], params['m'], params['b_z'],
-                                      params['b_theta'])
-    if len(sings) != 0:
-        suydam_result = check_suydam()
-        if len(suydam_result) == :
-            print ""
+    sings = identify_singularties(**sing_params)
+    sings_set = set(sings)
+    suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
+                                 params['p_prime'])
+
+    int_params = {}
+    int_params['f_func'] = f.newcomb_f_16
+    int_params['g_func'] = g.newcomb_g_18
+    int_params['params'] = params
+    int_params['check_crossing'] = True
+
+    frob_params = {'offset': offset, 'b_z_spl': params['b_z'],
+                   'b_theta_spl': params['b_theta'],
+                   'p_prime_spl': params['p_prime']}
+
+    stable = True
+    eigenfunctions = []
+
+    if len(suydam_result) == 0:
+        print("Profile is Suydam unstable at r = "+str(suydam_result))
+    else:
+        integration_points = np.insert(sings, (0, sings.size),
+                                       (params['r0'], params['a']))
+        intervals = [[integration_points[i],
+                      integration_points[i+1]] for i in range(sings.size-1)]
+
+        if intervals[0][1] in sings_set:
+            int_params['r_max'] = intervals[0][1] - offset
+        else:
+            int_params['r_max'] = intervals[0][1]
+
+        if intervals[0][0] == 0.:
+            int_params['r_init'] = 0. + offset
+            int_params['init_func'] = init.init_geometric_sing
+            crossing, eigenfunction, rs = newcomb_int(**int_params)
+            eigenfunctions.append([eigenfunction, rs])
+            stable = False if crossing else stable
+
+        elif intervals[0][0] in sings_set:
+            int_params['r_init'] = intervals[0][0] + offset
+            int_params['init_func'] = init.init_xi_given
+            frob_params['r_sing'] = intervals[0][0]
+            int_params['xi'] = frob.sing_small_solution(**frob_params)
+            crossing, eigenfunction, rs = newcomb_int(**int_params)
+            eigenfunctions.append([eigenfunction, rs])
+            stable = False if crossing else stable
+
+        else:
+            int_params['r_init'] = intervals[0][0]
+            int_params['init_func'] = init.init_xi_given
+            int_params['xi'] = (0.0, 1.0)
+            crossing, eigenfunction, rs = newcomb_int(**int_params)
+            int_params.pop('xi')
+            eigenfunctions.append([eigenfunction, rs])
+            stable = False if crossing else stable
+
+        for interval in intervals[1:]:
+            int_params['r_init'] = interval[0] + offset
+            int_params['init_func'] = init.init_xi_given
+            frob_params['r_sing'] = intervals[0][0]
+            int_params['xi'] = frob.sing_small_solution(**frob_params)
+            if interval[1] in sings_set:
+                int_params['r_max'] = interval[1] - offset
+            else:
+                int_params['r_max'] = interval[1]
+            crossing, eigenfunction, rs = newcomb_int(**int_params)
+            eigenfunctions.append([eigenfunction, rs])
+            stable = False if crossing else stable
+
+    return stable, eigenfunctions
+
 
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
                 f_func, g_func):
@@ -114,8 +186,8 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
 
 def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
-                atol=None, rtol=None, reverse=False, divide_f=False, prime=0.,
-                xi_init=(None, None)):
+                atol=None, rtol=None, reverse=False, divide_f=False,
+                xi_init=(None, None), check_crossing=False):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two odes.
 
@@ -160,7 +232,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
                    'b_theta_prime': b_theta_spl.derivative()(r_init),
                    'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init),
                    'q_prime': q_spl.derivative()(r_init), 'f_func': f_func,
-                   'g_func': g_func, 'prime': prime, 'xi': xi_init}
+                   'g_func': g_func, 'xi': xi_init}
 
     xi = []
     rs = []
@@ -185,13 +257,20 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
             xi_int.integrate(xi_int.t + dr)
             xi.append(xi_int.y)
             rs.append(xi_int.t)
+            if check_crossing:
+                if xi[0][-1]*xi[0][-2] < 0:
+                    return (False, np.array(xi), np.array(rs))
+
     else:
         while xi_int.successful() and xi_int.t > r_max+dr:
             xi_int.integrate(xi_int.t + dr)
             xi.append(xi_int.y)
             rs.append(xi_int.t)
+            if check_crossing:
+                if xi[0][-1]*xi[0][-2] < 0:
+                    return (False, np.array(xi), np.array(rs))
 
-    return (np.array(xi), np.array(rs))
+    return (True, np.array(xi), np.array(rs))
 
 
 def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl):
@@ -213,6 +292,7 @@ def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl):
                 zero_positions.append(zero_pos)
     return zero_positions
 
+
 def f_relevant_part(r, k, m, b_z_spl, b_theta_spl):
     """
     Return relevant part of f for singularity detection.
@@ -229,48 +309,7 @@ def f_relevant_part_func(r, k, m, b_z, b_theta):
     return k*r*b_z + m*b_theta
 
 
-def suydam(r, b_z, q_prime, q, p_prime):
-    r"""
-    Returns suydam condition.
-
-    Parameters
-    ----------
-    r : ndarray
-        radial test points
-
-    b_z : scipy spline
-        axial magnetic field
-
-    qprime : scipy spline
-        derivative of safety factor
-
-    q : scipy spline
-        safety factor
-
-    pprime : scipy spline
-        derivative of pressure
-
-    Returns
-    -------
-    suydam : ndarray
-
-
-    Notes
-    -----
-    Returned expression can be checked for elements <=0.
-
-    .. math:: \frac{r}{8}\frac{B_{z}}{\mu_{0}}\frac{q'}{q}^2
-
-    Reference
-    ---------
-    Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
-    eq (5).
-    Jardin (2010) Computational Mehtods in Plasma Physics. eq (8.84)
-    """
-    return r/8.*b_z*(q_prime/q)**2+p_prime
-
-
-def check_suydam(r, b_z_spl, q_spl, p_prime_spl):
+def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl):
     r"""
     Parameters
     ----------
@@ -288,12 +327,10 @@ def check_suydam(r, b_z_spl, q_spl, p_prime_spl):
     -------
 
     """
-    b_z = b_z_spl(r)
-    q = q_spl(r)
-    q_prime = q_spl.derivative()(r)
-    p_prime = p_prime_spl(r)
-    zeros_mask = (suydam(r, b_z, q_prime, q, p_prime) <= 0)
-    return r[zeros_mask]
+    params = {'r': r, 'b_z_spl': b_z_spl, 'b_theta_spl': b_theta_spl,
+              'p_prime_spl': p_prime_spl}
+    unstable_mask = frob.sings_suydam_stable(**params)
+    return r[unstable_mask]
 
 
 
