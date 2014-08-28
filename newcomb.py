@@ -31,7 +31,7 @@ def internal_stability(dr, offset, sing_search_points, params):
     sing_params = {'a': params['r_0'], 'b': params['a'],
                    'points': sing_search_points, 'k': params['k'],
                    'm': params['m'], 'b_z_spl': params['b_z'],
-                   'b_theta_spl': params['b_theta_spl']}
+                   'b_theta_spl': params['b_theta']}
 
     sings = identify_singularties(**sing_params)
     sings_set = set(sings)
@@ -42,6 +42,7 @@ def internal_stability(dr, offset, sing_search_points, params):
     int_params['f_func'] = f.newcomb_f_16
     int_params['g_func'] = g.newcomb_g_18
     int_params['params'] = params
+    int_params['dr'] = params['dr']
     int_params['check_crossing'] = True
 
     frob_params = {'offset': offset, 'b_z_spl': params['b_z'],
@@ -55,9 +56,11 @@ def internal_stability(dr, offset, sing_search_points, params):
         print("Profile is Suydam unstable at r = "+str(suydam_result))
     else:
         integration_points = np.insert(sings, (0, sings.size),
-                                       (params['r0'], params['a']))
+                                       (params['r_0'], params['a']))
+
         intervals = [[integration_points[i],
-                      integration_points[i+1]] for i in range(sings.size-1)]
+                      integration_points[i+1]]
+                      for i in range(integration_points.size-1)]
 
         if intervals[0][1] in sings_set:
             int_params['r_max'] = intervals[0][1] - offset
@@ -75,7 +78,7 @@ def internal_stability(dr, offset, sing_search_points, params):
             int_params['r_init'] = intervals[0][0] + offset
             int_params['init_func'] = init.init_xi_given
             frob_params['r_sing'] = intervals[0][0]
-            int_params['xi'] = frob.sing_small_solution(**frob_params)
+            int_params['xi_init'] = frob.sing_small_solution(**frob_params)
             crossing, eigenfunction, rs = newcomb_int(**int_params)
             eigenfunctions.append([eigenfunction, rs])
             stable = False if crossing else stable
@@ -83,17 +86,16 @@ def internal_stability(dr, offset, sing_search_points, params):
         else:
             int_params['r_init'] = intervals[0][0]
             int_params['init_func'] = init.init_xi_given
-            int_params['xi'] = (0.0, 1.0)
+            int_params['xi_init'] = (0.0, 1.0)
             crossing, eigenfunction, rs = newcomb_int(**int_params)
-            int_params.pop('xi')
             eigenfunctions.append([eigenfunction, rs])
             stable = False if crossing else stable
 
         for interval in intervals[1:]:
             int_params['r_init'] = interval[0] + offset
             int_params['init_func'] = init.init_xi_given
-            frob_params['r_sing'] = intervals[0][0]
-            int_params['xi'] = frob.sing_small_solution(**frob_params)
+            frob_params['r_sing'] = interval[0]
+            int_params['xi_init'] = frob.sing_small_solution(**frob_params)
             if interval[1] in sings_set:
                 int_params['r_max'] = interval[1] - offset
             else:
@@ -214,7 +216,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
     The seperation of the Euler-lagrange equation is based on Alan Glasser's
     cyl code.
     Newcomb's condition states that at each singularity f=0 the integration
-    should start from 0.
+    should start from 0.params = {'k': k, 'm': m, 'r_0': 0.5, 'a': 0.1, 'b_zi': 0.1, 'b_thetai': 0.1, 'c': 1.}
 
     Reference
     ---------
@@ -270,7 +272,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
                 if xi[0][-1]*xi[0][-2] < 0:
                     return (False, np.array(xi), np.array(rs))
 
-    return (True, np.array(xi), np.array(rs))
+    return True, np.array(xi), np.array(rs)
 
 
 def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl):
@@ -290,7 +292,7 @@ def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl):
                 continue
             else:
                 zero_positions.append(zero_pos)
-    return zero_positions
+    return np.array(zero_positions)
 
 
 def f_relevant_part(r, k, m, b_z_spl, b_theta_spl):
