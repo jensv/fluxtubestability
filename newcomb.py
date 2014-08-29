@@ -261,7 +261,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
             rs.append(xi_int.t)
             if check_crossing:
                 if xi[0][-1]*xi[0][-2] < 0:
-                    return (False, np.array(xi), np.array(rs))
+                    return (True, np.array(xi), np.array(rs))
 
     else:
         while xi_int.successful() and xi_int.t > r_max+dr:
@@ -270,9 +270,9 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
             rs.append(xi_int.t)
             if check_crossing:
                 if xi[0][-1]*xi[0][-2] < 0:
-                    return (False, np.array(xi), np.array(rs))
+                    return (True, np.array(xi), np.array(rs))
 
-    return True, np.array(xi), np.array(rs)
+    return False, np.array(xi), np.array(rs)
 
 
 def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl):
