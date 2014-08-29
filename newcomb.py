@@ -52,8 +52,9 @@ def internal_stability(dr, offset, sing_search_points, params):
     stable = True
     eigenfunctions = []
 
-    if len(suydam_result) == 0:
+    if len(suydam_result) != 0:
         print("Profile is Suydam unstable at r = "+str(suydam_result))
+        stable = False
     else:
         integration_points = np.insert(sings, (0, sings.size),
                                        (params['r_0'], params['a']))
