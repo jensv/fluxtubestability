@@ -44,9 +44,11 @@ class EquilSolver(object):
 
 class ParabolicNu2(EquilSolver):
 
-    def __init__(self, a=1, points=500, q0=1.0, k=1, b_z0=1, temp=1.0):
+    def __init__(self, a=1, points=500, q0=1.0, k=1, b_z0=1, temp=1.0, qa=None):
         self.r = np.linspace(0, a, points)
         self.q0 = q0
+        if qa != None:
+            q0 = qa/3.
         self.k = k
         self.b_z0 = b_z0
         self.temp = temp
