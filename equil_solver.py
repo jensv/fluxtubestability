@@ -5,17 +5,19 @@ Created on Fri May 23 10:19:28 2014
 @author: Jens von der Linden
 """
 
-#Python 3.x compatability
+
 from __future__ import print_function, unicode_literals, division
 from __future__ import absolute_import
 from future import standard_library, utils
 from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              int, map, next, oct, open, pow, range, round,
                              str, super, zip)
+# Python 3.x compatability
 
 import numpy as np
 import sympy as sp
 import scipy.interpolate as interp
+import scipy.integrate as inte
 
 
 class EquilSolver(object):
@@ -40,6 +42,14 @@ class EquilSolver(object):
 
     def get_splines(self):
         return self.splines
+
+    def q(self, r):
+        if r[0] == 0.:
+            q_to_return = np.ones(r.size)*self.q0
+            q_to_return[1:] = r[1:]*self.k*self.b_z(r)/self.b_theta(r)
+        else:
+            q_to_return = r*self.k*self.b_z(r)/self.b_theta(r)
+        return q_to_return
 
 
 class ParabolicNu2(EquilSolver):
@@ -93,11 +103,6 @@ class ParabolicNu2(EquilSolver):
         return np.ones(r.size)
         #return self.pressure(r)/self.temp
 
-    def q(self, r):
-        q_to_return = r*self.k*self.b_z(r)/self.b_theta(r)
-        q_to_return[0] = self.q0
-        return q_to_return
-
     def d_b_theta_over_r(self, r, b_theta):
         b_over_r = interp.InterpolatedUnivariateSpline(r, b_theta.derivative()(r)
                                                        /r, k=3)
@@ -143,14 +148,125 @@ class NewcombConstantPressure(EquilSolver):
     def rho(self, r):
         return np.ones(r.size)
 
-    def q(self, r):
-        q_to_return = r*self.k*self.b_z(r)/self.b_theta(r)
-        return q_to_return
+
+class SmoothedCoreSkin(EquilSolver):
+    r"""
+    Creates splines describing a smooth skin and core current profile.
+    """
+
+    def __init__(self, points_core=20, points_transition=50, points_skin=20,
+                 r_core=0.7, r_transition=0.1, r_skin=0.1, k=1., b_z0=0.1,
+                 epsilon=None, beta=None):
+
+        self.points_core = points_core
+        self.points_transition = points_transition
+        self.points_skin = points_skin
+        self.r_core = r_core
+        self.r_transition = r_transition
+        self.r_skin = r_skin
+
+        mask = np.ones(points_transition + 2, dtype=bool)
+        mask[[0, -1]] = False
+        r1 = np.linspace(0., r_core, points_core)
+        r2 = np.linspace(r_core, r_core + r_transition, points_transition + 2)
+        r2 = r2[mask]
+        r3 = np.linspace(r_core + r_transition, r_core + r_transition + r_skin,
+                         points_skin)
+        r4 = np.linspace(r_core + r_transition + r_skin, r_core +
+                         2*r_transition + r_skin, points_transition + 2)
+        r4 = r4[mask]
+        self.r = np.concatenate((r1, r2, r3, r4))
+
+        self.k = k
+        self.b_z0 = b_z0
+
+    def smooth(self, x1, x2, g1, g2, x):
+        """
+        Smoothing method by Alan Glasser.
+        """
+        delta_x = (x2 - x1) / 2.
+        x_bar = (x2 + x1) / 2.
+        delta_g = (g2 - g1) / 2.
+        g_bar = (g1 + g2) / 2.
+        z = (x - x_bar) / delta_x
+        return g_bar + self.f(z)*delta_g
+
+    def smooth_f(self, z):
+        r"""
+        Smoothing polynominal by Alan Glasser.
+        """
+        return z/8.*(3.*z**4 - 10.*z**2 + 15.)
+
+    def get_j_z(self, r):
+        r"""
+        For now always returns complete j_z.
+        """
+        total_points = (self.points_core + 2*self.points_transition +
+                        self.points_skin)
+
+        points1 = self.points_core
+        points2 = self.points_core + self.points_transition
+        points3 = self.points_core + self.points_transition + self.points_skin
+        points4 = (self.points_core + 2*self.points_transition +
+                   self.points_skin)
+
+        boundary1 = self.r_core
+        boundary2 = self.r_core + self.r_transition
+        boundary3 = self.r_core + self.r_transition + self.r_skin
+        boundary4 = self.r_core + 2*self.r_transition + self.r_skin
+
+        j_z = np.zeros(total_points)
+        j_z[:points1] = self.j_core
+        j_z[points1:points2] = self.smooth(boundary1, boundary2, self.j_core,
+                                           self.j_skin,
+                                           self.r[points1:points2])
+        j_z[points2:points3] = self.j_skin
+        j_z[points3:points4] = self.smooth(boundary3, boundary4, self.j_skin,
+                                           0., self.r[points3:points4])
+        return j_z
+
+    def b_theta(self, r):
+        r"""
+        """
+        b_theta_r_integrator = inte.ode(self.b_theta_r_prime)
+        b_theta_r_integrator.set_integrator('lsoda')
+        b_theta_r_integrator.set_initial_value(0., t=0.)
+        for position in r[1:]:
+            if b_theta_r_integrator.successful():
+                b_theta_r_integrator.integrate(t=position)
+            else:
+                break
+        return b_theta
+
+    def b_theta_r_prime(r, y):
+        r"""
+        """
+        return self.splines['j_z'](r)*r
+
+    def b_z(self, r):
+        r"""
+        """
+        return np.ones(r.size)*self.b_z0
+
+    def pprime(self, r):
+        r"""
+        """
+        return self.splines['b_theta']*self.splines['j_z']*
+
+    def pressure(self, r):
+        r"""
+        """
+        pressure_integrator = inte.ode(self.pprime)
+
+    def rho(self, r):
+        r"""
+        """
+        return np.ones(r.size)
 
 
-class Smoothed_core_skin(EquilSolver):
+class HardCoreZPinch(EquilSolver):
     pass
 
 
-class Sharp_core_skin(EquilSolver):
+class SharpCoreSkin(EquilSolver):
     pass
