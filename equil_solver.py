@@ -16,34 +16,39 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import numpy as np
 import sympy as sp
+from collections import OrderedDict
 import scipy.interpolate as interp
 import scipy.integrate as inte
 
 
 class EquilSolver(object):
-
-    def ___init__(self, a, points):
-        self.r = np.linspace(0, a, points)
+    r"""
+    General Equilibrium Solver parent implements spline generation and safety
+    factor calculation.
+    """
 
     def set_splines(self, param_points):
+        r"""
+        Returns Splines requested with a dictionary of spline names and point
+        generating functions.
+        """
         splines = {}
         r = self.r
-        d_b_theta_r_request = False
         for key, value in param_points.items():
-            if key == 'd_b_theta_over_r':
-                d_b_theta_r_request = True
-            else:
-                splines[key] = interp.InterpolatedUnivariateSpline(r, value,
-                                                                   k=3)
-        if d_b_theta_r_request:
-            splines['d_b_theta_over_r'] = self.d_b_theta_over_r(r,
-                                                           splines['b_theta'])
+            splines[key] = interp.InterpolatedUnivariateSpline(r, value,
+                                                               k=3)
         self.splines = splines
 
     def get_splines(self):
+        r"""
+        Returns splines of instance.
+        """
         return self.splines
 
     def q(self, r):
+        r"""
+        Returns safety factor evaluated at points.
+        """
         if r[0] == 0.:
             q_to_return = np.ones(r.size)*self.q0
             q_to_return[1:] = r[1:]*self.k*self.b_z(r)/self.b_theta(r)
@@ -51,10 +56,24 @@ class EquilSolver(object):
             q_to_return = r*self.k*self.b_z(r)/self.b_theta(r)
         return q_to_return
 
+    def rho(self, r):
+        r"""
+        Return density. Set to one evrywhere. Density plays no role for
+        Newcomb. However, the general eigenvalue problem has stability issues.
+        """
+        return np.ones(r.size)
+
 
 class ParabolicNu2(EquilSolver):
+    r"""
+    Creates splines for parabolic current profile pinch.
+    """
 
-    def __init__(self, a=1, points=500, q0=1.0, k=1, b_z0=1, temp=1.0, qa=None):
+    def __init__(self, a=1, points=500, q0=1.0, k=1, b_z0=1, temp=1.0,
+                 qa=None):
+        r"""
+        Initalize parameters defining parabolic pinch and create splines.
+        """
         self.r = np.linspace(0, a, points)
         self.q0 = q0
         if qa != None:
@@ -65,48 +84,54 @@ class ParabolicNu2(EquilSolver):
         r = self.r
         self.j0 = self.get_j0()
         param_points = {'j_z': self.j_z(r), 'b_theta': self.b_theta(r),
-                        'b_z': self.b_z(r), 'p_prime': self.pprime(r),
+                        'b_z': self.b_z(r), 'p_prime': self.p_prime(r),
                         'pressure': self.pressure(r), 'q': self.q(r),
-                        'rho': self.rho(r),
-                        'd_b_theta_over_r': None}
+                        'rho': self.rho(r)}
         self.set_splines(param_points)
 
     def get_j0(self):
+        r"""
+        Return j0 for a b_z and q0 paramters of pinch.
+        """
         self.j0 = 1
         return self.k*2*self.b_z(0)/self.q0
 
     def j_z(self, r):
+        r"""
+        Return parabolic axial current profile.
+        """
         return self.j0*(1 - r**2)**2
 
     def b_theta(self, r):
+        r"""
+        Return azimuthhal magnetic field for a parabolic current profile pinch.
+        """
         j0 = self.j0
         return j0*r/2 - j0*r**3/2 + j0*r**5/6
 
     def b_z(self, r):
+        r"""
+        Return constant axial magnetic field.
+        """
         b_z0 = self.b_z0
-        if isinstance(r, float) or isinstance(r, int):
-            return np.ones(1) * b_z0
-        else:
-            return np.ones(r.size) * b_z0
+        r = np.asarray(r)
+        return np.ones(r.size) * b_z0
 
-    def pprime(self, r):
+    def p_prime(self, r):
+        r"""
+        Returns pressure_prime profile for a arabolic current profile pinch.
+        """
         j0 = self.j0
         return (-j0**2*r/2 + 3*j0**2*r**3/2 - 5*j0**2*r**5/3 + 5*j0**2*r**7/6
                 - j0**2*r**9/6)
 
     def pressure(self, r):
+        r"""
+        Returns pressure profile for a arabolic current profile pinch.
+        """
         j0 = self.j0
         return (47*j0**2/720 - j0**2*r**2/4 + 3*j0**2*r**4/8 - 5*j0**2*r**6/18
                 + 5*j0**2*r**8/48 - j0**2*r**10/60)
-
-    def rho(self, r):
-        return np.ones(r.size)
-        #return self.pressure(r)/self.temp
-
-    def d_b_theta_over_r(self, r, b_theta):
-        b_over_r = interp.InterpolatedUnivariateSpline(r, b_theta.derivative()(r)
-                                                       /r, k=3)
-        return b_over_r.derivative()
 
 
 class NewcombConstantPressure(EquilSolver):
@@ -117,6 +142,9 @@ class NewcombConstantPressure(EquilSolver):
 
     def __init__(self, a=0.1, r_0i=0.5, k=1, b_z0=0.1, b_thetai=0.1,
                  points=500):
+        r"""
+        Initialize parameters defining parabolic pinch and create splines.
+        """
         self.r = np.linspace(a, r_0i, points)
         self.a = a
         self.r_0i = r_0i
@@ -125,27 +153,42 @@ class NewcombConstantPressure(EquilSolver):
         self.b_thetai = b_thetai
         r = self.r
         param_points = {'j_z': self.get_j_z(r), 'b_theta': self.b_theta(r),
-                        'b_z': self.b_z(r), 'p_prime': self.pprime(r),
+                        'b_z': self.b_z(r), 'p_prime': self.p_prime(r),
                         'pressure': self.pressure(r), 'q': self.q(r),
                         'rho': self.rho(r)}
         self.set_splines(param_points)
 
     def get_j_z(self, r):
+        r"""
+        Return zero current.
+        """
+        r = np.asarray(r)
         return np.zeros(r.size)
 
     def b_theta(self, r):
+        r"""
+        Return b_theta current profile as given in Newcomb's paper.
+        """
         return self.b_thetai*self.r_0i/r
 
     def b_z(self, r):
+        r"""
+        Return constant b_z field.
+        """
         return np.ones(r.size)*self.b_z0
 
-    def pprime(self, r):
+    def p_prime(self, r):
+        r"""
+        Return pressure_prime profile.
+        """
+        r = np.asarray(r)
         return np.zeros(r.size)
 
     def pressure(self, r):
-        return np.ones(r.size)
-
-    def rho(self, r):
+        r"""
+        Return pressure.
+        """
+        r = np.asarray(r)
         return np.ones(r.size)
 
 
@@ -153,10 +196,13 @@ class SmoothedCoreSkin(EquilSolver):
     r"""
     Creates splines describing a smooth skin and core current profile.
     """
-
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
                  r_core=0.7, r_transition=0.1, r_skin=0.1, k=1., b_z0=0.1,
                  epsilon=None, beta=None):
+        r"""
+        Initialize parameters defining smooth skin and core profile
+        and create splines.
+        """
 
         self.points_core = points_core
         self.points_transition = points_transition
@@ -180,6 +226,16 @@ class SmoothedCoreSkin(EquilSolver):
         self.k = k
         self.b_z0 = b_z0
 
+        param_points = OrderedDict([('j_z', self.j_z(self.r)),
+                                    ('b_theta', self.b_theta(self.r)),
+                                    ('b_z', self.b_z(self.r)),
+                                    ('p_prime', self.pprime(self.r)),
+                                    ('pressure', self.pressure(self.r)),
+                                    ('q', self.q(self.r)),
+                                    ('rho', self.rho(self.r))])
+
+        self.set_splines(param_points)
+
     def smooth(self, x1, x2, g1, g2, x):
         """
         Smoothing method by Alan Glasser.
@@ -197,7 +253,7 @@ class SmoothedCoreSkin(EquilSolver):
         """
         return z/8.*(3.*z**4 - 10.*z**2 + 15.)
 
-    def get_j_z(self, r):
+    def j_z(self, r):
         r"""
         For now always returns complete j_z.
         """
@@ -218,7 +274,7 @@ class SmoothedCoreSkin(EquilSolver):
         j_z = np.zeros(total_points)
         j_z[:points1] = self.j_core
         j_z[points1:points2] = self.smooth(boundary1, boundary2, self.j_core,
-                                           self.j_skin,
+                                  r = np.asarray(r)         self.j_skin,
                                            self.r[points1:points2])
         j_z[points2:points3] = self.j_skin
         j_z[points3:points4] = self.smooth(boundary3, boundary4, self.j_skin,
@@ -227,19 +283,24 @@ class SmoothedCoreSkin(EquilSolver):
 
     def b_theta(self, r):
         r"""
+        Return b_theta at given r values.
         """
-        b_theta_r_integrator = inte.ode(self.b_theta_r_prime)
+        b_theta_r_integrator = inte.ode(self.__b_theta_r_prime__)
         b_theta_r_integrator.set_integrator('lsoda')
         b_theta_r_integrator.set_initial_value(0., t=0.)
+        b_theta_r_integrator.set_f_params(self)
+        b_theta_array = [0.]
         for position in r[1:]:
             if b_theta_r_integrator.successful():
                 b_theta_r_integrator.integrate(t=position)
+                b_theta_array.append(b_theta_r_integrator.y)
             else:
                 break
-        return b_theta
+        return np.array(b_theta_array)
 
-    def b_theta_r_prime(r, y):
+    def __b_theta_r_prime__(r, y, self):
         r"""
+        Return b_theta_r_prime at given r values. To be used for integration.
         """
         return self.splines['j_z'](r)*r
 
@@ -248,20 +309,48 @@ class SmoothedCoreSkin(EquilSolver):
         """
         return np.ones(r.size)*self.b_z0
 
-    def pprime(self, r):
+    def p_prime(self, r):
         r"""
+        Return pressure_prime at given r values. To be used for integration.
         """
-        return self.splines['b_theta']*self.splines['j_z']*
+        return -self.splines['b_theta'](r)*self.splines['j_z'](r)
+
+    def __p_prime_for_integrating__(r, y, self):
+        r"""
+        Return pressure_prime at given r values. To be used for integration.
+        """
+        return [self.splines['j_z'](r)*r, -y[0]/r*self.splines['j_z'](r)]
 
     def pressure(self, r):
         r"""
+        Return pressure_prime at given r values. To be used for integration.
         """
-        pressure_integrator = inte.ode(self.pprime)
+        r_reverse = r[::-1]
+        pressure_integrator = inte.ode(self.__p_prime_for_integrating__)
+        pressure_integrator.set_integrator('lsoda')
+        pressure_integrator.set_initial_value([0., 0.], r_reverse[0])
+        pressure_integrator.set_f_params(self)
+        pressure_array = [0.]
+        for position in r_reverse[1:]:
+            if pressure_integrator.successful():
+                pressure_integrator.integrate(t=position)
+                pressure_array.append(pressure_integrator.y[1])
+            else:
+                break
+        return np.array(pressure_array)
 
-    def rho(self, r):
+    def q(self, r):
         r"""
+        Returns safety factor evaluated at points.
         """
-        return np.ones(r.size)
+        if r[0] == 0.:
+            q_to_return = np.ones(r.size)*self.q0
+            q_to_return[1:] = (r[1:]*self.k*self.splines['b_z'](r)/
+                               self.splines['b_theta'](r))
+        else:
+            q_to_return = (r*self.k*self.splines['b_z'](r)/
+                           self.splines['b_theta'](r))
+        return q_to_return
 
 
 class HardCoreZPinch(EquilSolver):
