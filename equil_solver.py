@@ -198,7 +198,7 @@ class SmoothedCoreSkin(EquilSolver):
     """
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
                  core_radius=0.7, transition_width=0.1, skin_width=0.1, k=1.,
-                 j_core=0.1, epsilon=0.3, lambda_bar=0.5, q0=1.1):
+                 j_core=0.1, epsilon=0.3, lambda_bar=0.5):
         r"""
         Initialize parameters defining smooth skin and core profile
         and create splines.
@@ -214,7 +214,7 @@ class SmoothedCoreSkin(EquilSolver):
         mask = np.ones(points_transition + 2, dtype=bool)
         mask[[0, -1]] = False
         self.r1 = np.linspace(0., core_radius, points_core)
-        r2 = np.linspace(r_core, core_radius + transition_width,
+        r2 = np.linspace(core_radius, core_radius + transition_width,
                          points_transition + 2)
         self.r2 = r2[mask]
         self.r3 = np.linspace(core_radius + transition_width,
@@ -264,26 +264,29 @@ class SmoothedCoreSkin(EquilSolver):
         """
         a = self.core_radius + 2*self.tranistion_width + self.skin_width
         term1 = -7.*a**2
-        term2 = 7.*a*skin_width
-        term3 = 14.*a*transition_width
+        term2 = 7.*a*self.skin_width
+        term3 = 14.*a*self.transition_width
         term4 = 7.*a**2*self.epsilon
-        term5 = -14.*a*skin_width*self.epsilon
-        term6 = 7.*skin_width**2*self.epsilon
-        term7 = -21.*a*transition_width*self.epsilon
-        term8 = 21.*skin_width*transition_width*self.epsilon
-        term9 = 16.*transition_width**2*self.epsilon
-        denominator = (7.*(2*a - skin_width - .2*transition_width)*
-                       (skin_width + transition_width) * self.epsilon)
-        return j_core*(term1 + term2 + term3 + term4 + term5 + term6 + term7 +
-                       term8 + term9) / denominator
+        term5 = -14.*a*self.skin_width*self.epsilon
+        term6 = 7.*self.skin_width**2*self.epsilon
+        term7 = -21.*a*self.transition_width*self.epsilon
+        term8 = 21.*self.skin_width*self.transition_width*self.epsilon
+        term9 = 16.*self.transition_width**2*self.epsilon
+        denominator = (7.*(2*self.a - self.skin_width -
+                       .2*self.transition_width) *
+                       (self.skin_width + self.transition_width) *
+                       self.epsilon)
+        return self.j_core*(term1 + term2 + term3 + term4 + term5 + term6 +
+                            term7 + term8 + term9) / denominator
 
-    def get_b_z():
+    def get_b_z(self):
         r"""
         Returns b_z based on j_z, geometry and lambda_bar of pinch.
         """
         a = self.core_radius + 2*self.tranistion_width + self.skin_width
-        denominator = 2.*a**3*np.pi**2*self.epsilon*lambda_bar
-        return self.j_core*(a - skin_width - 2.*transition_width)/denominator
+        denominator = 2.*a**3*np.pi**2*self.epsilon*self.lambda_bar
+        return self.j_core*(a - self.skin_width -
+                            2.*self.transition_width)/denominator
 
     def j_z(self, r):
         r"""
@@ -307,7 +310,7 @@ class SmoothedCoreSkin(EquilSolver):
         j_z = np.zeros(total_points)
         j_z[:points1] = self.j_core
         j_z[points1:points2] = self.smooth(boundary1, boundary2, self.j_core,
-                                  r = np.asarray(r)         self.j_skin,
+                                           self.j_skin,
                                            self.r[points1:points2])
         j_z[points2:points3] = self.j_skin
         j_z[points3:points4] = self.smooth(boundary3, boundary4, self.j_skin,
@@ -339,6 +342,7 @@ class SmoothedCoreSkin(EquilSolver):
 
     def b_z(self, r):
         r"""
+        Returns constant axial magnetic field.
         """
         return np.ones(r.size)*self.b_z0
 
@@ -388,9 +392,95 @@ class SmoothedCoreSkin(EquilSolver):
 
 class HardCoreZPinch(EquilSolver):
     r"""
+    Create profiles for the Hard-Core Z-pinch as described in Freidberg Ideal
+    MHD.
     """
-    def
-    pass
+    def __init__(self, i_c=0.1, i_p=0.2, r_c=0.1, r_a=1.0):
+        self.i_c = i_c
+        self.i_p = i_p
+        self.r_c = r_c
+        self.r_a = r_a
+        self.current = i_c + i_p
+        self.k_p = 3./2.*(5./3.)**(5./2.)
+        self.k_i = (i_c + i_p)**2./(2.*np.pi*r_c)
+
+        param_points = OrderedDict([('j_z', self.j_z(self.r)),
+                                    ('b_theta', self.b_theta(self.r)),
+                                    ('b_z', self.b_z(self.r)),
+                                    ('p_prime', self.pprime(self.r)),
+                                    ('pressure', self.pressure(self.r)),
+                                    ('q', self.q(self.r)),
+                                    ('rho', self.rho(self.r))])
+
+        self.set_splines(param_points)
+
+    def b_z(self, r):
+        r"""
+        Returns axial field.
+        """
+        r = np.asarray(r)
+        return np.zeros(r.size)
+
+    def b_theta(self, r):
+        r"""
+        Returns azimuthal field.
+        """
+        r = np.asarray(r)
+        x = r**2 / self.r_c**2
+        b_theta = np.sqrt(self.k_i/x - 2.*self.k_p*(9.*x-5.)/(3*x*x**(3./2.)))
+        return b_theta
+
+    def pressure(self, r):
+        r"""
+        Returns pressure.
+        """
+        r = np.asarray(r)
+        x = r**2 / self.r_c**2
+        return self.k_p*(x - 1.)/x**(5./2.)
+
+    def p_prime(self, r):
+        r"""
+        Returns derivative of pressure.
+        """
+        r = np.asarray(r)
+        r_sym, r_c, k_p = sp.symbols('r r_c K_p')
+        x = r_sym**2 / self.r_c**2
+        pressure_sym = k_p*(x - 1)/x**(2.5)
+        p_prime_func = sp.lambdify((r_sym, r_c, k_p), sp.diff(pressure_sym, r))
+        return p_prime_func(r, self.r_c, self.k_p)
+
+    def j_z(self, r):
+        r"""
+        Returns axial current.
+        """
+        r = np.asarray(r)
+
+        r_sym, r_c, k_p, k_i = sp.symbols('r r_c K_p K_i')
+        x = r_sym**2 / self.r_c**2
+        b_theta = np.sqrt(self.k_i/x - 2*k_p*(9*x - 5)/(3*x*x**(1.5)))
+        j_z_sym = sp.diff(r_sym*b_theta, r)/r_sym
+        j_z_func = sp.lambdify((r_sym, r_c, k_p, k_i), j_z_sym)
+        return j_z_func(r, self.r_c, self.k_p, self.k_i)
+
+    def beta(self, r):
+        r"""
+        Returns Beta
+        """
+        r = np.asarray(r)
+        return 1. - self.i_c/(self.i_c + self.i_p)
+
+    def stability_criterion(self, r):
+        r"""
+        Returns stability criterion. If array is  greater than 0 any where the
+        profile is unstable.
+        """
+        r = np.asarray(r)
+        x_sym, r_c, current, k_p = sp.symbols('x r_c I K_p')
+        beta = 32./3.*np.pi**2*r_c**2/current**2*k_p
+        b_theta_norm = 1. - beta/4. * (9.*x_sym - 5.)/x_sym**(3./2.)
+        stab_sym = sp.diff(b_theta_norm**2/x_sym**(1./2.), x_sym)
+        stab_func = sp.lambdify((x_sym, r_c, k_p, current), stab_sym)
+        return stab_func(r**2/self.r_c**2, self.r_c, self.k_p, self.current)
 
 
 class SharpCoreSkin(EquilSolver):
