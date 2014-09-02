@@ -197,8 +197,8 @@ class SmoothedCoreSkin(EquilSolver):
     Creates splines describing a smooth skin and core current profile.
     """
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
-                 r_core=0.7, r_transition=0.1, r_skin=0.1, k=1., b_z0=0.1,
-                 epsilon=None, beta=None):
+                 r_core=0.7, r_transition=0.1, r_skin=0.1, k=1.,
+                 j_core=0.1, epsilon=0.3, lambda_bar=0.5, q0=):
         r"""
         Initialize parameters defining smooth skin and core profile
         and create splines.
@@ -213,18 +213,21 @@ class SmoothedCoreSkin(EquilSolver):
 
         mask = np.ones(points_transition + 2, dtype=bool)
         mask[[0, -1]] = False
-        r1 = np.linspace(0., r_core, points_core)
+        self.r1 = np.linspace(0., r_core, points_core)
         r2 = np.linspace(r_core, r_core + r_transition, points_transition + 2)
-        r2 = r2[mask]
-        r3 = np.linspace(r_core + r_transition, r_core + r_transition + r_skin,
+        self.r2 = r2[mask]
+        self.r3 = np.linspace(r_core + r_transition, r_core + r_transition + r_skin,
                          points_skin)
         r4 = np.linspace(r_core + r_transition + r_skin, r_core +
                          2*r_transition + r_skin, points_transition + 2)
-        r4 = r4[mask]
-        self.r = np.concatenate((r1, r2, r3, r4))
+        self.r4 = r4[mask]
+        self.r = np.concatenate((self.r1, self.r2, self.r3, self.r4))
 
         self.k = k
-        self.b_z0 = b_z0
+        self.j_core = j_core
+        self.epsilon = epsilon
+        self.lambda_bar = lambda_bar
+
 
         param_points = OrderedDict([('j_z', self.j_z(self.r)),
                                     ('b_theta', self.b_theta(self.r)),
@@ -252,6 +255,19 @@ class SmoothedCoreSkin(EquilSolver):
         Smoothing polynominal by Alan Glasser.
         """
         return z/8.*(3.*z**4 - 10.*z**2 + 15.)
+
+    def get_j_z_skin(self):
+        r"""
+        Returs j_z_skin based on j_z_core, geometry and epsilon of pinch.
+        """
+
+        return
+
+    def get_b_z():
+        r"""
+        Returns b_z based on j_z, geometry and lambda_bar of pinch.
+        """
+        return
 
     def j_z(self, r):
         r"""
@@ -354,6 +370,9 @@ class SmoothedCoreSkin(EquilSolver):
 
 
 class HardCoreZPinch(EquilSolver):
+    r"""
+    """
+    def
     pass
 
 
