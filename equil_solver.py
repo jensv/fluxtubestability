@@ -76,7 +76,7 @@ class ParabolicNu2(EquilSolver):
         """
         self.r = np.linspace(0, a, points)
         self.q0 = q0
-        if qa != None:
+        if qa is not None:
             q0 = qa/3.
         self.k = k
         self.b_z0 = b_z0
@@ -197,8 +197,8 @@ class SmoothedCoreSkin(EquilSolver):
     Creates splines describing a smooth skin and core current profile.
     """
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
-                 r_core=0.7, r_transition=0.1, r_skin=0.1, k=1.,
-                 j_core=0.1, epsilon=0.3, lambda_bar=0.5, q0=):
+                 core_radius=0.7, transition_width=0.1, skin_width=0.1, k=1.,
+                 j_core=0.1, epsilon=0.3, lambda_bar=0.5, q0=1.1):
         r"""
         Initialize parameters defining smooth skin and core profile
         and create splines.
@@ -207,19 +207,22 @@ class SmoothedCoreSkin(EquilSolver):
         self.points_core = points_core
         self.points_transition = points_transition
         self.points_skin = points_skin
-        self.r_core = r_core
-        self.r_transition = r_transition
-        self.r_skin = r_skin
+        self.core_radius = core_radius
+        self.transition_width = transition_width
+        self.skin_width = skin_width
 
         mask = np.ones(points_transition + 2, dtype=bool)
         mask[[0, -1]] = False
-        self.r1 = np.linspace(0., r_core, points_core)
-        r2 = np.linspace(r_core, r_core + r_transition, points_transition + 2)
+        self.r1 = np.linspace(0., core_radius, points_core)
+        r2 = np.linspace(r_core, core_radius + transition_width,
+                         points_transition + 2)
         self.r2 = r2[mask]
-        self.r3 = np.linspace(r_core + r_transition, r_core + r_transition + r_skin,
-                         points_skin)
-        r4 = np.linspace(r_core + r_transition + r_skin, r_core +
-                         2*r_transition + r_skin, points_transition + 2)
+        self.r3 = np.linspace(core_radius + transition_width,
+                              core_radius + transition_width + skin_width,
+                              points_skin)
+        r4 = np.linspace(core_radius + transition_width + skin_width,
+                         core_radius + 2*transition_width + skin_width,
+                         points_transition + 2)
         self.r4 = r4[mask]
         self.r = np.concatenate((self.r1, self.r2, self.r3, self.r4))
 
@@ -227,7 +230,6 @@ class SmoothedCoreSkin(EquilSolver):
         self.j_core = j_core
         self.epsilon = epsilon
         self.lambda_bar = lambda_bar
-
 
         param_points = OrderedDict([('j_z', self.j_z(self.r)),
                                     ('b_theta', self.b_theta(self.r)),
@@ -260,14 +262,28 @@ class SmoothedCoreSkin(EquilSolver):
         r"""
         Returs j_z_skin based on j_z_core, geometry and epsilon of pinch.
         """
-
-        return
+        a = self.core_radius + 2*self.tranistion_width + self.skin_width
+        term1 = -7.*a**2
+        term2 = 7.*a*skin_width
+        term3 = 14.*a*transition_width
+        term4 = 7.*a**2*self.epsilon
+        term5 = -14.*a*skin_width*self.epsilon
+        term6 = 7.*skin_width**2*self.epsilon
+        term7 = -21.*a*transition_width*self.epsilon
+        term8 = 21.*skin_width*transition_width*self.epsilon
+        term9 = 16.*transition_width**2*self.epsilon
+        denominator = (7.*(2*a - skin_width - .2*transition_width)*
+                       (skin_width + transition_width) * self.epsilon)
+        return j_core*(term1 + term2 + term3 + term4 + term5 + term6 + term7 +
+                       term8 + term9) / denominator
 
     def get_b_z():
         r"""
         Returns b_z based on j_z, geometry and lambda_bar of pinch.
         """
-        return
+        a = self.core_radius + 2*self.tranistion_width + self.skin_width
+        denominator = 2.*a**3*np.pi**2*self.epsilon*lambda_bar
+        return self.j_core*(a - skin_width - 2.*transition_width)/denominator
 
     def j_z(self, r):
         r"""
@@ -282,10 +298,11 @@ class SmoothedCoreSkin(EquilSolver):
         points4 = (self.points_core + 2*self.points_transition +
                    self.points_skin)
 
-        boundary1 = self.r_core
-        boundary2 = self.r_core + self.r_transition
-        boundary3 = self.r_core + self.r_transition + self.r_skin
-        boundary4 = self.r_core + 2*self.r_transition + self.r_skin
+        boundary1 = self.core_radius
+        boundary2 = self.core_radius + self.transition_width
+        boundary3 = self.core_radius + self.transition_width + self.skin_width
+        boundary4 = (self.core_radius + 2*self.transition_width +
+                     self.skin_width)
 
         j_z = np.zeros(total_points)
         j_z[:points1] = self.j_core
@@ -361,10 +378,10 @@ class SmoothedCoreSkin(EquilSolver):
         """
         if r[0] == 0.:
             q_to_return = np.ones(r.size)*self.q0
-            q_to_return[1:] = (r[1:]*self.k*self.splines['b_z'](r)/
+            q_to_return[1:] = (r[1:]*self.k*self.splines['b_z'](r) /
                                self.splines['b_theta'](r))
         else:
-            q_to_return = (r*self.k*self.splines['b_z'](r)/
+            q_to_return = (r*self.k*self.splines['b_z'](r) /
                            self.splines['b_theta'](r))
         return q_to_return
 
