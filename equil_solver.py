@@ -395,22 +395,26 @@ class HardCoreZPinch(EquilSolver):
     Create profiles for the Hard-Core Z-pinch as described in Freidberg Ideal
     MHD.
     """
-    def __init__(self, i_c=0.1, i_p=0.2, r_c=0.1, r_a=1.0):
+    def __init__(self, i_c=0.1, i_p=0.2, r_c=0.1, r_a=1.0, k=1.0, points=500):
+        self.k = k
         self.i_c = i_c
         self.i_p = i_p
         self.r_c = r_c
         self.r_a = r_a
         self.current = i_c + i_p
         self.k_p = 3./2.*(5./3.)**(5./2.)
-        self.k_i = (i_c + i_p)**2./(2.*np.pi*r_c)
+        self.k_i = ((i_c + i_p)/(2.*np.pi*r_c))**2
 
-        param_points = OrderedDict([('j_z', self.j_z(self.r)),
-                                    ('b_theta', self.b_theta(self.r)),
-                                    ('b_z', self.b_z(self.r)),
-                                    ('p_prime', self.pprime(self.r)),
-                                    ('pressure', self.pressure(self.r)),
-                                    ('q', self.q(self.r)),
-                                    ('rho', self.rho(self.r))])
+        self.r = np.linspace(r_c, r_a, points)
+
+        param_points = {'j_z': self.j_z(self.r),
+                        'b_theta': self.b_theta(self.r),
+                        'b_z': self.b_z(self.r),
+                        'p_prime': self.p_prime(self.r),
+                        'pressure': self.pressure(self.r),
+                        'q': self.q(self.r),
+                        'rho': self.rho(self.r),
+                        'stability': self.stability_criterion(self.r)}
 
         self.set_splines(param_points)
 
@@ -427,7 +431,12 @@ class HardCoreZPinch(EquilSolver):
         """
         r = np.asarray(r)
         x = r**2 / self.r_c**2
+        print(r)
+        print(self.k_p)
+        print(self.k_i)
+        print(x)
         b_theta = np.sqrt(self.k_i/x - 2.*self.k_p*(9.*x-5.)/(3*x*x**(3./2.)))
+        print(b_theta)
         return b_theta
 
     def pressure(self, r):
@@ -446,7 +455,8 @@ class HardCoreZPinch(EquilSolver):
         r_sym, r_c, k_p = sp.symbols('r r_c K_p')
         x = r_sym**2 / self.r_c**2
         pressure_sym = k_p*(x - 1)/x**(2.5)
-        p_prime_func = sp.lambdify((r_sym, r_c, k_p), sp.diff(pressure_sym, r))
+        p_prime_func = sp.lambdify((r_sym, r_c, k_p),
+                                   sp.diff(pressure_sym, r_sym), modules=np)
         return p_prime_func(r, self.r_c, self.k_p)
 
     def j_z(self, r):
@@ -456,10 +466,11 @@ class HardCoreZPinch(EquilSolver):
         r = np.asarray(r)
 
         r_sym, r_c, k_p, k_i = sp.symbols('r r_c K_p K_i')
-        x = r_sym**2 / self.r_c**2
-        b_theta = np.sqrt(self.k_i/x - 2*k_p*(9*x - 5)/(3*x*x**(1.5)))
-        j_z_sym = sp.diff(r_sym*b_theta, r)/r_sym
-        j_z_func = sp.lambdify((r_sym, r_c, k_p, k_i), j_z_sym)
+        x = r_sym**2 / r_c**2
+        b_theta = sp.sqrt(k_i/x - 2*k_p*(9*x - 5)/(3*x*x**(1.5)))
+        j_z_sym = sp.diff(r_sym*b_theta, r_sym)/r_sym
+        j_z_func = sp.lambdify((r_sym, r_c, k_p, k_i), j_z_sym,
+                               modules=np)
         return j_z_func(r, self.r_c, self.k_p, self.k_i)
 
     def beta(self, r):
@@ -467,7 +478,7 @@ class HardCoreZPinch(EquilSolver):
         Returns Beta
         """
         r = np.asarray(r)
-        return 1. - self.i_c/(self.i_c + self.i_p)
+        return 1. - (self.i_c/(self.i_c + self.i_p))**2
 
     def stability_criterion(self, r):
         r"""
@@ -476,10 +487,11 @@ class HardCoreZPinch(EquilSolver):
         """
         r = np.asarray(r)
         x_sym, r_c, current, k_p = sp.symbols('x r_c I K_p')
-        beta = 32./3.*np.pi**2*r_c**2/current**2*k_p
-        b_theta_norm = 1. - beta/4. * (9.*x_sym - 5.)/x_sym**(3./2.)
-        stab_sym = sp.diff(b_theta_norm**2/x_sym**(1./2.), x_sym)
-        stab_func = sp.lambdify((x_sym, r_c, k_p, current), stab_sym)
+        beta = 32./3.*sp.pi**2*r_c**2/current**2*k_p
+        b_theta_norm_sq = 1. - beta/4. * (9.*x_sym - 5.)/x_sym**(1.5)
+        stab_sym = sp.diff(b_theta_norm_sq/x_sym**(0.5), x_sym)
+        stab_func = sp.lambdify((x_sym, r_c, k_p, current), stab_sym,
+                                modules=np)
         return stab_func(r**2/self.r_c**2, self.r_c, self.k_p, self.current)
 
 
