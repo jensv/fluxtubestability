@@ -24,7 +24,8 @@ import newcomb_init as init
 import singularity_frobenius as frob
 
 
-def internal_stability(dr, offset, sing_search_points, params):
+def internal_stability(dr, offset, sing_search_points, params,
+                       init_value=(0.0, 1.0)):
     """
     Checks for internal stability accroding to Newcomb's procedure.
     """
@@ -53,15 +54,15 @@ def internal_stability(dr, offset, sing_search_points, params):
     eigenfunctions = []
 
     if len(suydam_result) != 0:
-        print("Profile is Suydam unstable at r = "+str(suydam_result))
         stable = False
+        print("Profile is Suydam unstable at r =", suydam_result)
     else:
         integration_points = np.insert(sings, (0, sings.size),
                                        (params['r_0'], params['a']))
 
         intervals = [[integration_points[i],
                       integration_points[i+1]]
-                      for i in range(integration_points.size-1)]
+                     for i in range(integration_points.size-1)]
 
         if intervals[0][1] in sings_set:
             int_params['r_max'] = intervals[0][1] - offset
@@ -87,7 +88,7 @@ def internal_stability(dr, offset, sing_search_points, params):
         else:
             int_params['r_init'] = intervals[0][0]
             int_params['init_func'] = init.init_xi_given
-            int_params['xi_init'] = (0.0, 1.0)
+            int_params['xi_init'] = init_value
             crossing, eigenfunction, rs = newcomb_int(**int_params)
             eigenfunctions.append([eigenfunction, rs])
             stable = False if crossing else stable
@@ -248,6 +249,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
         xi_int.set_integrator('lsoda')
     else:
         xi_int.set_integrator('lsoda', atol, rtol)
+
     xi_int.set_initial_value(init_func(**init_params), t=r_init)
     xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
                         g_func)
@@ -262,7 +264,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
             rs.append(xi_int.t)
             if check_crossing:
                 if xi[0][-1]*xi[0][-2] < 0:
-                    return (True, np.array(xi), np.array(rs))
+                    return True, np.array(xi), np.array(rs)
 
     else:
         while xi_int.successful() and xi_int.t > r_max+dr:
@@ -271,7 +273,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
             rs.append(xi_int.t)
             if check_crossing:
                 if xi[0][-1]*xi[0][-2] < 0:
-                    return (True, np.array(xi), np.array(rs))
+                    return True, np.array(xi), np.array(rs)
 
     return False, np.array(xi), np.array(rs)
 
