@@ -37,6 +37,9 @@ def newcomb_f_16(r, k, m, b_z, b_theta, q):
     b_theta : ndarray of floats
         azimuthal mangetic field
 
+    q: ndarray of floats
+        safety factor
+
     Returns
     -------
     f : ndarray of floats
@@ -61,6 +64,37 @@ def newcomb_f_16(r, k, m, b_z, b_theta, q):
 
 def goedbloed_f_9_106(r, k, m, b_z, b_theta, q):
     r"""
+    Return f from Newcomb's paper.
+
+    Parameters
+    ----------
+    r : ndarray of floats
+        radius
+
+    k : float
+        axial periodicity number
+
+    m : float
+        azimuthal periodicity number
+
+    b_z : ndarray of floats
+        axial magnetic field
+
+    b_theta : ndarray of floats
+        azimuthal mangetic field
+
+    q: ndarray of floats
+        safety factor
+
+    Returns
+    -------
+    f : ndarray of floats
+        f from Newcomb's paper
+
+    Reference
+    ---------
+    Goedbloed (2004) Principles of Magnetohydrodynamics
+    Equation (9.106)
     """
     params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
     f = eg.f(**params)
@@ -69,6 +103,37 @@ def goedbloed_f_9_106(r, k, m, b_z, b_theta, q):
 
 def jardin_f_8_78(r, k, m, b_z, b_theta, q):
     r"""
+    Return f from Newcomb's paper.
+
+    Parameters
+    ----------
+    r : ndarray of floats
+        radius
+
+    k : float
+        axial periodicity number
+
+    m : float
+        azimuthal periodicity number
+
+    b_z : ndarray of floats
+        axial magnetic field
+
+    b_theta : ndarray of floats
+        azimuthal mangetic field
+
+    q: ndarray of floats
+        safety factor
+
+    Returns
+    -------
+    f : ndarray of floats
+        f from Newcomb's paper
+
+    Reference
+    ---------
+    Jardin (2010) Computational Methods in Plasma Physics
+    Equation (8.78)
     """
     return r*b_theta**2*(m - k*q)**2/(k**2*r**2 + m**2)
 
