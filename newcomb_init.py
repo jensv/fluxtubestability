@@ -8,13 +8,58 @@ Collection of init functions to set initial xi and xi prime for newcomb
 integrations.
 """
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                             int, map, next, oct, open, pow, range, round,
+                             str, super, zip)
+"""Python 3.x compatibility"""
+
 import numpy as np
+import scipy.constants as consts
 
 
 def init_geometric_sing(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
-                        p_prime, q, q_prime, g_func, *args, **kwargs):
+                        p_prime, q, q_prime, f_func, *args, **kwargs):
     r"""
     Return xi found from Frobenius method at a geometric singularity (i.e. r=0)
+
+    Parameters
+    ----------
+    r : float
+        radius
+    k : float
+        axial periodicity number
+    m : float
+        azimuthal periodicity number
+    b_z : float
+        axial magnetic field
+    b_z_prime : float
+        derivative of axial magnetic field
+    b_theta : float
+        azimuthal magnetic field
+    b_theta_prime : float
+        derivative of azimuthal magnetic field
+    p_prime : float
+        derivative of pressure
+    q : float
+        safety factor
+    q_prime : float
+        derivative of safety factor
+    f_func : function
+        function used to return Newcomb's g
+
+    Returns
+    -------
+    y : ndarray of flaots (2)
+        intial values for linear set of ODEs representing Euler-Lagrange
+        equation. :math:`y(0)=\xi'` and :math:`y(1)=f\xi'`
+
+    Notes
+    -----
+    The expressions for xi and xi_prime are from power series expansion as
+    described in the Newcomb's paper, Goedbloed and Freidberg's MHD books.
     """
     y = np.zeros(2)
 
@@ -27,24 +72,61 @@ def init_geometric_sing(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
     else:
         y[0] = r**(abs(m) - 1)
 
-    y[1] = g_func(**g_params)*y[0]
+    y[1] = f_func(**f_params)*y[0]
 
     return y
 
 
 def init_xi_given(xi, r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
-                  p_prime, q, q_prime, g_func, *args, **kwargs):
+                  p_prime, q, q_prime, f_func, mu_0=consts.mu_0, *args,
+                  **kwargs):
     r"""
     Return y intizlized with given xi and xi_prime.
+
+    Parameters
+    ----------
+    r : float
+        radius
+    k : float
+        axial periodicity number
+    m : float
+        azimuthal periodicity number
+    b_z : float
+        axial magnetic field
+    b_z_prime : float
+        derivative of axial magnetic field
+    b_theta : float
+        azimuthal magnetic field
+    b_theta_prime : float
+        derivative of azimuthal magnetic field
+    p_prime : float
+        derivative of pressure
+    q : float
+        safety factor
+    q_prime : float
+        derivative of safety factor
+    f_func : function
+        function used to return Newcomb's f
+
+    Returns
+    -------
+    y : ndarray of flaots (2)
+        intial values for linear set of ODEs representing Euler-Lagrange
+        equation. :math:`y(0)=\xi'` and :math:`y(1)=f\xi'`
+
+    Notes
+    -----
+    The expressions for xi and xi_prime are from power series expansion as
+    described in the Newcomb's paper, Goedbloed and Freidberg's MHD books.
     """
     y = np.zeros(2)
 
     g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_z_prime': b_z_prime,
                 'b_theta': b_theta, 'b_theta_prime': b_theta_prime,
-                'p_prime': p_prime, 'q': q, 'q_prime': q_prime}
+                'p_prime': p_prime, 'q': q, 'q_prime': q_prime, 'mu_0': mu_0}
 
     y[0] = xi[0]
-    y[1] = xi[1] * g_func(**g_params)
+    y[1] = xi[1] * f_func(**f_params)
 
     return y
 
