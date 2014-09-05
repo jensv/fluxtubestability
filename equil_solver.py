@@ -19,6 +19,7 @@ import sympy as sp
 from collections import OrderedDict
 import scipy.interpolate as interp
 import scipy.integrate as inte
+import scipy.constants as consts
 
 
 class EquilSolver(object):
@@ -395,7 +396,8 @@ class HardCoreZPinch(EquilSolver):
     Create profiles for the Hard-Core Z-pinch as described in Freidberg Ideal
     MHD.
     """
-    def __init__(self, i_c=0.1, i_p=0.2, r_c=0.1, r_a=1.0, k=1.0, points=500):
+    def __init__(self, i_c=0.1, i_p=0.2, r_c=0.1, r_a=1.0, k=1.0, points=500,
+                 mu_0=consts.mu_0):
         self.k = k
         self.i_c = i_c
         self.i_p = i_p
@@ -403,7 +405,8 @@ class HardCoreZPinch(EquilSolver):
         self.r_a = r_a
         self.current = i_c + i_p
         self.k_p = 3./2.*(5./3.)**(5./2.)
-        self.k_i = ((i_c + i_p)/(2.*np.pi*r_c))**2
+        self.k_i = mu_0*((i_c + i_p)/(2.*np.pi*r_c))**2
+        self.mu_0 = mu_0
 
         self.r = np.linspace(r_c, r_a, points)
 
@@ -431,12 +434,8 @@ class HardCoreZPinch(EquilSolver):
         """
         r = np.asarray(r)
         x = r**2 / self.r_c**2
-        print(r)
-        print(self.k_p)
-        print(self.k_i)
-        print(x)
-        b_theta = np.sqrt(self.k_i/x - 2.*self.k_p*(9.*x-5.)/(3*x*x**(3./2.)))
-        print(b_theta)
+        b_theta = np.sqrt(self.k_i/x - 2.*self.mu_0*self.k_p*(9.*x-5.)/
+                          (3*x*x**(3./2.)))
         return b_theta
 
     def pressure(self, r):
@@ -487,7 +486,7 @@ class HardCoreZPinch(EquilSolver):
         """
         r = np.asarray(r)
         x_sym, r_c, current, k_p = sp.symbols('x r_c I K_p')
-        beta = 32./3.*sp.pi**2*r_c**2/current**2*k_p
+        beta = 32./3.*sp.pi**2*r_c**2/(self.mu_0*current**2)*k_p
         b_theta_norm_sq = 1. - beta/4. * (9.*x_sym - 5.)/x_sym**(1.5)
         stab_sym = sp.diff(b_theta_norm_sq/x_sym**(0.5), x_sym)
         stab_func = sp.lambdify((x_sym, r_c, k_p, current), stab_sym,
