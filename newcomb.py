@@ -94,9 +94,11 @@ def internal_stability(dr, offset, sing_search_points, params,
 
         int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18,
                       'params': params, 'dr': dr, 'check_crossing': True}
-        frob_params = {'offset': offset, 'b_z_spl': params['b_z'],
+        frob_params = {'offset': offset, 'k': params['k'], 'm': params['m'],
+                       'b_z_spl': params['b_z'],
                        'b_theta_spl': params['b_theta'],
-                       'p_prime_spl': params['p_prime']}
+                       'p_prime_spl': params['p_prime']
+                       'q_spl' : params['q'], 'f_func': f.newcomb_f_16}
 
         if intervals[0][1] in sings_set:
             # check if endpoint of first interval is singular
@@ -200,7 +202,6 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     ---------
     Newcomb (1960) Hydromagnetic Stability of a diffuse linear pinch.
     """
-    newcomb_der()
     y_prime = np.zeros(2)
 
     g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
@@ -308,12 +309,8 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
                                             'p_prime', 'q'])
 
     init_params = {'r': r_init, 'k': k, 'm': m, 'b_z': b_z_spl(r_init),
-                   'b_z_prime': b_z_spl.derivative()(r_init),
-                   'b_theta': b_theta_spl(r_init),
-                   'b_theta_prime': b_theta_spl.derivative()(r_init),
-                   'p_prime': p_prime_spl(r_init), 'q': q_spl(r_init),
-                   'q_prime': q_spl.derivative()(r_init), 'f_func': f_func,
-                   'xi': xi_init}
+                   'b_theta': b_theta_spl(r_init), 'q': q_spl(r_init),
+                   'f_func': f_func, 'xi': xi_init}
 
     xi = []
     rs = []
