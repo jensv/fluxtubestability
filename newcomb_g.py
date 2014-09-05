@@ -20,6 +20,40 @@ from newcomb_f import f_denom, f_num_wo_r
 def jardin_g_8_80(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
                   q_prime):
     r"""
+    Return g from Newcomb's paper.
+
+    Parameters
+    ----------
+    r : ndarray of floats
+        radius
+    k : float
+        axial periodicity number
+    m : float
+        azimuthal periodicity number
+    b_z : ndarray of floats
+        axial magnetic field
+    b_theta : ndarray of floats
+        azimuthal mangetic field
+    b_theta_prime: ndarray of floats
+        azimuthal magnetic field
+    p_prime : ndarray of floats
+        pressure prime
+    q : ndarray of floats
+        safety factor
+    q_prime : ndarray of floats
+        derivative of safety factor
+    mu_0 : float
+        magnetic permeability of free space
+
+    Returns
+    -------
+    g : ndarray of floats
+        g from Newcomb's paper
+
+    Reference
+    ---------
+    Jardin (2010) Computational Methods in Plasma Physics
+    Equation (8.80)
     """
     term1 = (2.*k**2*r**2)/(k**2*r**2+m**2)*p_prime
     term2 = b_theta**2/r*(m-k*q)**2*(k**2*r**2+m**2-1.)/(k**2*r**2+m**2)
@@ -30,6 +64,40 @@ def jardin_g_8_80(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
 def jardin_g_8_79(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
                  q_prime):
     r"""
+    Return g from Newcomb's paper.
+
+    Parameters
+    ----------
+    r : ndarray of floats
+        radius
+    k : float
+        axial periodicity number
+    m : float
+        azimuthal periodicity number
+    b_z : ndarray of floats
+        axial magnetic field
+    b_theta : ndarray of floats
+        azimuthal mangetic field
+    b_theta_prime: ndarray of floats
+        azimuthal magnetic field
+    p_prime : ndarray of floats
+        pressure prime
+    q : ndarray of floats
+        safety factor
+    q_prime : ndarray of floats
+        derivative of safety factor
+    mu_0 : float
+        magnetic permeability of free space
+
+    Returns
+    -------
+    g : ndarray of floats
+        g from Newcomb's paper
+
+    Reference
+    ---------
+    Jardin (2010) Computational Methods in Plasma Physics
+    Equation (8.79)
     """
     term1 = 1./r*b_theta**2/(k**2*r**2+m**2)*(k*q + m)**2
     term2 = b_theta**2/r*(m - k*q)
@@ -45,6 +113,40 @@ def jardin_g_8_79(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
 def newcomb_g_17(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
                  q_prime):
     r"""
+    Return g from Newcomb's paper.
+
+    Parameters
+    ----------
+    r : ndarray of floats
+        radius
+    k : float
+        axial periodicity number
+    m : float
+        azimuthal periodicity number
+    b_z : ndarray of floats
+        axial magnetic field
+    b_theta : ndarray of floats
+        azimuthal mangetic field
+    b_theta_prime: ndarray of floats
+        azimuthal magnetic field
+    p_prime : ndarray of floats
+        pressure prime
+    q : ndarray of floats
+        safety factor
+    q_prime : ndarray of floats
+        derivative of safety factor
+    mu_0 : float
+        magnetic permeability of free space
+
+    Returns
+    -------
+    g : ndarray of floats
+        g from Newcomb's paper
+
+    Reference
+    ---------
+    Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
+    Equation (17)
     """
     term1 = 1./r*(k*r*b_z - m*b_theta)**2/(k**2*r**2 + m**2)
     term2 = 1./r*(k*r*b_z - m*b_theta)**2
@@ -57,9 +159,43 @@ def newcomb_g_17(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
     return term1 + term2 - term3 - der_term1 - der_term2
 
 
-def goedbloed_g_0(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
-                  q_prime):
+def goedbloed_g_9_107(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime,
+                      q, q_prime):
     r"""
+    Return g from Newcomb's paper.
+
+    Parameters
+    ----------
+    r : ndarray of floats
+        radius
+    k : float
+        axial periodicity number
+    m : float
+        azimuthal periodicity number
+    b_z : ndarray of floats
+        axial magnetic field
+    b_theta : ndarray of floats
+        azimuthal mangetic field
+    b_theta_prime: ndarray of floats
+        azimuthal magnetic field
+    p_prime : ndarray of floats
+        pressure prime
+    q : ndarray of floats
+        safety factor
+    q_prime : ndarray of floats
+        derivative of safety factor
+    mu_0 : float
+        magnetic permeability of free space
+
+    Returns
+    -------
+    g : ndarray of floats
+        g from Newcomb's paper
+
+    Reference
+    ---------
+    Goedbloed (2004) Principles of Magnetohydrodynamics
+    Equation (9.107)
     """
     params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
     f = eg.f(**params)
@@ -70,7 +206,7 @@ def goedbloed_g_0(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
 
 
 def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
-                 q_prime):
+                 q_prime, mu_0):
     r"""
     Return g from Newcomb's paper.
 
@@ -78,21 +214,24 @@ def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
     ----------
     r : ndarray of floats
         radius
-
     k : float
         axial periodicity number
-
     m : float
         azimuthal periodicity number
-
     b_z : ndarray of floats
         axial magnetic field
-
     b_theta : ndarray of floats
         azimuthal mangetic field
-
+    b_theta_prime: ndarray of floats
+        azimuthal magnetic field
     p_prime : ndarray of floats
         pressure prime
+    q : ndarray of floats
+        safety factor
+    q_prime : ndarray of floats
+        derivative of safety factor
+    mu_0 : float
+        magnetic permeability of free space
 
     Returns
     -------
@@ -113,14 +252,10 @@ def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
     ---------
     Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
     Equation (18)
-
-    Notes
-    -----
-    Equation (17) is harder to implement due to derivative of Newcomb f.
     """
-    term1 = 2.*k**2*r**2/(f_denom(r, k, m))*p_prime
+    term1 = 2.*k**2*r**2/(f_denom(r, k, m))*p_prime*mu_0
     term2 = (1./r*f_num_wo_r(r, k, m, b_z, b_theta)*(k**2*r**2+m**2-1.) /
              f_denom(r, k, m))
     term3 = (2.*k**2*r/f_denom(r, k, m)**2 *
-             (k**2*r**2*b_z**2-m**2*b_theta**2))
+             (k**2*r**2*b_z**2 - m**2*b_theta**2))
     return term1 + term2 + term3
