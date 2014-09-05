@@ -97,8 +97,8 @@ def internal_stability(dr, offset, sing_search_points, params,
         frob_params = {'offset': offset, 'k': params['k'], 'm': params['m'],
                        'b_z_spl': params['b_z'],
                        'b_theta_spl': params['b_theta'],
-                       'p_prime_spl': params['p_prime']
-                       'q_spl' : params['q'], 'f_func': f.newcomb_f_16}
+                       'p_prime_spl': params['p_prime'],
+                       'q_spl': params['q'], 'f_func': f.newcomb_f_16}
 
         if intervals[0][1] in sings_set:
             # check if endpoint of first interval is singular
@@ -215,7 +215,7 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
 
-    #if np.allclose(f_func(**f_params), 0., atol=1E-10):
+    # if np.allclose(f_func(**f_params), 0., atol=1E-10):
     #    print('singularity at r=' + str(r))
     y_prime[0] = y[1] / f_func(**f_params)
     y_prime[1] = y[0]*g_func(**g_params)
