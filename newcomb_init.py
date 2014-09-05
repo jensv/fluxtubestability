@@ -17,11 +17,8 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatibility"""
 
 import numpy as np
-import scipy.constants as consts
 
-
-def init_geometric_sing(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
-                        p_prime, q, q_prime, f_func, *args, **kwargs):
+def init_geometric_sing(r, k, m, b_z, b_theta, q, f_func, *args, **kwargs):
     r"""
     Return xi found from Frobenius method at a geometric singularity (i.e. r=0)
 
@@ -63,23 +60,21 @@ def init_geometric_sing(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
     """
     y = np.zeros(2)
 
-    g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_z_prime': b_z_prime,
-                'b_theta': b_theta, 'b_theta_prime': b_theta_prime,
-                'p_prime': p_prime, 'q': q, 'q_prime': q_prime}
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta, 'q': q}
 
     if m == 0:
         y[0] = r
+        y[1] = 1
     else:
         y[0] = r**(abs(m) - 1)
+        y[1] = (abs(m) - 1)*r**(abs(m) - 2)
 
-    y[1] = f_func(**f_params)*y[0]
+    y[1] = f_func(**f_params)*y[1]
 
     return y
 
 
-def init_xi_given(xi, r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
-                  p_prime, q, q_prime, f_func, mu_0=consts.mu_0, *args,
-                  **kwargs):
+def init_xi_given(xi, r, k, m, b_z, b_theta, q, f_func, *args, **kwargs):
     r"""
     Return y intizlized with given xi and xi_prime.
 
@@ -121,9 +116,7 @@ def init_xi_given(xi, r, k, m, b_z, b_z_prime, b_theta, b_theta_prime,
     """
     y = np.zeros(2)
 
-    g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_z_prime': b_z_prime,
-                'b_theta': b_theta, 'b_theta_prime': b_theta_prime,
-                'p_prime': p_prime, 'q': q, 'q_prime': q_prime, 'mu_0': mu_0}
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta, 'q': q}
 
     y[0] = xi[0]
     y[1] = xi[1] * f_func(**f_params)
