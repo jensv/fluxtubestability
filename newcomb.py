@@ -26,7 +26,7 @@ import scipy.constants as consts
 
 
 def internal_stability(dr, offset, sing_search_points, params,
-                       init_value=(0.0, 1.0), mu_0=1.):
+                       init_value=(0.0, 1.0)):
     """
     Checks for internal stability accroding to Newcomb's procedure.
 
@@ -81,7 +81,7 @@ def internal_stability(dr, offset, sing_search_points, params,
     sings = identify_singularties(**sing_params)
     sings_set = set(sings)
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
-                                 params['p_prime'])
+                                 params['p_prime'], params['mu_0'])
     if len(suydam_result) != 0:
         stable = False
         print("Profile is Suydam unstable at r =", suydam_result)
@@ -94,12 +94,13 @@ def internal_stability(dr, offset, sing_search_points, params,
                      for i in range(integration_points.size-1)]
         int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18,
                       'params': params, 'dr': dr, 'check_crossing': True,
-                      'mu_0': mu_0}
+                      'mu_0': params['mu_0']}
         frob_params = {'offset': offset, 'k': params['k'], 'm': params['m'],
                        'b_z_spl': params['b_z'],
                        'b_theta_spl': params['b_theta'],
                        'p_prime_spl': params['p_prime'],
-                       'q_spl': params['q'], 'f_func': f.newcomb_f_16}
+                       'q_spl': params['q'], 'f_func': f.newcomb_f_16,
+                       'mu_0': params['mu_0']}
 
         if intervals[0][1] in sings_set:
             # check if endpoint of first interval is singular
@@ -163,7 +164,7 @@ def internal_stability(dr, offset, sing_search_points, params,
 
 
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
-                f_func, g_func, mu_0=consts.mu_0):
+                f_func, g_func, mu_0):
     r"""
     Returns derivatives of Newcomb's Euler-Lagrange equation expressed as a set
     of 2 first order ODEs.
@@ -261,9 +262,9 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     return y_prime
 
 
-def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
+def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0
                 atol=None, rtol=None, reverse=False, divide_f=False,
-                xi_init=(None, None), check_crossing=True, mu_0=consts.mu_0):
+                xi_init=(None, None), check_crossing=True):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two ODES.
 
@@ -318,7 +319,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
 
     init_params = {'r': r_init, 'k': k, 'm': m, 'b_z': b_z_spl(r_init),
                    'b_theta': b_theta_spl(r_init), 'q': q_spl(r_init),
-                   'f_func': f_func, 'xi': xi_init, 'mu_0': mu_0}
+                   'f_func': f_func, 'xi': xi_init}
 
     xi = []
     xi_der_f = []
@@ -506,7 +507,7 @@ def f_relevant_part_func(r, k, m, b_z, b_theta):
     return k*r*b_z + m*b_theta
 
 
-def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl):
+def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, mu_0):
     r"""
     Return radial positions at which the Euler-Lagrange equation is singular
     and Suydam's criterion is violated.
@@ -527,6 +528,6 @@ def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl):
         positions at which plasma column is suydam unstable
     """
     params = {'r': r, 'b_z_spl': b_z_spl, 'b_theta_spl': b_theta_spl,
-              'p_prime_spl': p_prime_spl}
+              'p_prime_spl': p_prime_spl, 'mu_0': mu_0}
     unstable_mask = np.invert(frob.sings_suydam_stable(**params))
     return r[unstable_mask]
