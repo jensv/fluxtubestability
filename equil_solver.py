@@ -71,7 +71,7 @@ class ParabolicNu2(EquilSolver):
     """
 
     def __init__(self, a=1, points=500, q0=1.0, k=1, b_z0=1, temp=1.0,
-                 qa=None):
+                 qa=None, mu_0=1.):
         r"""
         Initalize parameters defining parabolic pinch and create splines.
         """
@@ -95,7 +95,7 @@ class ParabolicNu2(EquilSolver):
         Return j0 for a b_z and q0 paramters of pinch.
         """
         self.j0 = 1
-        return self.k*2*self.b_z(0)/self.q0
+        return self.k*2.*self.b_z(0)/(self.q0*self.mu_0)
 
     def j_z(self, r):
         r"""
@@ -108,7 +108,7 @@ class ParabolicNu2(EquilSolver):
         Return azimuthhal magnetic field for a parabolic current profile pinch.
         """
         j0 = self.j0
-        return j0*r/2 - j0*r**3/2 + j0*r**5/6
+        return 1/self.mu_0*(j0*r/2 - j0*r**3/2 + j0*r**5/6)
 
     def b_z(self, r):
         r"""
@@ -123,16 +123,18 @@ class ParabolicNu2(EquilSolver):
         Returns pressure_prime profile for a arabolic current profile pinch.
         """
         j0 = self.j0
-        return (-j0**2*r/2 + 3*j0**2*r**3/2 - 5*j0**2*r**5/3 + 5*j0**2*r**7/6
-                - j0**2*r**9/6)
+        return 1./self.mu_0*(-j0**2*r/2. + 3.*j0**2*r**3/2.
+                             - 5.*j0**2*r**5/3. + 5.*j0**2*r**7/6.
+                             - j0**2*r**9/6.)
 
     def pressure(self, r):
         r"""
         Returns pressure profile for a arabolic current profile pinch.
         """
         j0 = self.j0
-        return (47*j0**2/720 - j0**2*r**2/4 + 3*j0**2*r**4/8 - 5*j0**2*r**6/18
-                + 5*j0**2*r**8/48 - j0**2*r**10/60)
+        return 1./self.mu_0*(47.*j0**2/720. - j0**2*r**2/4. + 3.*j0**2*r**4/8.
+                             - 5.*j0**2*r**6/18. + 5.*j0**2*r**8/48.
+                             - j0**2*r**10/60.)
 
 
 class NewcombConstantPressure(EquilSolver):
@@ -199,11 +201,12 @@ class SmoothedCoreSkin(EquilSolver):
     """
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
                  core_radius=0.7, transition_width=0.1, skin_width=0.1, k=1.,
-                 j_core=0.1, epsilon=0.3, lambda_bar=0.5):
+                 j_core=0.1, epsilon=0.3, lambda_bar=0.5, mu_0=1.):
         r"""
         Initialize parameters defining smooth skin and core profile
         and create splines.
         """
+        self.mu_0 = mu_0
 
         self.points_core = points_core
         self.points_transition = points_transition
@@ -284,7 +287,7 @@ class SmoothedCoreSkin(EquilSolver):
         r"""
         Returns b_z based on j_z, geometry and lambda_bar of pinch.
         """
-        a = self.core_radius + 2*self.tranistion_width + self.skin_width
+        a = self.core_radius + 2.*self.tranistion_width + self.skin_width
         denominator = 2.*a**3*np.pi**2*self.epsilon*self.lambda_bar
         return self.j_core*(a - self.skin_width -
                             2.*self.transition_width)/denominator
@@ -339,7 +342,7 @@ class SmoothedCoreSkin(EquilSolver):
         r"""
         Return b_theta_r_prime at given r values. To be used for integration.
         """
-        return self.splines['j_z'](r)*r
+        return self.splines['j_z'](r)*r/self.mu_0
 
     def b_z(self, r):
         r"""
@@ -397,7 +400,7 @@ class HardCoreZPinch(EquilSolver):
     MHD.
     """
     def __init__(self, i_c=0.1, i_p=0.2, r_c=0.1, r_a=1.0, k=1.0, points=500,
-                 mu_0=consts.mu_0):
+                 mu_0=1.):
         self.k = k
         self.i_c = i_c
         self.i_p = i_p
@@ -467,7 +470,7 @@ class HardCoreZPinch(EquilSolver):
         r_sym, r_c, k_p, k_i = sp.symbols('r r_c K_p K_i')
         x = r_sym**2 / r_c**2
         b_theta = sp.sqrt(k_i/x - 2*k_p*(9*x - 5)/(3*x*x**(1.5)))
-        j_z_sym = sp.diff(r_sym*b_theta, r_sym)/r_sym
+        j_z_sym = sp.diff(r_sym*b_theta, r_sym)/(r_sym*self.mu_0)
         j_z_func = sp.lambdify((r_sym, r_c, k_p, k_i), j_z_sym,
                                modules=np)
         return j_z_func(r, self.r_c, self.k_p, self.k_i)
@@ -477,7 +480,7 @@ class HardCoreZPinch(EquilSolver):
         Returns Beta
         """
         r = np.asarray(r)
-        return 1. - (self.i_c/(self.i_c + self.i_p))**2
+        return 32./2.*np.pi**2*self.r_c**2/(self.mu_0*self.current)*self.k_p
 
     def stability_criterion(self, r):
         r"""
