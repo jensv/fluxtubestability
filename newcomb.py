@@ -262,7 +262,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     return y_prime
 
 
-def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0
+def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
                 atol=None, rtol=None, reverse=False, divide_f=False,
                 xi_init=(None, None), check_crossing=True):
     r"""
