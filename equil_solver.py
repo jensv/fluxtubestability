@@ -199,12 +199,14 @@ class SmoothedCoreSkin(EquilSolver):
     """
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
                  core_radius=0.7, transition_width=0.1, skin_width=0.1, k=1.,
-                 j_core=0.1, epsilon=0.3, lambda_bar=0.5, mu_0=1.):
+                 j_core=0.1, epsilon=0.3, lambda_bar=0.5, mu_0=1., q0=1.1,
+                 b_z0=0.1, determinator='q0'):
         r"""
         Initialize parameters defining smooth skin and core profile
         and create splines.
         """
         self.mu_0 = mu_0
+        self.q0 = q0
 
         self.points_core = points_core
         self.points_transition = points_transition
@@ -229,9 +231,19 @@ class SmoothedCoreSkin(EquilSolver):
         self.r = np.concatenate((self.r1, self.r2, self.r3, self.r4))
 
         self.k = k
-        self.j_core = j_core
         self.epsilon = epsilon
         self.lambda_bar = lambda_bar
+
+        if determinator=='q0':
+            self.b_z0 = b_z0
+            self.j_core = self.get_j_z_core()
+            self.j_skin = self.get_j_z_skin()
+
+        if determinator=='j_core':
+            self.j_core = j_core
+            self.j_skin = self.get_j_z_skin()
+            self.b_z0 = self.get_b_z()
+
 
         param_points = OrderedDict([('j_z', self.j_z(self.r)),
                                     ('b_theta', self.b_theta(self.r)),
@@ -260,6 +272,13 @@ class SmoothedCoreSkin(EquilSolver):
         """
         return z/8.*(3.*z**4 - 10.*z**2 + 15.)
 
+    def get_j_z_core(self):
+        r"""
+        """
+        a = self.core_radius + 2*self.tranistion_width + self.skin_width
+        return (2.*a*self.b_z0*self.k*self.mu_0*self.epsilon /
+                (self.core_radius*self.q0))
+
     def get_j_z_skin(self):
         r"""
         Returs j_z_skin based on j_z_core, geometry and epsilon of pinch.
@@ -286,9 +305,8 @@ class SmoothedCoreSkin(EquilSolver):
         Returns b_z based on j_z, geometry and lambda_bar of pinch.
         """
         a = self.core_radius + 2.*self.tranistion_width + self.skin_width
-        denominator = 2.*a**3*np.pi**2*self.epsilon*self.lambda_bar
-        return self.j_core*(a - self.skin_width -
-                            2.*self.transition_width)/denominator
+        denominator = 4.*a**3*self.mu_0*np.pi**2*self.epsilon*self.lambda_bar
+        return self.j_core*(self.core_radius)/denominator
 
     def j_z(self, r):
         r"""
