@@ -19,8 +19,6 @@ import sympy as sp
 from collections import OrderedDict
 import scipy.interpolate as interp
 import scipy.integrate as inte
-import scipy.constants as consts
-
 
 class EquilSolver(object):
     r"""
@@ -437,7 +435,7 @@ class HardCoreZPinch(EquilSolver):
         """
         r = np.asarray(r)
         x = r**2 / self.r_c**2
-        b_theta = np.sqrt(self.k_i/x - 2.*self.mu_0*self.k_p*(9.*x-5.)/
+        b_theta = np.sqrt(self.k_i/x - 2.*self.mu_0*self.k_p*(9.*x-5.) /
                           (3*x*x**(3./2.)))
         return b_theta
 
