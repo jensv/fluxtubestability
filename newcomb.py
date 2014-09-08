@@ -93,7 +93,7 @@ def internal_stability(dr, offset, sing_search_points, params,
                       integration_points[i+1]]
                      for i in range(integration_points.size-1)]
         int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18,
-                      'params': params, 'dr': dr, 'check_crossing': True,
+                      'params': params, 'check_crossing': True,
                       'mu_0': params['mu_0']}
         frob_params = {'offset': offset, 'k': params['k'], 'm': params['m'],
                        'b_z_spl': params['b_z'],
@@ -102,55 +102,31 @@ def internal_stability(dr, offset, sing_search_points, params,
                        'q_spl': params['q'], 'f_func': f.newcomb_f_16,
                        'mu_0': params['mu_0']}
 
-        if intervals[0][1] in sings_set:
-            # check if endpoint of first interval is singular
-            int_params['r_max'] = intervals[0][1] - offset
-        else:
-            int_params['r_max'] = intervals[0][1]
+        intervals = offset_intervals(intervals, sing_set, offset)
+        intervals_dr = process_dr(dr, intervals)
+        int_params['dr'] = intervals_dr[0]
 
-        if intervals[0][0] == 0.:
-            # integration starts at geometric singularity case r=0
-            int_params['r_init'] = 0. + offset
-            int_params['init_func'] = init.init_geometric_sing
-            crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
-            eigenfunctions.append(eigenfunction)
-            eigen_ders.append(eigen_der)
-            rs_list.append(rs)
-            stable = False if crossing else stable
+        int_params['r_max'] = intervals[0][1]
+        int_params['r_init'] = intervals[0][0]
 
-        elif intervals[0][0] in sings_set:
-            # integration starts at f=0 sinularity
-            int_params['r_init'] = intervals[0][0] + offset
-            int_params['init_func'] = init.init_xi_given
-            frob_params['r_sing'] = intervals[0][0]
-            int_params['xi_init'] = frob.sing_small_solution(**frob_params)
-            crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
-            eigenfunctions.append(eigenfunction)
-            eigen_ders.append(eigen_der)
-            rs_list.append(rs)
-            stable = False if crossing else stable
+        deal_special_case = {'sing': deal_sing, 'geo': deal_geo,
+                             None: deal_norm}
+        deal_special_case[special_case](int_params, frob_params,
+                                        intervals[0][0], offset, init_value)
 
-        else:
-            # integration starts at non-singular point
-            int_params['r_init'] = intervals[0][0]
-            int_params['init_func'] = init.init_xi_given
-            int_params['xi_init'] = init_value
-            crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
-            eigenfunctions.append(eigenfunction)
-            eigen_ders.append(eigen_der)
-            rs_list.append(rs)
-            stable = False if crossing else stable
+        crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
+        eigenfunctions.append(eigenfunction)
+        eigen_ders.append(eigen_der)
+        rs_list.append(rs)
+        stable = False if crossing else stable
 
-        for interval in intervals[1:]:
+        for i, interval in enumerate(intervals[1:]):
             # repeat integration for each interval
-            int_params['r_init'] = interval[0] + offset
+            int_params['dr'] = intervals_dr[i]
+            int_params['r_init'] = interval[0]
             int_params['init_func'] = init.init_xi_given
-            frob_params['r_sing'] = interval[0]
+            frob_params['r_sing'] = interval[0] - offset
             int_params['xi_init'] = frob.sing_small_solution(**frob_params)
-            if interval[1] in sings_set:
-                int_params['r_max'] = interval[1] - offset
-            else:
-                int_params['r_max'] = interval[1]
             crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
             eigenfunctions.append(eigenfunction)
             eigen_ders.append(eigen_der)
@@ -162,6 +138,23 @@ def internal_stability(dr, offset, sing_search_points, params,
     rs_array = np.asarray(rs_list)
     return stable, eigenfunctions, eigen_ders, rs_array
 
+
+def deal_sing(params, *args):
+    int_params['init_func'] = init.init_geometric_sing
+    return int_params
+
+
+def deal_geo(params, frob_params, interval, offset, *args):
+    int_params['init_func'] = init.init_xi_given
+    frob_params['r_sing'] = interval - offset
+    int_params['xi_init'] = frob.sing_small_solution(**frob_params)
+    return int_params
+
+
+def deal_norm(params, frob_params, interval, offset, init_value):
+    int_params['init_func'] = init.init_xi_given
+    int_params['xi_init'] = init_value
+    return int_params
 
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
                 f_func, g_func, mu_0):
@@ -264,7 +257,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
 def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
                 atol=None, rtol=None, reverse=False, divide_f=False,
-                xi_init=(None, None), check_crossing=True):
+                xi_init=(None, None)):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two ODES.
 
@@ -272,7 +265,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
     ----------
     r_init : float
         intial radius at which to start integrating
-    dr : float or ndarray of floats
+    dr : ndarray of floats
         radial stepsize between integration points
     rmax : float
         maxium radius at which to integrate
@@ -321,9 +314,10 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
                    'b_theta': b_theta_spl(r_init), 'q': q_spl(r_init),
                    'f_func': f_func, 'xi': xi_init}
 
-    xi = []
-    xi_der_f = []
-    rs = []
+    xi = np.empty(dr.size + 1)
+    xi_der_f = np.empty(dr.size + 1)
+    rs = np.empty(dr.size + 1)
+
     if divide_f:
         xi_int = inte.ode(newcomb_der_divide_f)
     else:
@@ -339,48 +333,28 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
                         g_func, mu_0)
 
     y_init = init_func(**init_params)
-    xi.append(y_init[0])
-    xi_der_f.append(y_init[1])
-    rs.append(r_init)
+    xi[0] = y_init[0]
+    xi_der_f[0] = y_init[1]
+    rs[0] = r_init
 
-    if isinstance(dr, float):
-        dr_generator = repeat(dr)
-    else:
-        dr_generator = (delta for delta in dr)
+    for i in range(dr.size):
+        if not xi_int.successful():
+            break
+        xi_int.integrate(xi_int.t + dr[i])
+        xi[i+1] = xi_int.y[0]
+        xi_der_f[i+1] = xi_int.y[1]
+        rs[i+1] = xi_int.t
 
-    if not reverse:
-        while xi_int.successful() and xi_int.t < r_max:
-            xi_int.integrate(xi_int.t + dr_generator.next())
-            xi.append(xi_int.y[0])
-            xi_der_f.append(xi_int.y[1])
-            rs.append(xi_int.t)
-            if check_crossing:
-                if xi[-1]*xi[-2] < 0:
-                    rs = np.asarray(rs)
-                    xi_der_f = np.asarray(xi_der_f)
-                    xi_der = divide_by_f(rs, xi_der_f, k, m, b_z_spl,
-                                         b_theta_spl, q_spl, f_func)
-                    return True, np.asarray(xi), xi_der, rs
-
-    else:
-        while xi_int.successful() and xi_int.t > r_max:
-            xi_int.integrate(xi_int.t + dr_generator.next())
-            xi.append(xi_int.y[0])
-            xi_der_f.append(xi_int.y[1])
-            rs.append(xi_int.t)
-            if check_crossing:
-                if xi[-1]*xi[-2] < 0:
-                    rs = np.asarray(rs)
-                    xi_der_f = np.asarray(xi_der_f)
-                    xi_der = divide_by_f(rs, xi_der_f, k, m, b_z_spl,
-                                         b_theta_spl, q_spl, f_func)
-                    return True, np.asarray(xi), xi_der, rs
-
+    crossing = False
+    crossings = np.where(np.diff(np.sign(xi)))[0]
+    if crossings.size != 0:
+        crossing = True
+        print('Eigenfunction crosses zero near:', np.cumsum(dr)[crossings])
     rs = np.asarray(rs)
     xi_der_f = np.asarray(xi_der_f)
     xi_der = divide_by_f(rs, xi_der_f, k, m, b_z_spl,
                          b_theta_spl, q_spl, f_func)
-    return False, np.asarray(xi), xi_der, rs
+    return crossing, np.asarray(xi), xi_der, rs
 
 
 def divide_by_f(r, xi_der_f, k, m, b_z_spl, b_theta_spl, q_spl, f_func):
@@ -460,7 +434,9 @@ def f_relevant_part(r, k, m, b_z_spl, b_theta_spl):
     Returns
     -------
     f_relvant_part : ndarray of floats
-        The relevant part of Newcomb's f for determining f=0. The term that can
+        The relevant part o    eigenfunctions = []
+    eigen_ders = []
+    rs_list = []f Newcomb's f for determining f=0. The term that can
         make f=0 when :math:`r \neq 0`
 
     Notes
@@ -505,6 +481,45 @@ def f_relevant_part_func(r, k, m, b_z, b_theta):
        k r B_{z} + m B_{\theta}
     """
     return k*r*b_z + m*b_theta
+
+
+def offset_intevals(intervals, sing_set, offset):
+    r"""
+    Shift interval bundaries off of singularties by offset.
+    """
+    special_case = None
+    if interval[0][0] <= offset:
+        interval[0][0] = offset
+        special_case = 'geo'
+    elif interval[0][0] in sing_set:
+        interval[0][0] += offset
+        special_case = 'sing'
+    for i, interval in enumerate(intervals):
+        if interval[1] in sings_set:
+            interval[1] -= offset
+            if i < len(intervals)-1:
+                intervals[i+1][0] += offset
+    return special_case, intervals
+
+def process_dr(dr, offset, intervals):
+    r"""
+    Return dr array with only elements used in integration. Singularity
+    elements are thrown away.
+    """
+    if isinstance(dr, float) or isinstance(dr, int):
+        dr_cum = np.arange(intervals[0][0], intervals[-1][1], dr)
+        dr = np.ones(dr_cum.size)*dr
+    else:
+        dr_cum = np.cumsum(dr)
+    if intervals[0][0] > offset:
+        dr_cum += intervals[0][0]
+
+    intervals_dr = []
+    for interval in intervals:
+        interval_dr = np.where(dr_cum > interval[0])
+        interval_dr = np.where(interval_dr > interval[1])
+        intervals_dr.append(interval_dr)
+    return intervals_dr
 
 
 def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, mu_0):
