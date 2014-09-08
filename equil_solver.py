@@ -50,7 +50,7 @@ class EquilSolver(object):
         """
         if r[0] == 0.:
             q_to_return = np.ones(r.size)*self.q0
-            q_to_return[1:] = r[1:]*self.k*self.b_z(r)/self.b_theta(r)
+            q_to_return[1:] = r[1:]*self.k*self.b_z(r[1:])/self.b_theta(r[1:])
         else:
             q_to_return = r*self.k*self.b_z(r)/self.b_theta(r)
         return q_to_return
@@ -75,6 +75,7 @@ class ParabolicNu2(EquilSolver):
         """
         self.r = np.linspace(0, a, points)
         self.q0 = q0
+        self.mu_0 = mu_0
         if qa is not None:
             q0 = qa/3.
         self.k = k
