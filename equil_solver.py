@@ -12,13 +12,14 @@ from future import standard_library, utils
 from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              int, map, next, oct, open, pow, range, round,
                              str, super, zip)
-# Python 3.x compatability
+"""Python 3.x compatability"""
 
 import numpy as np
 import sympy as sp
 from collections import OrderedDict
 import scipy.interpolate as interp
 import scipy.integrate as inte
+
 
 class EquilSolver(object):
     r"""
