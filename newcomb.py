@@ -80,6 +80,8 @@ def internal_stability(dr, offset, sing_search_points, params,
                    'b_theta_spl': params['b_theta']}
     sings = identify_singularties(**sing_params)
     sings_set = set(sings)
+    if 0. in sings_set:
+        sings_set.remove(0.)
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
                                  params['p_prime'], params['mu_0'])
     if len(suydam_result) != 0:
@@ -93,8 +95,7 @@ def internal_stability(dr, offset, sing_search_points, params,
                       integration_points[i+1]]
                      for i in range(integration_points.size-1)]
         int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18,
-                      'params': params, 'check_crossing': True,
-                      'mu_0': params['mu_0']}
+                      'params': params, 'mu_0': params['mu_0']}
         frob_params = {'offset': offset, 'k': params['k'], 'm': params['m'],
                        'b_z_spl': params['b_z'],
                        'b_theta_spl': params['b_theta'],
@@ -102,8 +103,9 @@ def internal_stability(dr, offset, sing_search_points, params,
                        'q_spl': params['q'], 'f_func': f.newcomb_f_16,
                        'mu_0': params['mu_0']}
 
-        intervals = offset_intervals(intervals, sing_set, offset)
-        intervals_dr = process_dr(dr, intervals)
+        special_case, intervals = offset_intervals(intervals, sings_set,
+                                                   offset)
+        intervals_dr = process_dr(dr, offset, intervals)
         int_params['dr'] = intervals_dr[0]
 
         int_params['r_max'] = intervals[0][1]
@@ -111,7 +113,7 @@ def internal_stability(dr, offset, sing_search_points, params,
 
         deal_special_case = {'sing': deal_sing, 'geo': deal_geo,
                              None: deal_norm}
-        deal_special_case[special_case](int_params, frob_params,
+        int_params = deal_special_case[special_case](int_params, frob_params,
                                         intervals[0][0], offset, init_value)
 
         crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
@@ -139,19 +141,19 @@ def internal_stability(dr, offset, sing_search_points, params,
     return stable, eigenfunctions, eigen_ders, rs_array
 
 
-def deal_sing(params, *args):
+def deal_geo(int_params, *args):
     int_params['init_func'] = init.init_geometric_sing
     return int_params
 
 
-def deal_geo(params, frob_params, interval, offset, *args):
+def deal_sing(int_params, frob_params, interval, offset, *args):
     int_params['init_func'] = init.init_xi_given
     frob_params['r_sing'] = interval - offset
     int_params['xi_init'] = frob.sing_small_solution(**frob_params)
     return int_params
 
 
-def deal_norm(params, frob_params, interval, offset, init_value):
+def deal_norm(int_params, frob_params, interval, offset, init_value):
     int_params['init_func'] = init.init_xi_given
     int_params['xi_init'] = init_value
     return int_params
@@ -483,16 +485,16 @@ def f_relevant_part_func(r, k, m, b_z, b_theta):
     return k*r*b_z + m*b_theta
 
 
-def offset_intevals(intervals, sing_set, offset):
+def offset_intervals(intervals, sings_set, offset):
     r"""
     Shift interval bundaries off of singularties by offset.
     """
     special_case = None
-    if interval[0][0] <= offset:
-        interval[0][0] = offset
+    if intervals[0][0] <= offset:
+        intervals[0][0] = offset
         special_case = 'geo'
-    elif interval[0][0] in sing_set:
-        interval[0][0] += offset
+    elif intervals[0][0] in sings_set:
+        intervals[0][0] += offset
         special_case = 'sing'
     for i, interval in enumerate(intervals):
         if interval[1] in sings_set:
@@ -500,6 +502,7 @@ def offset_intevals(intervals, sing_set, offset):
             if i < len(intervals)-1:
                 intervals[i+1][0] += offset
     return special_case, intervals
+
 
 def process_dr(dr, offset, intervals):
     r"""
@@ -511,13 +514,13 @@ def process_dr(dr, offset, intervals):
         dr = np.ones(dr_cum.size)*dr
     else:
         dr_cum = np.cumsum(dr)
-    if intervals[0][0] > offset:
+    if (intervals[0][0] - offset) <= 1E-10:
         dr_cum += intervals[0][0]
 
     intervals_dr = []
     for interval in intervals:
-        interval_dr = np.where(dr_cum > interval[0])
-        interval_dr = np.where(interval_dr > interval[1])
+        index = np.where(dr_cum < interval[1])
+        interval_dr = dr[index][np.where(dr_cum[index] > interval[0])]
         intervals_dr.append(interval_dr)
     return intervals_dr
 
