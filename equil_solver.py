@@ -35,9 +35,10 @@ class EquilSolver(object):
         splines = {}
         r = self.r
         for key, value in param_points.items():
-            splines[key] = interp.InterpolatedUnivariateSpline(r, value,
+            splines[key] = interp.InterpolatedUnivariateSpline(r,
+                                                               value(self.r),
                                                                k=3)
-        self.splines = splines
+            self.splines = splines
 
     def get_splines(self):
         r"""
@@ -247,13 +248,13 @@ class SmoothedCoreSkin(EquilSolver):
             self.b_z0 = self.get_b_z()
 
 
-        param_points = OrderedDict([('j_z', self.j_z(self.r)),
-                                    ('b_theta', self.b_theta(self.r)),
-                                    ('b_z', self.b_z(self.r)),
-                                    ('p_prime', self.pprime(self.r)),
-                                    ('pressure', self.pressure(self.r)),
-                                    ('q', self.q(self.r)),
-                                    ('rho', self.rho(self.r))])
+        param_points = OrderedDict([('j_z', self.j_z),
+                                    ('b_theta', self.b_theta),
+                                    ('b_z', self.b_z),
+                                    ('p_prime', self.p_prime),
+                                    ('pressure', self.pressure),
+                                    ('q', self.q),
+                                    ('rho', self.rho)])
 
         self.set_splines(param_points)
 
@@ -266,7 +267,7 @@ class SmoothedCoreSkin(EquilSolver):
         delta_g = (g2 - g1) / 2.
         g_bar = (g1 + g2) / 2.
         z = (x - x_bar) / delta_x
-        return g_bar + self.f(z)*delta_g
+        return g_bar + self.smooth_f(z)*delta_g
 
     def smooth_f(self, z):
         r"""
@@ -277,7 +278,7 @@ class SmoothedCoreSkin(EquilSolver):
     def get_j_z_core(self):
         r"""
         """
-        a = self.core_radius + 2*self.tranistion_width + self.skin_width
+        a = self.core_radius + 2*self.transition_width + self.skin_width
         return (2.*a*self.b_z0*self.k*self.mu_0*self.epsilon /
                 (self.core_radius*self.q0))
 
@@ -285,7 +286,7 @@ class SmoothedCoreSkin(EquilSolver):
         r"""
         Returs j_z_skin based on j_z_core, geometry and epsilon of pinch.
         """
-        a = self.core_radius + 2*self.tranistion_width + self.skin_width
+        a = self.core_radius + 2*self.transition_width + self.skin_width
         term1 = -7.*a**2
         term2 = 7.*a*self.skin_width
         term3 = 14.*a*self.transition_width
@@ -295,12 +296,12 @@ class SmoothedCoreSkin(EquilSolver):
         term7 = -21.*a*self.transition_width*self.epsilon
         term8 = 21.*self.skin_width*self.transition_width*self.epsilon
         term9 = 16.*self.transition_width**2*self.epsilon
-        denominator = (7.*(2*self.a - self.skin_width -
-                       .2*self.transition_width) *
+        denominator = (7.*(2.*a - self.skin_width -
+                       2.*self.transition_width) *
                        (self.skin_width + self.transition_width) *
                        self.epsilon)
-        return self.j_core*(term1 + term2 + term3 + term4 + term5 + term6 +
-                            term7 + term8 + term9) / denominator
+        return -self.j_core*(term1 + term2 + term3 + term4 + term5 + term6 +
+                             term7 + term8 + term9) / denominator
 
     def get_b_z(self):
         r"""
@@ -346,7 +347,7 @@ class SmoothedCoreSkin(EquilSolver):
         b_theta_r_integrator = inte.ode(self.__b_theta_r_prime__)
         b_theta_r_integrator.set_integrator('lsoda')
         b_theta_r_integrator.set_initial_value(0., t=0.)
-        b_theta_r_integrator.set_f_params(self)
+        #b_theta_r_integrator.set_f_params(self)
         b_theta_array = [0.]
         for position in r[1:]:
             if b_theta_r_integrator.successful():
@@ -356,7 +357,7 @@ class SmoothedCoreSkin(EquilSolver):
                 break
         return np.array(b_theta_array)
 
-    def __b_theta_r_prime__(r, y, self):
+    def __b_theta_r_prime__(self, r, y):
         r"""
         Return b_theta_r_prime at given r values. To be used for integration.
         """
@@ -374,7 +375,7 @@ class SmoothedCoreSkin(EquilSolver):
         """
         return -self.splines['b_theta'](r)*self.splines['j_z'](r)
 
-    def __p_prime_for_integrating__(r, y, self):
+    def __p_prime_for_integrating__(self, r, y):
         r"""
         Return pressure_prime at given r values. To be used for integration.
         """
@@ -388,7 +389,7 @@ class SmoothedCoreSkin(EquilSolver):
         pressure_integrator = inte.ode(self.__p_prime_for_integrating__)
         pressure_integrator.set_integrator('lsoda')
         pressure_integrator.set_initial_value([0., 0.], r_reverse[0])
-        pressure_integrator.set_f_params(self)
+        #pressure_integrator.set_f_params(self)
         pressure_array = [0.]
         for position in r_reverse[1:]:
             if pressure_integrator.successful():
@@ -404,8 +405,8 @@ class SmoothedCoreSkin(EquilSolver):
         """
         if r[0] == 0.:
             q_to_return = np.ones(r.size)*self.q0
-            q_to_return[1:] = (r[1:]*self.k*self.splines['b_z'](r) /
-                               self.splines['b_theta'](r))
+            q_to_return[1:] = (r[1:]*self.k*self.splines['b_z'](r[1:]) /
+                               self.splines['b_theta'](r[1:]))
         else:
             q_to_return = (r*self.k*self.splines['b_z'](r) /
                            self.splines['b_theta'](r))
@@ -487,7 +488,7 @@ class HardCoreZPinch(EquilSolver):
 
         r_sym, r_c, k_p, k_i = sp.symbols('r r_c K_p K_i')
         x = r_sym**2 / r_c**2
-        b_theta = sp.sqrt(k_i/x - 2*k_p*(9*x - 5)/(3*x*x**(1.5)))
+        b_theta = sp.sqrt(k_i/x - 2.*k_p*(9.*x - 5.)/(3*x*x**(1.5)))
         j_z_sym = sp.diff(r_sym*b_theta, r_sym)/(r_sym*self.mu_0)
         j_z_func = sp.lambdify((r_sym, r_c, k_p, k_i), j_z_sym,
                                modules=np)
