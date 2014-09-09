@@ -20,15 +20,17 @@ def external_stability(params, xi, xi_der):
     r"""
     Returns external external stability and dW.
     """
+    a = params['a']
     b_z = params['b_z'](a)
     b_theta = params['b_theta'](a)
     m = params['m']
     k = params['k']
 
-    if b == 'infinity':
+    if params['b'] == 'infinity':
         lambda_term = lambda_infinity(**{'a': a, 'k': k, 'm': m})
     else:
-        assert isinstance(b, float), "b must be 'infinity' or of type float."
+        assert isinstance(params['b'], float), "b must be 'infinity' or of \
+                                                type float."
         lambda_term = lambda_boundary(**{'a': a, 'b': b, 'k': k, 'm': m})
     f_term = capital_f(**{'a': a, 'k': k, 'm': m, 'b_theta': b_theta,
                           'b_z': b_z})
@@ -39,9 +41,9 @@ def external_stability(params, xi, xi_der):
     term1 = f_term**2*a*xi_der/(k_0_term**2*xi)
     term2 = f_term*f_adjoint_term/(k_0_term**2)
     term3 = a**2*f_term**2*lambda_term/m
-    delta_W = (term1+term2*term3)*xi**2
-    stable = delta_W > 0
-    return stable, delta_W
+    delta_w = (term1+term2*term3)*xi**2
+    stable = delta_w > 0
+    return stable, delta_w
 
 
 def lambda_infinity(a, k, m):
@@ -51,7 +53,7 @@ def lambda_infinity(a, k, m):
     k_a = spec.kv(m, abs(k)*a)
     k_a_prime = spec.kvp(m, abs(k)*a)
 
-    return m*k_a/(abs(k*a)*k_a_prime)
+    return -m*k_a/(abs(k*a)*k_a_prime)
 
 
 def lambda_boundary(a, b, k, m):
@@ -65,7 +67,7 @@ def lambda_boundary(a, b, k, m):
     i_a_prime = spec.ivp(m, abs(k)*a)
     i_b_prime = spec.ivp(m, abs(k)*b)
 
-    factor1 = -m*k_a/abs(k*a)*k_a_prime
+    factor1 = -m*k_a/(abs(k*a)*k_a_prime)
     factor2_num = 1. - k_b_prime*i_a/(i_b_prime*k_a)
     factor2_denom = 1. - k_b_prime*i_a_prime/(i_b_prime*k_a_prime)
     return factor1*factor2_num/factor2_denom
