@@ -5,10 +5,18 @@ Created on Mon Sep 08 20:42:30 2014
 @author: Jens von der Linden
 """
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                             int, map, next, oct, open, pow, range, round,
+                             str, super, zip)
+"""Python 3.x compatibility"""
+
 import scipy.special as spec
 
 
-def external_stability(a, params, xi, xi_der, b='infinity'):
+def external_stability(params, xi, xi_der):
     r"""
     Returns external external stability and dW.
     """
