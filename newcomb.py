@@ -29,16 +29,23 @@ def stability(dr, offset, sing_search_points, params,
     (stable_internal, xi,
      xi_der, r_array) = internal_stability(dr, offset, sing_search_points,
                                            params, init_value=(0.0, 1.0))
-    stable_external, delta_W = ext.external_stability(params, xi[-1],
-                                                      xi_der[-1])
+    if (params['m'] != 0 and r_array.size != 0 and
+        r_array[-1][-1] - params['a'] < 1E-4):
+        stable_external, delta_w = ext.external_stability(params, xi[-1, -1],
+                                                          xi_der[-1, -1])
+    else:
+        stable_external = True
+        delta_w = None
 
     k = params['k']
     m = params['m']
     if not stable_external:
-        print("Profile is unstable to external mode k=", k, "m=", m)
+        print("Profile is unstable to external mode k =", k, "m =", m)
     if not stable_internal:
-        print("Profile is unstable to internal mode k=", k, "m=", m)
-    return stable_internal, stable_external, xi, xi_der, r_array, delta_W
+        print("Profile is unstable to internal mode k =", k, "m =", m)
+    if stable_external and stable_internal:
+        print("Profile is stable to mode k = ", k, "m =", m)
+    return stable_internal, stable_external, xi, xi_der, r_array, delta_w
 
 
 def internal_stability(dr, offset, sing_search_points, params,
