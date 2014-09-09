@@ -14,7 +14,6 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              str, super, zip)
 """Python 3.x compatibility"""
 
-from itertools import repeat
 import numpy as np
 import scipy.integrate as inte
 import scipy.optimize as opt
@@ -22,7 +21,24 @@ import newcomb_f as f
 import newcomb_g as g
 import newcomb_init as init
 import singularity_frobenius as frob
-import scipy.constants as consts
+import external_stability as ext
+
+
+def stability(dr, offset, sing_search_points, params,
+              init_value=(0.0, 1.0)):
+    (stable_internal, xi,
+     xi_der, r_array) = internal_stability(dr, offset, sing_search_points,
+                                           params, init_value=(0.0, 1.0))
+    stable_external, delta_W = ext.external_stability(params, xi[-1],
+                                                      xi_der[-1])
+
+    k = params['k']
+    m = params['m']
+    if not stable_external:
+        print("Profile is unstable to external mode k=", k, "m=", m)
+    if not stable_internal:
+        print("Profile is unstable to internal mode k=", k, "m=", m)
+    return stable_internal, stable_external, xi, xi_der, r_array, delta_W
 
 
 def internal_stability(dr, offset, sing_search_points, params,
