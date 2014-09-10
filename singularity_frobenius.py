@@ -66,7 +66,7 @@ def beta_func(b_z, b_theta, p_prime, mu_0, **kwargs):
     return 2.*b_theta**2*mu_0/(b_theta + b_z)**2 * p_prime
 
 
-def nu_1_2(alpha, beta, **kwargs):
+def nu_1_2(alpha, beta, imaginary=False, **kwargs):
     r"""
     Return exponents of Frobenius solution.
 
@@ -84,8 +84,8 @@ def nu_1_2(alpha, beta, **kwargs):
     nu_2 : ndarray of floats
          exponent 1 of Frobenius solution
     """
-    nu_1 = 0.5 + np.sqrt(0.25 + beta/alpha)
-    nu_2 = 0.5 - np.sqrt(0.25 + beta/alpha)
+    nu_1 = 0.5 + np.emath.sqrt(0.25 + beta/alpha)
+    nu_2 = 0.5 - np.emath.sqrt(0.25 + beta/alpha)
     return nu_1, nu_2
 
 
@@ -184,6 +184,7 @@ def sing_small_solution(r_sing, offset, k, m, b_z_spl, b_theta_spl,
     """
     alpha, beta = sings_alpha_beta(r_sing, b_z_spl, b_theta_spl, p_prime_spl,
                                    mu_0)
+
     nu_1, nu_2 = nu_1_2(alpha, beta)
     r = r_sing + offset
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
@@ -249,6 +250,6 @@ def small_solution(r, r_sing, nu_1, nu_2):
     """
     x = np.abs(r - r_sing)
     if nu_1 > nu_2:
-        return np.array([x**-nu_2, -nu_2*x**(-nu_2 - 1.)])
+        return np.array([np.real(x**-nu_2), np.real(-nu_2*x**(-nu_2 - 1.))])
     else:
-        return np.array([x**-nu_1, -nu_1*x**(-nu_1 - 1.)])
+        return np.array([np.real(x**-nu_1), np.real(-nu_1*x**(-nu_1 - 1.))])
