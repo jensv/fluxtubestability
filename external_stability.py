@@ -40,7 +40,7 @@ def external_stability(params, xi, xi_der):
 
     term1 = f_term**2*a*xi_der/(k_0_term**2*xi)
     term2 = f_term*f_adjoint_term/(k_0_term**2)
-    term3 = a**2*f_term**2*lambda_term/m
+    term3 = a**2*f_term**2*lambda_term
     delta_w = (term1+term2*term3)*xi**2
     stable = delta_w > 0
     return stable, delta_w
@@ -53,7 +53,7 @@ def lambda_infinity(a, k, m):
     k_a = spec.kv(m, abs(k)*a)
     k_a_prime = spec.kvp(m, abs(k)*a)
 
-    return -m*k_a/(abs(k*a)*k_a_prime)
+    return -k_a/(abs(k*a)*k_a_prime)
 
 
 def lambda_boundary(a, b, k, m):
@@ -67,7 +67,7 @@ def lambda_boundary(a, b, k, m):
     i_a_prime = spec.ivp(m, abs(k)*a)
     i_b_prime = spec.ivp(m, abs(k)*b)
 
-    factor1 = -m*k_a/(abs(k*a)*k_a_prime)
+    factor1 = -k_a/(abs(k*a)*k_a_prime)
     factor2_num = 1. - k_b_prime*i_a/(i_b_prime*k_a)
     factor2_denom = 1. - k_b_prime*i_a_prime/(i_b_prime*k_a_prime)
     return factor1*factor2_num/factor2_denom
