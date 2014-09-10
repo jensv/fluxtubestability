@@ -85,10 +85,10 @@ class ParabolicNu2(EquilSolver):
         self.temp = temp
         r = self.r
         self.j0 = self.get_j0()
-        param_points = {'j_z': self.j_z(r), 'b_theta': self.b_theta(r),
-                        'b_z': self.b_z(r), 'p_prime': self.p_prime(r),
-                        'pressure': self.pressure(r), 'q': self.q(r),
-                        'rho': self.rho(r)}
+        param_points = {'j_z': self.j_z, 'b_theta': self.b_theta,
+                        'b_z': self.b_z, 'p_prime': self.p_prime,
+                        'pressure': self.pressure, 'q': self.q,
+                        'rho': self.rho}
         self.set_splines(param_points)
 
     def get_j0(self):
@@ -156,10 +156,10 @@ class NewcombConstantPressure(EquilSolver):
         self.b_z0 = b_z0
         self.b_thetai = b_thetai
         r = self.r
-        param_points = {'j_z': self.get_j_z(r), 'b_theta': self.b_theta(r),
-                        'b_z': self.b_z(r), 'p_prime': self.p_prime(r),
-                        'pressure': self.pressure(r), 'q': self.q(r),
-                        'rho': self.rho(r)}
+        param_points = {'j_z': self.get_j_z, 'b_theta': self.b_theta,
+                        'b_z': self.b_z, 'p_prime': self.p_prime,
+                        'pressure': self.pressure, 'q': self.q,
+                        'rho': self.rho}
         self.set_splines(param_points)
 
     def get_j_z(self, r):
@@ -432,14 +432,14 @@ class HardCoreZPinch(EquilSolver):
 
         self.r = np.linspace(r_c, r_a, points)
 
-        param_points = {'j_z': self.j_z(self.r),
-                        'b_theta': self.b_theta(self.r),
-                        'b_z': self.b_z(self.r),
-                        'p_prime': self.p_prime(self.r),
-                        'pressure': self.pressure(self.r),
-                        'q': self.q(self.r),
-                        'rho': self.rho(self.r),
-                        'stability': self.stability_criterion(self.r)}
+        param_points = {'j_z': self.j_z,
+                        'b_theta': self.b_theta,
+                        'b_z': self.b_z,
+                        'p_prime': self.p_prime,
+                        'pressure': self.pressure,
+                        'q': self.q,
+                        'rho': self.rho,
+                        'stability': self.stability_criterion}
 
         self.set_splines(param_points)
 
