@@ -104,17 +104,16 @@ def internal_stability(dr, offset, sing_search_points, params,
                    'm': params['m'], 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta']}
     sings = identify_singularties(**sing_params)
-    sings_set = set(sings)
-    if 0. in sings_set:
-        sings_set.remove(0.)
+
+    sings_wo_0 = np.setxor1d(np.array([0.]), sings)
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
                                  params['p_prime'], params['mu_0'])
     if len(suydam_result) != 0:
-        stable = False
+        if not suydam_result == np.array([0.]):
+            stable = False
         print("Profile is Suydam unstable at r =", suydam_result)
 
-    integration_points = np.insert(sings, (0, sings.size),
-                                   (params['r_0'], params['a']))
+    integration_points = np.insert((params['r_0'], params['a']), 1, sings_wo_0)
     intervals = [[integration_points[i],
                   integration_points[i+1]]
                  for i in range(integration_points.size-1)]
@@ -127,18 +126,21 @@ def internal_stability(dr, offset, sing_search_points, params,
                    'q_spl': params['q'], 'f_func': f.newcomb_f_16,
                    'mu_0': params['mu_0']}
 
-    special_case, intervals = offset_intervals(intervals, sings_set,
+    special_case, intervals = offset_intervals(intervals, sings_wo_0,
                                                offset)
     intervals_dr = process_dr(dr, offset, intervals)
-    int_params['dr'] = intervals_dr[0]
 
+    int_params['dr'] = intervals_dr[0]
     int_params['r_max'] = intervals[0][1]
     int_params['r_init'] = intervals[0][0]
 
     deal_special_case = {'sing': deal_sing, 'geo': deal_geo,
                          None: deal_norm}
     int_params = deal_special_case[special_case](int_params, frob_params,
-                                    intervals[0][0], offset, init_value)
+                                                 intervals[0][0], offset,
+                                                 init_value)
+
+    print(int_params['r_init'], int_params['r_max'])
 
     crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
     eigenfunctions.append(eigenfunction)
