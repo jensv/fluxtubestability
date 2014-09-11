@@ -76,10 +76,10 @@ class ParabolicNu2(EquilSolver):
         Initalize parameters defining parabolic pinch and create splines.
         """
         self.r = np.linspace(0, a, points)
-        self.q0 = q0
-        self.mu_0 = mu_0
         if qa is not None:
             q0 = qa/3.
+        self.q0 = q0
+        self.mu_0 = mu_0
         self.k = k
         self.b_z0 = b_z0
         self.temp = temp
