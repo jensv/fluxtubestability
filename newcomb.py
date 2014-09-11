@@ -32,10 +32,13 @@ def stability(dr, offset, sing_search_points, params,
     (stable_internal, xi,
      xi_der, r_array) = internal_stability(dr, offset, sing_search_points,
                                            params, init_value=(0.0, 1.0))
-    if (r_array.size != 0 and r_array[-1][-1] - params['a'] < 1E-4):
+    if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
+        r_array[-1][-1] - params['a'] < 1E-4):
         stable_external, delta_w = ext.external_stability(params, xi[-1, -1],
-                                                          xi_der[-1, -1])
+                                                              xi_der[-1, -1])
     else:
+        print("Integration to plasma edge did not succed. Can not determine \
+              external stability.")
         stable_external = True
         delta_w = None
 
@@ -43,10 +46,12 @@ def stability(dr, offset, sing_search_points, params,
     m = params['m']
     if not stable_external:
         print("Profile is unstable to external mode k =", k, "m =", m)
+        print("delta_W =", delta_w)
     if not stable_internal:
         print("Profile is unstable to internal mode k =", k, "m =", m)
     if stable_external and stable_internal:
         print("Profile is stable to mode k = ", k, "m =", m)
+        print("delta_W =", delta_w)
     return stable_internal, stable_external, xi, xi_der, r_array, delta_w
 
 
@@ -104,8 +109,14 @@ def internal_stability(dr, offset, sing_search_points, params,
                    'm': params['m'], 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta']}
     sings = identify_singularties(**sing_params)
+    if not sings.size == 0:
+        print("Non-geometric singularties identified at r =", sings)
 
-    sings_wo_0 = np.setxor1d(np.array([0.]), sings)
+    if not sings.size == 0 and sings[0] == 0.:
+        sings_wo_0 = np.delete(sings, 0)
+    else:
+        sings_wo_0 = sings
+
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
                                  params['p_prime'], params['mu_0'])
     if len(suydam_result) != 0:
@@ -117,6 +128,7 @@ def internal_stability(dr, offset, sing_search_points, params,
     intervals = [[integration_points[i],
                   integration_points[i+1]]
                  for i in range(integration_points.size-1)]
+
     int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18,
                   'params': params, 'mu_0': params['mu_0']}
     frob_params = {'offset': offset, 'k': params['k'], 'm': params['m'],
@@ -139,8 +151,6 @@ def internal_stability(dr, offset, sing_search_points, params,
     int_params = deal_special_case[special_case](int_params, frob_params,
                                                  intervals[0][0], offset,
                                                  init_value)
-
-    print(int_params['r_init'], int_params['r_max'])
 
     crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
     eigenfunctions.append(eigenfunction)
