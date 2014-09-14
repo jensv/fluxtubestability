@@ -108,7 +108,7 @@ class ParabolicNu2(EquilSolver):
         Return azimuthhal magnetic field for a parabolic current profile pinch.
         """
         j0 = self.j0
-        return 1/self.mu_0*(j0*r/2 - j0*r**3/2 + j0*r**5/6)
+        return self.mu_0*(j0*r/2 - j0*r**3/2. + j0*r**5/6.)
 
     def b_z(self, r):
         r"""
@@ -123,7 +123,7 @@ class ParabolicNu2(EquilSolver):
         Returns pressure_prime profile for a arabolic current profile pinch.
         """
         j0 = self.j0
-        return 1./self.mu_0*(-j0**2*r/2. + 3.*j0**2*r**3/2.
+        return self.mu_0*(-j0**2*r/2. + 3.*j0**2*r**3/2.
                              - 5.*j0**2*r**5/3. + 5.*j0**2*r**7/6.
                              - j0**2*r**9/6.)
 
@@ -132,51 +132,51 @@ class ParabolicNu2(EquilSolver):
         Returns pressure profile for a arabolic current profile pinch.
         """
         j0 = self.j0
-        return 1./self.mu_0*(47.*j0**2/720. - j0**2*r**2/4. + 3.*j0**2*r**4/8.
+        return self.mu_0*(47.*j0**2/720. - j0**2*r**2/4. + 3.*j0**2*r**4/8.
                              - 5.*j0**2*r**6/18. + 5.*j0**2*r**8/48.
                              - j0**2*r**10/60.)
 
 
-class NuCurentConstructor(object):
+class NuCurrentConstructor(object):
 
-    def __init__(self, a=1.):
-        j0, r, nu, mu_0, k, b_z, q0, qa = sp.symbols('j_0 r nu mu_0 k b_z \
-                                                     q_0 q_a')
+    def __init__(self, a=1., nu=2):
+        j0, r, mu_0, k, b_z, q0, qa = sp.symbols('j_0 r mu_0 k b_z \
+                                                  q_0 q_a')
         current_sym = j0*(1 - r**2)**nu
         b_theta_sym = mu_0*sp.integrate(current_sym*r, r, conds='none')/r
         p_prime_sym = -current_sym*b_theta_sym
         pressure_sym = sp.integrate(p_prime_sym, r, conds='none')
         pressure_norm_sym = pressure_sym - pressure_sym.subs(r, a)
-        q_sym = r*k*b_z/b_theta_sym
+        q_sym = sp.cancel(r*k*b_z/b_theta_sym)
         q0_sym = q_sym.subs(r, 0)
         qa_sym = q_sym.subs(r, a)
         j0_defined_by_q0_sym = sp.solve(q0_sym - q0, j0)[0]
         j0_defined_by_qa_sym = sp.solve(qa_sym - qa, j0)[0]
 
         # create lambda functions of expressions
-        self.current_func = sp.lambdify((r, j0, nu), current_sym,
-                                        modules='numpy')
-        self.b_theta_func = sp.lambdify((r, j0, nu, mu_0), b_theta_sym,
-                                        modules='numpy')
-        self.p_prime_func = sp.lambdify((r, j0, nu, mu_0), p_prime_sym,
-                                        modules='numpy')
-        self.pressure_func = sp.lambdify((r, j0, nu, mu_0), pressure_norm_sym,
-                                         modules='numpy')
-        self.q_func = sp.lambdify((r, k, b_z, j0, nu, mu_0), q_sym,
-                                  modules='numpy')
-        self.j0_defined_by_q0_func = sp.lambdify((k, b_z, nu, mu_0, q0),
+        self.current_func = sp.lambdify((r, j0), current_sym,
+                                        modules=str('numpy'))
+        self.b_theta_func = sp.lambdify((r, j0, mu_0), b_theta_sym,
+                                        modules=str('numpy'))
+        self.p_prime_func = sp.lambdify((r, j0, mu_0), p_prime_sym,
+                                        modules=str('numpy'))
+        self.pressure_func = sp.lambdify((r, j0, mu_0), pressure_norm_sym,
+                                         modules=str('numpy'))
+        self.q_func = sp.lambdify((r, k, b_z, j0, mu_0), q_sym,
+                                  modules=str('numpy'))
+        self.j0_defined_by_q0_func = sp.lambdify((k, b_z, mu_0, q0),
                                                  j0_defined_by_q0_sym,
-                                                 modules='numpy')
-        self.j0_defined_by_qa_func = sp.lambdify((k, b_z, j0, nu, mu_0, qa),
+                                                 modules=str('numpy'))
+        self.j0_defined_by_qa_func = sp.lambdify((k, b_z, j0, mu_0, qa),
                                                  j0_defined_by_qa_sym,
-                                                 modules='numpy')
+                                                 modules=str('numpy'))
 
 
 class NuCurrentProfile():
     r"""
     """
 
-    def __init__(self, nu_constructor=NuCurentConstructor(), nu=2, a=1,
+    def __init__(self, nu_constructor=NuCurrentConstructor(), nu=2, a=1,
                  points=500, q0=1.0, k=1, b_z0=1, temp=1.0, qa=None, mu_0=1.):
         r"""
 
