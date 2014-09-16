@@ -156,9 +156,9 @@ class NuCurrentConstructor(object):
         # create lambda functions of expressions
         self.current_func = sp.lambdify((r, j0), current_sym,
                                         modules=str('numpy'))
-        self.b_theta_func = sp.lambdify((r, j0, mu_0), b_theta_sym,
+        self.b_theta_func = sp.lambdify((r, j0, mu_0), sp.cancel(b_theta_sym),
                                         modules=str('numpy'))
-        self.p_prime_func = sp.lambdify((r, j0, mu_0), p_prime_sym,
+        self.p_prime_func = sp.lambdify((r, j0, mu_0), sp.cancel(p_prime_sym),
                                         modules=str('numpy'))
         self.pressure_func = sp.lambdify((r, j0, mu_0), pressure_norm_sym,
                                          modules=str('numpy'))
@@ -167,12 +167,12 @@ class NuCurrentConstructor(object):
         self.j0_defined_by_q0_func = sp.lambdify((k, b_z, mu_0, q0),
                                                  j0_defined_by_q0_sym,
                                                  modules=str('numpy'))
-        self.j0_defined_by_qa_func = sp.lambdify((k, b_z, j0, mu_0, qa),
+        self.j0_defined_by_qa_func = sp.lambdify((k, b_z, mu_0, qa),
                                                  j0_defined_by_qa_sym,
                                                  modules=str('numpy'))
 
 
-class NuCurrentProfile():
+class NuCurrentProfile(EquilSolver):
     r"""
     """
 
@@ -193,11 +193,9 @@ class NuCurrentProfile():
         self.r = np.linspace(0, a, points)
         self.nu = nu
         if qa is not None:
-            self.j0 = self.get_j0_given_qa(**{'k': k, 'b_z': b_z0, 'nu': nu,
-                                              'mu_0': mu_0, 'qa': qa})
+            self.j0 = self.get_j0_given_qa(k, b_z0, mu_0, qa)
         else:
-            self.j0 = self.get_j0_given_q0(**{'k': k, 'b_z': b_z0, 'nu': nu,
-                                              'mu_0': mu_0, 'q0': q0})
+            self.j0 = self.get_j0_given_q0(k, b_z0, mu_0, q0)
         self.q0 = q0
         self.mu_0 = mu_0
         self.k = k
@@ -213,14 +211,16 @@ class NuCurrentProfile():
         r"""
         Return nu axial current profile.
         """
-        return self.get_j_z(**{'r': r, 'j0': self.j0, 'nu': self.nu})
+        j_z_value = self.get_j_z(r, self.j0)
+        if isinstance(j_z_value, int) or isinstance(j_z_value, float):
+            j_z_value = np.ones(r.size)*j_z_value
+        return j_z_value
 
     def b_theta(self, r):
         r"""
         Return azimuthhal magnetic field for a nu current profile pinch.
         """
-        return self.get_b_theta(**{'r': r, 'j0': self.j0, 'nu': self.nu,
-                                   'mu_0': self.mu_0})
+        return self.get_b_theta(r, self.j0, self.mu_0)
 
     def b_z(self, r):
         r"""
@@ -228,28 +228,28 @@ class NuCurrentProfile():
         """
         b_z0 = self.b_z0
         r = np.asarray(r)
-        return np.ones(r.size) * b_z0
+        return np.ones(r.size) * self.b_z0
 
     def p_prime(self, r):
         r"""
 
         """
-        return self.get_p_prime(**{'r': r, 'j0': self.j0, 'nu': self.nu,
-                                   'mu_0': self.mu_0})
+        return self.get_p_prime(r, self.j0, self.mu_0)
 
     def pressure(self, r):
         r"""
 
         """
-        return self.get_pressure(**{'r': r, 'j0': self.j0, 'nu': self.nu,
-                                    'mu_0': self.mu_0})
+        return self.get_pressure(r, self.j0, self.mu_0)
 
     def q(self, r):
         r"""
         Returns safety factor evaluated at points.
         """
-        return self.get_q(**{'r': r, 'k': self.k, 'b_z': self.b_z0,
-                             'j0': self.j0, 'nu': self.nu, 'mu_0': self.mu_0})
+        q_value = self.get_q(r, self.k, self.b_z0, self.j0, self.mu_0)
+        if isinstance(q_value, int) or isinstance(q_value, float):
+            q_value = np.ones(r.size)*q_value
+        return q_value
 
 
 class NewcombConstantPressure(EquilSolver):
