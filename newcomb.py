@@ -25,38 +25,40 @@ import external_stability as ext
 
 
 def stability(dr, offset, sing_search_points, params,
-              init_value=(0.0, 1.0)):
+              init_value=(0.0, 1.0), suppress_output=False):
     r"""
     Examines the total stability of profile.
     """
     (stable_internal, xi,
      xi_der, r_array) = internal_stability(dr, offset, sing_search_points,
-                                           params, init_value=(0.0, 1.0))
+                                           params, init_value=(0.0, 1.0),
+                                           suppress_output=suppress_output)
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
-        r_array[-1][-1] - params['a'] < 1E-4):
+        r_array[-1][-1] - params['a'] < 1E-1):
         stable_external, delta_w = ext.external_stability(params, xi[-1, -1],
                                                               xi_der[-1, -1])
     else:
         print("Integration to plasma edge did not succed. Can not determine \
-              external stability.")
+external stability.")
         stable_external = True
         delta_w = None
 
     k = params['k']
     m = params['m']
-    if not stable_external:
-        print("Profile is unstable to external mode k =", k, "m =", m)
-        print("delta_W =", delta_w)
-    if not stable_internal:
-        print("Profile is unstable to internal mode k =", k, "m =", m)
-    if stable_external and stable_internal:
-        print("Profile is stable to mode k = ", k, "m =", m)
-        print("delta_W =", delta_w)
-    return stable_internal, stable_external, xi, xi_der, r_array, delta_w
+    if not suppress_output:
+        if not stable_external:
+            print("Profile is unstable to external mode k =", k, "m =", m)
+            print("delta_W =", delta_w)
+        if not stable_internal:
+            print("Profile is unstable to internal mode k =", k, "m =", m)
+        if stable_external and stable_internal:
+            print("Profile is stable to mode k = ", k, "m =", m)
+            print("delta_W =", delta_w)
+    return (stable_internal, stable_external, xi, xi_der, r_array, delta_w)
 
 
 def internal_stability(dr, offset, sing_search_points, params,
-                       init_value=(0.0, 1.0)):
+                       init_value=(0.0, 1.0), suppress_output=False):
     """
     Checks for internal stability accroding to Newcomb's procedure.
 
@@ -109,8 +111,9 @@ def internal_stability(dr, offset, sing_search_points, params,
                    'm': params['m'], 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta']}
     sings = identify_singularties(**sing_params)
-    if not sings.size == 0:
-        print("Non-geometric singularties identified at r =", sings)
+    if not suppress_output:
+        if not sings.size == 0:
+           print("Non-geometric singularties identified at r =", sings)
 
     if not sings.size == 0 and sings[0] == 0.:
         sings_wo_0 = np.delete(sings, 0)
@@ -119,10 +122,11 @@ def internal_stability(dr, offset, sing_search_points, params,
 
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
                                  params['p_prime'], params['mu_0'])
-    if len(suydam_result) != 0:
-        if not suydam_result == np.array([0.]):
+    if suydam_result.size != 0:
+        if (not suydam_result.size == 1 or not suydam_result[0] == 0.):
             stable = False
-        print("Profile is Suydam unstable at r =", suydam_result)
+            if not suppress_output:
+                print("Profile is Suydam unstable at r =", suydam_result)
 
     integration_points = np.insert((params['r_0'], params['a']), 1, sings_wo_0)
     intervals = [[integration_points[i],
@@ -145,6 +149,7 @@ def internal_stability(dr, offset, sing_search_points, params,
     int_params['dr'] = intervals_dr[0]
     int_params['r_max'] = intervals[0][1]
     int_params['r_init'] = intervals[0][0]
+    int_params['suppress_output'] = suppress_output
 
     deal_special_case = {'sing': deal_sing, 'geo': deal_geo,
                          None: deal_norm}
@@ -178,11 +183,15 @@ def internal_stability(dr, offset, sing_search_points, params,
 
 
 def deal_geo(int_params, *args):
+    r"""
+    """
     int_params['init_func'] = init.init_geometric_sing
     return int_params
 
 
 def deal_sing(int_params, frob_params, interval, offset, *args):
+    r"""
+    """
     int_params['init_func'] = init.init_xi_given
     frob_params['r_sing'] = interval - offset
     int_params['xi_init'] = frob.sing_small_solution(**frob_params)
@@ -190,9 +199,12 @@ def deal_sing(int_params, frob_params, interval, offset, *args):
 
 
 def deal_norm(int_params, frob_params, interval, offset, init_value):
+    r"""
+    """
     int_params['init_func'] = init.init_xi_given
     int_params['xi_init'] = init_value
     return int_params
+
 
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
                 f_func, g_func, mu_0):
@@ -255,8 +267,6 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
 
-    # if np.allclose(f_func(**f_params), 0., atol=1E-10):
-    #    print('singularity at r=' + str(r))
     y_prime[0] = y[1] / f_func(**f_params)
     y_prime[1] = y[0]*g_func(**g_params)
     return y_prime
@@ -295,7 +305,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
 def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
                 atol=None, rtol=None, reverse=False, divide_f=False,
-                xi_init=(None, None)):
+                xi_init=(None, None), suppress_output=False):
     r"""
     Integrate Newcomb's Euler Lagrange equation as two ODES.
 
@@ -387,7 +397,8 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
     crossings = np.where(np.diff(np.sign(xi)))[0]
     if crossings.size != 0:
         crossing = True
-        print('Eigenfunction crosses zero near:', np.cumsum(dr)[crossings])
+        if not suppress_output:
+            print('Eigenfunction crosses zero near:', np.cumsum(dr)[crossings])
     rs = np.asarray(rs)
     xi_der_f = np.asarray(xi_der_f)
     xi_der = divide_by_f(rs, xi_der_f, k, m, b_z_spl,
