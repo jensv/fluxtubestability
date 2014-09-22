@@ -34,12 +34,14 @@ def stability(dr, offset, sing_search_points, params,
                                            params, init_value=(0.0, 1.0),
                                            suppress_output=suppress_output)
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
-        r_array[-1][-1] - params['a'] < 1E-1):
-        stable_external, delta_w = ext.external_stability(params, xi[-1, -1],
-                                                              xi_der[-1, -1])
+        np.abs(r_array[-1][-1] - params['a']) < 1E-1):
+        stable_external, delta_w = ext.external_stability(params, xi[-1][-1],
+                                                              xi_der[-1][-1])
     else:
-        print("Integration to plasma edge did not succed. Can not determine \
-external stability.")
+        msg = "Integration to plasma edge did not succeed. Can not determine \
+external stability."
+        print(msg)
+
         stable_external = True
         delta_w = None
 
@@ -165,7 +167,7 @@ def internal_stability(dr, offset, sing_search_points, params,
 
     for i, interval in enumerate(intervals[1:]):
         # repeat integration for each interval
-        int_params['dr'] = intervals_dr[i]
+        int_params['dr'] = intervals_dr[i+1]
         int_params['r_init'] = interval[0]
         int_params['init_func'] = init.init_xi_given
         frob_params['r_sing'] = interval[0] - offset
@@ -189,16 +191,16 @@ def deal_geo(int_params, *args):
     return int_params
 
 
-def deal_sing(int_params, frob_params, interval, offset, *args):
+def deal_sing(int_params, frob_params, interval_start, offset, *args):
     r"""
     """
     int_params['init_func'] = init.init_xi_given
-    frob_params['r_sing'] = interval - offset
+    frob_params['r_sing'] = interval_start - offset
     int_params['xi_init'] = frob.sing_small_solution(**frob_params)
     return int_params
 
 
-def deal_norm(int_params, frob_params, interval, offset, init_value):
+def deal_norm(int_params, frob_params, interval_start, offset, init_value):
     r"""
     """
     int_params['init_func'] = init.init_xi_given
@@ -214,7 +216,7 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
     Parameters
     ----------
-    r : float
+    r : floatfirst_element_correction
         radius for which to find derivative
     y : ndarray (2)
         values of :math:`\xi` and :math:`f \xi'`
@@ -387,6 +389,9 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
 
     for i in range(dr.size):
         if not xi_int.successful():
+            rs[i+1:] = np.nan
+            xi[i+1:] = np.nan
+            xi_der_f[i+1:] = np.nan
             break
         xi_int.integrate(xi_int.t + dr[i])
         xi[i+1] = xi_int.y[0]
@@ -561,13 +566,16 @@ def process_dr(dr, offset, intervals):
         dr = np.ones(dr_cum.size)*dr
     else:
         dr_cum = np.cumsum(dr)
-    if (intervals[0][0] - offset) <= 1E-10:
-        dr_cum += intervals[0][0]
 
     intervals_dr = []
+    first_element_correction = 0
     for interval in intervals:
         index = np.where(dr_cum < interval[1])
         interval_dr = dr[index][np.where(dr_cum[index] > interval[0])]
+        interval_dr[0] = interval_dr[0] - first_element_correction
+        last_element = interval[1] - dr_cum[index][-1]
+        interval_dr = np.append(interval_dr, last_element)
+        first_element_correction = last_element
         intervals_dr.append(interval_dr)
     return intervals_dr
 
