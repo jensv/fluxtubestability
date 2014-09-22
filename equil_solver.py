@@ -124,8 +124,8 @@ class ParabolicNu2(EquilSolver):
         """
         j0 = self.j0
         return self.mu_0*(-j0**2*r/2. + 3.*j0**2*r**3/2.
-                             - 5.*j0**2*r**5/3. + 5.*j0**2*r**7/6.
-                             - j0**2*r**9/6.)
+                          - 5.*j0**2*r**5/3. + 5.*j0**2*r**7/6.
+                          - j0**2*r**9/6.)
 
     def pressure(self, r):
         r"""
@@ -133,8 +133,8 @@ class ParabolicNu2(EquilSolver):
         """
         j0 = self.j0
         return self.mu_0*(47.*j0**2/720. - j0**2*r**2/4. + 3.*j0**2*r**4/8.
-                             - 5.*j0**2*r**6/18. + 5.*j0**2*r**8/48.
-                             - j0**2*r**10/60.)
+                          - 5.*j0**2*r**6/18. + 5.*j0**2*r**8/48.
+                          - j0**2*r**10/60.)
 
 
 class NuCurrentConstructor(object):
@@ -351,16 +351,15 @@ class SmoothedCoreSkin(EquilSolver):
         self.epsilon = epsilon
         self.lambda_bar = lambda_bar
 
-        if determinator=='q0':
+        if determinator == 'q0':
             self.b_z0 = b_z0
             self.j_core = self.get_j_z_core()
             self.j_skin = self.get_j_z_skin()
 
-        if determinator=='j_core':
+        if determinator == 'j_core':
             self.j_core = j_core
             self.j_skin = self.get_j_z_skin()
             self.b_z0 = self.get_b_z()
-
 
         param_points = OrderedDict([('j_z', self.j_z),
                                     ('b_theta', self.b_theta),
@@ -461,7 +460,7 @@ class SmoothedCoreSkin(EquilSolver):
         b_theta_r_integrator = inte.ode(self.__b_theta_r_prime__)
         b_theta_r_integrator.set_integrator('lsoda')
         b_theta_r_integrator.set_initial_value(0., t=0.)
-        #b_theta_r_integrator.set_f_params(self)
+        # b_theta_r_integrator.set_f_params(self)
         b_theta_array = [0.]
         for position in r[1:]:
             if b_theta_r_integrator.successful():
@@ -503,7 +502,7 @@ class SmoothedCoreSkin(EquilSolver):
         pressure_integrator = inte.ode(self.__p_prime_for_integrating__)
         pressure_integrator.set_integrator('lsoda')
         pressure_integrator.set_initial_value([0., 0.], r_reverse[0])
-        #pressure_integrator.set_f_params(self)
+        # pressure_integrator.set_f_params(self)
         pressure_array = [0.]
         for position in r_reverse[1:]:
             if pressure_integrator.successful():
