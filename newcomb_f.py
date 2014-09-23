@@ -61,7 +61,6 @@ def newcomb_f_16(r, k, m, b_z, b_theta, q):
     return r*f_num_wo_r(**params_num)/f_denom(**params_denom)
 
 
-
 def goedbloed_f_9_106(r, k, m, b_z, b_theta, q):
     r"""
     Return f from Newcomb's paper.
