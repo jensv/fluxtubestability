@@ -16,7 +16,6 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import numpy as np
 import scipy.integrate as inte
-import scipy.optimize as opt
 import newcomb_f as f
 import newcomb_g as g
 import newcomb_init as init
@@ -36,7 +35,7 @@ def stability(dr, offset, sing_search_points, params,
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
         stable_external, delta_w = ext.external_stability(params, xi[-1][-1],
-                                                              xi_der[-1][-1])
+                                                          xi_der[-1][-1])
     else:
         msg = "Integration to plasma edge did not succeed. Can not determine \
 external stability."
@@ -112,15 +111,10 @@ def internal_stability(dr, offset, sing_search_points, params,
                    'points': sing_search_points, 'k': params['k'],
                    'm': params['m'], 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta']}
-    sings = identify_singularties(**sing_params)
+    sings, sings_wo_0, intervals = identify_singularties(**sing_params)
     if not suppress_output:
         if not sings.size == 0:
-           print("Non-geometric singularties identified at r =", sings)
-
-    if not sings.size == 0 and sings[0] == 0.:
-        sings_wo_0 = np.delete(sings, 0)
-    else:
-        sings_wo_0 = sings
+            print("Non-geometric singularties identified at r =", sings)
 
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
                                  params['p_prime'], params['mu_0'])
@@ -129,11 +123,6 @@ def internal_stability(dr, offset, sing_search_points, params,
             stable = False
             if not suppress_output:
                 print("Profile is Suydam unstable at r =", suydam_result)
-
-    integration_points = np.insert((params['r_0'], params['a']), 1, sings_wo_0)
-    intervals = [[integration_points[i],
-                  integration_points[i+1]]
-                 for i in range(integration_points.size-1)]
 
     int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18,
                   'params': params, 'mu_0': params['mu_0']}
@@ -418,123 +407,6 @@ def divide_by_f(r, xi_der_f, k, m, b_z_spl, b_theta_spl, q_spl, f_func):
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
     return xi_der_f / f_func(**f_params)
-
-
-def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl):
-    """
-    Return list of singular points.
-
-    Parameters
-    ----------
-    a : float
-        radial start of pinch
-    b : float
-        radial end of pinch
-    points : int
-        number of points through which to divide f
-    k : float
-        axial periodicity number
-    m : float
-        azimuthal periodicity number
-    b_z_spl : scipy spline object
-        axial magnetic field
-    b_theta_spl : scipy spline object
-        azimuthal magnetic field
-
-    Returns
-    -------
-    zero_positions: ndarray of floats (M)
-        radial positions at which r equals zero.
-
-    Notes
-    -----
-    Singular points are found by dividing f into intervals checking for sign
-    changes and then running a zero funding method from the scipy optimize
-    module.
-    """
-    params = (k, m, b_z_spl, b_theta_spl)
-    r = np.linspace(a, b, points)
-    zero_positions = []
-
-    sign = np.sign(f_relevant_part(r, k, m, b_z_spl, b_theta_spl))
-    for i in range(points-1):
-        if np.allclose(sign[i] + sign[i+1], 0.):
-            zero_pos = opt.brentq(f_relevant_part, r[i], r[i+1], args=params)
-            zero = f_relevant_part(r[i], k, m, b_z_spl, b_theta_spl)
-            if np.isnan(zero) or abs(zero) > 1e-2:
-                continue
-            else:
-                zero_positions.append(zero_pos)
-    return np.array(zero_positions)
-
-
-def f_relevant_part(r, k, m, b_z_spl, b_theta_spl):
-    """
-    Return relevant part of f for singularity detection.
-
-    Parameters
-    ----------
-    r : ndarray of floats
-        radial points
-    k : float
-        axial periodicity number
-    m : float
-        azimuthal periodicity number
-    b_z_spl : scipy spline object
-        axial magnetic field
-    b_theta_spl : scipy spline object
-        azimuthal magnetic field
-
-    Returns
-    -------
-    f_relvant_part : ndarray of floats
-        The relevant part o    eigenfunctions = []
-    eigen_ders = []
-    rs_list = []f Newcomb's f for determining f=0. The term that can
-        make f=0 when :math:`r \neq 0`
-
-    Notes
-    -----
-    The relevant part of f is:
-    .. math::
-       k r B_{z} + m B_{\theta}
-    """
-    b_theta = b_theta_spl(r)
-    b_z = b_z_spl(r)
-    return f_relevant_part_func(r, k, m, b_z, b_theta)
-
-
-def f_relevant_part_func(r, k, m, b_z, b_theta):
-    """
-    Return relevant part of f for singularity detection. Could be complied be
-    with numba.
-
-    Parameters
-    ----------
-    r : ndarray of floats
-        radial points
-    k : float
-        axial periodicity number
-    m : float
-        azimuthal periodicity number
-    b_z : ndarray of floats
-        axial magnetic field
-    b_theta : ndarray of floats
-        azimuthal magnetic field
-
-    Returns
-    -------
-    f_relvant_part : ndarray of floats
-        The relevant part of Newcomb's f for determining f=0. The term that can
-        make f=0 when :math:`r \neq 0`
-
-    Notes
-    -----
-    The relevant part of f is:
-    .. math::
-       k r B_{z} + m B_{\theta}
-    """
-    return k*r*b_z + m*b_theta
 
 
 def offset_intervals(intervals, sings_set, offset):
