@@ -71,7 +71,7 @@ def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl, offset,
     else:
         sings_wo_0 = sings
 
-    integration_points = np.insert((params['r_0'], params['a']), 1, sings_wo_0)
+    integration_points = np.insert((a, b), 1, sings_wo_0)
     intervals = [[integration_points[i],
                   integration_points[i+1]]
                  for i in range(integration_points.size-1)]
