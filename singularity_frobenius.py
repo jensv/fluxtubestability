@@ -151,7 +151,7 @@ def sings_suydam_stable(r, b_z_spl, b_theta_spl, p_prime_spl, mu_0):
 
 
 def sing_small_solution(r_sing, offset, k, m, b_z_spl, b_theta_spl,
-                        p_prime_spl, q_spl, f_func, mu_0):
+                        p_prime_spl, q_spl, f_func, mu_0, r_request=None):
     r"""
     Returns small solution of Frobenius expansion near singularity in y form of
     ODE set.
@@ -186,7 +186,10 @@ def sing_small_solution(r_sing, offset, k, m, b_z_spl, b_theta_spl,
                                    mu_0)
 
     nu_1, nu_2 = nu_1_2(alpha, beta)
-    r = r_sing + offset
+    if not r_request:
+        r = r_sing + offset
+    else:
+        r = r_request
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
     small_sol = small_solution(r_sing + offset, r_sing, nu_1, nu_2)
