@@ -35,9 +35,7 @@ def stability(dr, offset, sing_search_points, params,
                                            suppress_output=suppress_output)
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
-            if np.iscomplex(r_array[-1][-1]):
-                print("Warning, xi/xi_prime is complex." +
-                      "External stability may not be accurate.")
+
         stable_external, delta_w = ext.external_stability(params, xi[-1][-1],
                                                           xi_der[-1][-1])
     else:
@@ -445,15 +443,20 @@ def process_dr(dr, offset, intervals):
 
     intervals_dr = []
     first_element_correction = 0
-    for interval in intervals:
-        index = np.where(dr_cum < interval[1])
-        interval_dr = dr[index][np.where(dr_cum[index] > interval[0])]
-        interval_dr[0] = interval_dr[0] - first_element_correction
-        last_element = interval[1] - dr_cum[index][-1]
-        interval_dr = np.append(interval_dr, last_element)
-        first_element_correction = last_element
-        intervals_dr.append(interval_dr)
-    return intervals_dr
+    for i, interval in enumerate(intervals):
+        if interval[0] > interval[1]:
+            interval_dr = np.array([])
+            interval[0] = interval[1]
+            intervals[i] = interval
+        else:
+            index = np.where(dr_cum < interval[1])
+            interval_dr = dr[index][np.where(dr_cum[index] > interval[0])]
+            interval_dr[0] = interval_dr[0] - first_element_correction
+            last_element = interval[1] - dr_cum[index][-1]
+            interval_dr = np.append(interval_dr, last_element)
+            first_element_correction = last_element
+            intervals_dr.append(interval_dr)
+    return intervals_dr, intervals
 
 
 def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, mu_0):
