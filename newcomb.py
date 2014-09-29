@@ -112,7 +112,8 @@ def internal_stability(dr, offset, sing_search_points, params,
     sing_params = {'a': params['r_0'], 'b': params['a'],
                    'points': sing_search_points, 'k': params['k'],
                    'm': params['m'], 'b_z_spl': params['b_z'],
-                   'b_theta_spl': params['b_theta']}
+                   'b_theta_spl': params['b_theta'], 'offset': offset,
+                   'tol': 1E-2}
     sings, sings_wo_0, intervals = find_sing.identify_singularties(**sing_params)
     if not suppress_output:
         if not sings.size == 0:
@@ -137,7 +138,7 @@ def internal_stability(dr, offset, sing_search_points, params,
 
     special_case, intervals = offset_intervals(intervals, sings_wo_0,
                                                offset)
-    intervals_dr = process_dr(dr, offset, intervals)
+    intervals_dr, intervals = process_dr(dr, offset, intervals)
 
     int_params['dr'] = intervals_dr[0]
     int_params['r_max'] = intervals[0][1]
@@ -446,6 +447,7 @@ def process_dr(dr, offset, intervals):
     for i, interval in enumerate(intervals):
         if interval[0] > interval[1]:
             interval_dr = np.array([])
+            intervals_dr.append(interval_dr)
             interval[0] = interval[1]
             intervals[i] = interval
         else:
