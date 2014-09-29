@@ -21,6 +21,7 @@ import newcomb_g as g
 import newcomb_init as init
 import singularity_frobenius as frob
 import external_stability as ext
+import find_singularties as find_sing
 
 
 def stability(dr, offset, sing_search_points, params,
@@ -34,6 +35,9 @@ def stability(dr, offset, sing_search_points, params,
                                            suppress_output=suppress_output)
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
+            if np.iscomplex(r_array[-1][-1]):
+                print("Warning, xi/xi_prime is complex." +
+                      "External stability may not be accurate.")
         stable_external, delta_w = ext.external_stability(params, xi[-1][-1],
                                                           xi_der[-1][-1])
     else:
@@ -111,7 +115,7 @@ def internal_stability(dr, offset, sing_search_points, params,
                    'points': sing_search_points, 'k': params['k'],
                    'm': params['m'], 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta']}
-    sings, sings_wo_0, intervals = identify_singularties(**sing_params)
+    sings, sings_wo_0, intervals = find_sing.identify_singularties(**sing_params)
     if not suppress_output:
         if not sings.size == 0:
             print("Non-geometric singularties identified at r =", sings)
