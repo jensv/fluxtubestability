@@ -24,14 +24,16 @@ import external_stability as ext
 import find_singularties as find_sing
 
 
-def stability(dr, offset, sing_search_points, params,
+def stability(dr, offset, suydam_end_offset, sing_search_points, params,
               init_value=(0.0, 1.0), suppress_output=False):
     r"""
     Examines the total stability of profile.
     """
+    missing_end_params = None
     (stable_internal, xi,
-     xi_der, r_array) = internal_stability(dr, offset, sing_search_points,
-                                           params, init_value=(0.0, 1.0),
+     xi_der, r_array) = internal_stability(dr, offset, suydam_end_offset,
+                                           sing_search_points, params,
+                                           init_value=(0.0, 1.0),
                                            suppress_output=suppress_output)
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
@@ -42,7 +44,7 @@ def stability(dr, offset, sing_search_points, params,
         msg = "Integration to plasma edge did not succeed. Can not determine \
 external stability."
         print(msg)
-
+        missing_end_params = params
         stable_external = True
         delta_w = None
 
@@ -57,10 +59,10 @@ external stability."
         if stable_external and stable_internal:
             print("Profile is stable to mode k = ", k, "m =", m)
             print("delta_W =", delta_w)
-    return (stable_internal, stable_external, xi, xi_der, r_array, delta_w)
+    return (stable_internal, stable_external, xi, xi_der, r_array, delta_w, missing_end_params)
 
 
-def internal_stability(dr, offset, sing_search_points, params,
+def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                        init_value=(0.0, 1.0), suppress_output=False):
     """
     Checks for internal stability accroding to Newcomb's procedure.
@@ -137,7 +139,8 @@ def internal_stability(dr, offset, sing_search_points, params,
                    'mu_0': params['mu_0']}
 
     special_case, intervals = offset_intervals(intervals, sings_wo_0,
-                                               offset)
+                                               offset, suydam_result,
+                                               suydam_offset)
     intervals_dr, intervals = process_dr(dr, offset, intervals)
 
     int_params['dr'] = intervals_dr[0]
@@ -412,7 +415,7 @@ def divide_by_f(r, xi_der_f, k, m, b_z_spl, b_theta_spl, q_spl, f_func):
     return xi_der_f / f_func(**f_params)
 
 
-def offset_intervals(intervals, sings_set, offset):
+def offset_intervals(intervals, sings, offset, suydam_result, suydam_offset):
     r"""
     Shift interval bundaries off of singularties by offset.
     """
@@ -420,14 +423,18 @@ def offset_intervals(intervals, sings_set, offset):
     if intervals[0][0] <= offset:
         intervals[0][0] = offset
         special_case = 'geo'
-    elif intervals[0][0] in sings_set:
+    elif np.sum(np.allclose(intervals[0][0], sings) and not sings.size == 0):
         intervals[0][0] += offset
         special_case = 'sing'
     for i, interval in enumerate(intervals):
-        if interval[1] in sings_set:
+        if np.sum(np.allclose(interval[1], sings) and not sings.size == 0):
             interval[1] -= offset
             if i < len(intervals)-1:
-                intervals[i+1][0] += offset
+                if (i == len(intervals)-2 and not suydam_result.size == 0 and
+                        np.sum(np.allclose(interval[1], suydam_result))):
+                    intervals[i+1][0] += suydam_offset
+                else:
+                    intervals[i+1][0] += offset
     return special_case, intervals
 
 
