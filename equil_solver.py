@@ -177,7 +177,7 @@ class NuCurrentProfile(EquilSolver):
     """
 
     def __init__(self, nu_constructor=NuCurrentConstructor(), nu=2, a=1,
-                 points=500, q0=1.0, k=1, b_z0=1, temp=1.0, qa=None, mu_0=1.):
+                 points=500, q0=1.0, k=1., b_z0=1., temp=1.0, qa=None, mu_0=1.):
         r"""
 
         """
@@ -424,7 +424,7 @@ class SmoothedCoreSkin(EquilSolver):
         denominator = 4.*a**3*self.mu_0*np.pi**2*self.epsilon*self.lambda_bar
         return self.j_core*(self.core_radius)/denominator
 
-    def j_z(self, r):
+    def j_z(self, dummy_r):
         r"""
         For now always returns complete j_z.
         """
@@ -457,15 +457,16 @@ class SmoothedCoreSkin(EquilSolver):
         r"""
         Return b_theta at given r values.
         """
-        b_theta_r_integrator = inte.ode(self.__b_theta_r_prime__)
+        b_theta_r_integrator = inte.ode(b_theta_r_prime_func)
         b_theta_r_integrator.set_integrator('lsoda')
+        b_theta_r_integrator.set_f_params(self.splines['j_z'], self.mu_0)
         b_theta_r_integrator.set_initial_value(0., t=0.)
-        # b_theta_r_integrator.set_f_params(self)
-        b_theta_array = [0.]
-        for position in r[1:]:
+        b_theta_array = np.empty(r.size)
+        b_theta_array[0] = 0.
+        for i, position in enumerate(r[1:]):
             if b_theta_r_integrator.successful():
-                b_theta_r_integrator.integrate(t=position)
-                b_theta_array.append(b_theta_r_integrator.y)
+                b_theta_r_integrator.integrate(position)
+                b_theta_array[i+1] = (b_theta_r_integrator.y/position)
             else:
                 break
         return np.array(b_theta_array)
@@ -474,7 +475,7 @@ class SmoothedCoreSkin(EquilSolver):
         r"""
         Return b_theta_r_prime at given r values. To be used for integration.
         """
-        return self.splines['j_z'](r)*r/self.mu_0
+        return self.splines['j_z'](r)*r*self.mu_0
 
     def b_z(self, r):
         r"""
@@ -492,25 +493,28 @@ class SmoothedCoreSkin(EquilSolver):
         r"""
         Return pressure_prime at given r values. To be used for integration.
         """
-        return [self.splines['j_z'](r)*r, -y[0]/r*self.splines['j_z'](r)]
+        return [self.mu_0*self.splines['j_z'](r)*r,
+                -y[0]/r*self.splines['j_z'](r)]
 
     def pressure(self, r):
         r"""
         Return pressure_prime at given r values. To be used for integration.
         """
-        r_reverse = r[::-1]
-        pressure_integrator = inte.ode(self.__p_prime_for_integrating__)
+        pressure_integrator = inte.ode(p_prime_func)
         pressure_integrator.set_integrator('lsoda')
-        pressure_integrator.set_initial_value([0., 0.], r_reverse[0])
-        # pressure_integrator.set_f_params(self)
-        pressure_array = [0.]
-        for position in r_reverse[1:]:
+        pressure_integrator.set_initial_value(0., 0.)
+        pressure_integrator.set_f_params(self.splines['j_z'],
+                                         self.splines['b_theta'])
+        pressure_unnorm = np.empty(r.size)
+        pressure_unnorm[0] = 0.
+        for i, position in enumerate(r[1:]):
             if pressure_integrator.successful():
                 pressure_integrator.integrate(t=position)
-                pressure_array.append(pressure_integrator.y[1])
+                pressure_unnorm[i+1] = pressure_integrator.y
             else:
                 break
-        return np.array(pressure_array)
+        pressure_norm = pressure_unnorm - pressure_unnorm[-1]
+        return pressure_norm
 
     def q(self, r):
         r"""
@@ -631,3 +635,17 @@ class HardCoreZPinch(EquilSolver):
 
 class SharpCoreSkin(EquilSolver):
     pass
+
+
+def b_theta_r_prime_func(r, y, j_z, mu_0):
+    r"""
+    Return b_theta_r_prime at given r values. To be used for integration.
+    """
+    return j_z(r)*r*mu_0
+
+
+def p_prime_func(r, y, j_z, b_theta):
+    r"""
+    Return pressure_prime at given r values. To be used for integration.
+    """
+    return -b_theta(r)*j_z(r)
