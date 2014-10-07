@@ -391,9 +391,7 @@ class SmoothedCoreSkin(EquilSolver):
     def get_j_z_core(self):
         r"""
         """
-        a = self.core_radius + 2*self.transition_width + self.skin_width
-        return (2.*a*self.b_z0*self.k*self.mu_0*self.epsilon /
-                (self.core_radius*self.q0))
+        return (2.*self.b_z0*self.k/(self.mu_0*self.q0))
 
     def get_j_z_skin(self):
         r"""
@@ -521,7 +519,8 @@ class SmoothedCoreSkin(EquilSolver):
         Returns safety factor evaluated at points.
         """
         if r[0] == 0.:
-            q_to_return = np.ones(r.size)*self.q0
+            q0 = self.k*self.b_z0/(0.5*self.mu_0*self.j_core)
+            q_to_return = np.ones(r.size)*q0
             q_to_return[1:] = (r[1:]*self.k*self.splines['b_z'](r[1:]) /
                                self.splines['b_theta'](r[1:]))
         else:
