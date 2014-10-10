@@ -241,12 +241,13 @@ def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
     Notes
     -----
     Implements equation
+
     .. math::
-        \frac{2 k^{2} r^{2}}{k^{2} r^{2} + m^{2}} \ frac{dP}{dr} +
+        \frac{2 k^{2} r^{2}}{k^{2} r^{2} + m^{2}} \frac{dP}{dr} +
         \frac{1}{r}(k r B_{z}+m B_{\theta})^{2}
         \frac{k^{2}r^{2}+m^{2}-1}{k^{2}r^{2}+m^{2}}+
         \frac{2k^{2}r}{(k^{2}r^{2}+m^{2})^{2}}
-        (k^{2}r^{2}B_{z}^{2}-m^{2}B_{theta}^{2})
+        (k^{2}r^{2}B_{z}^{2}-m^{2}B_{\theta}^{2})
 
     Reference
     ---------
