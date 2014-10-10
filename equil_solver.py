@@ -317,7 +317,7 @@ class SmoothedCoreSkin(EquilSolver):
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
                  core_radius=0.7, transition_width=0.1, skin_width=0.1, k=1.,
                  j_core=0.1, epsilon=0.3, lambda_bar=0.5, mu_0=1., q0=1.1,
-                 b_z0=0.1, determinator='q0'):
+                 b_z0=0.1, determinator='j_core'):
         r"""
         Initialize parameters defining smooth skin and core profile
         and create splines.
@@ -354,11 +354,15 @@ class SmoothedCoreSkin(EquilSolver):
         if determinator == 'q0':
             self.b_z0 = b_z0
             self.j_core = self.get_j_z_core()
+            self.ratio = self.get_ratio()
+            self.j_skin = j_core*self.ratio
             self.j_skin = self.get_j_z_skin()
 
         if determinator == 'j_core':
             self.j_core = j_core
-            self.j_skin = self.get_j_z_skin()
+            self.ratio = self.get_ratio()
+            self.j_skin = j_core*self.ratio
+            self.current = self.get_current()
             self.b_z0 = self.get_b_z()
 
         param_points = OrderedDict([('j_z', self.j_z),
@@ -393,7 +397,7 @@ class SmoothedCoreSkin(EquilSolver):
         """
         return (2.*self.b_z0*self.k/(self.mu_0*self.q0))
 
-    def get_j_z_skin(self):
+    def get_ratio(self):
         r"""
         Returs j_z_skin based on j_z_core, geometry and epsilon of pinch.
         """
@@ -411,16 +415,31 @@ class SmoothedCoreSkin(EquilSolver):
                        2.*self.transition_width) *
                        (self.skin_width + self.transition_width) *
                        self.epsilon)
-        return -self.j_core*(term1 + term2 + term3 + term4 + term5 + term6 +
-                             term7 + term8 + term9) / denominator
+        return -(term1 + term2 + term3 + term4 + term5 + term6 +
+                 term7 + term8 + term9) / denominator
+
+    def get_current(self):
+        r"""
+        """
+        a = self.core_radius + 2*self.transition_width + self.skin_width
+        term1 = 0.5*(-a + self.skin_width + 2.*self.transition_width)**2*self.j_core
+        term2 = a*self.skin_width*self.j_skin
+        term3 = -self.skin_width**2*self.j_skin*0.5
+        term4 = a*self.transition_width*self.j_skin*0.5
+        term5 = -self.skin_width*self.transition_width*self.j_skin
+        term6 = -5.*self.transition_width**2*self.j_skin/14.
+        term7 = -1./14.*self.transition_width*-7.*a*(self.j_core*self.j_skin)
+        term8 = -1./14.*self.transition_width*7.*self.skin_width*(self.j_core*self.j_skin)
+        term9 = -1./14.*self.transition_width*3.*self.transition_width*(4.*self.j_core + 3.*self.j_skin)
+        return 2*np.pi*(term1 + term2 + term3 + term4 + term5 +
+                                     term6 + term7 + term8 + term9)
 
     def get_b_z(self):
         r"""
         Returns b_z based on j_z, geometry and lambda_bar of pinch.
         """
-        a = self.core_radius + 2.*self.tranistion_width + self.skin_width
-        denominator = 4.*a**3*self.mu_0*np.pi**2*self.epsilon*self.lambda_bar
-        return self.j_core*(self.core_radius)/denominator
+        a = self.core_radius + 2.*self.transition_width + self.skin_width
+        return self.current*self.mu_0/(np.pi*a**2*self.lambda_bar)
 
     def j_z(self, dummy_r):
         r"""
@@ -513,6 +532,17 @@ class SmoothedCoreSkin(EquilSolver):
                 break
         pressure_norm = pressure_unnorm - pressure_unnorm[-1]
         return pressure_norm
+
+    def get_beta(self, r):
+        r"""
+        """
+        beta_numerator = 2.*self.mu_0*self.splines['pressure'](self.r)
+        beta_denominator = ((self.splines['b_z'](self.r))**2 +
+                            (self.splines['b_theta'](self.r))**2)
+        return interp.InterpolatedUnivariateSpline(self.r, beta_numerator/beta_denominator)
+
+    def get_beta_average(self, r):
+        pass
 
     def q(self, r):
         r"""
