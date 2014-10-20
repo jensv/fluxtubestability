@@ -460,7 +460,8 @@ def process_dr(dr, offset, intervals):
         else:
             index = np.where(dr_cum < interval[1])
             interval_dr = dr[index][np.where(dr_cum[index] > interval[0])]
-            interval_dr[0] = interval_dr[0] - first_element_correction
+            if interval_dr.size != 0:
+                interval_dr[0] = interval_dr[0] - first_element_correction
             last_element = interval[1] - dr_cum[index][-1]
             interval_dr = np.append(interval_dr, last_element)
             first_element_correction = last_element
