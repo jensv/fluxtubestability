@@ -422,17 +422,19 @@ class SmoothedCoreSkin(EquilSolver):
         r"""
         """
         a = self.core_radius + 2*self.transition_width + self.skin_width
-        term1 = 0.5*(-a + self.skin_width + 2.*self.transition_width)**2*self.j_core
-        term2 = a*self.skin_width*self.j_skin
-        term3 = -self.skin_width**2*self.j_skin*0.5
-        term4 = a*self.transition_width*self.j_skin*0.5
-        term5 = -self.skin_width*self.transition_width*self.j_skin
-        term6 = -5.*self.transition_width**2*self.j_skin/14.
-        term7 = -1./14.*self.transition_width*-7.*a*(self.j_core*self.j_skin)
-        term8 = -1./14.*self.transition_width*7.*self.skin_width*(self.j_core*self.j_skin)
-        term9 = -1./14.*self.transition_width*3.*self.transition_width*(4.*self.j_core + 3.*self.j_skin)
-        return 2*np.pi*(term1 + term2 + term3 + term4 + term5 +
-                                     term6 + term7 + term8 + term9)
+        term1 = 7.*a**2*self.j_core
+        term2 = -14.*a*self.skin_width*self.j_core
+        term3 = 14.*a*self.skin_width*self.j_skin
+        term4 = -21.*a*self.transition_width*self.j_core
+        term5 = 14.*a*self.transition_width*self.j_skin
+        term6 = 7.*self.skin_width**2*self.j_core
+        term7 = -7.*self.skin_width**2*self.j_skin
+        term8 = 21.*self.skin_width*self.transition_width*self.j_core
+        term9 = -21.*self.skin_width*self.transition_width*self.j_skin
+        term10 = 16.*self.transition_width**2*self.j_core
+        term11 = -14.*self.transition_width**2*self.j_skin
+        return np.pi/7.*(term1 + term2 + term3 + term4 + term5 + term6 +
+                         term7 + term8 + term9 + term10 + term11)
 
     def get_b_z(self):
         r"""
