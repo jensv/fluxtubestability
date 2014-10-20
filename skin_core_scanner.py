@@ -32,8 +32,10 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
     sub_stability_maps = {-1: np.ones(mesh_shape),
                           0: np.ones(mesh_shape),
                           1: np.ones(mesh_shape)}
+
     stability_maps = {'internal': sub_stability_maps,
                       'external': deepcopy(sub_stability_maps),
+                      'd_w': deepcopy(sub_stability_maps),
                       'internal kink': np.empty(mesh_shape),
                       'external kink': np.empty(mesh_shape)}
 
@@ -54,11 +56,19 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                                         suppress_output=True)
                 stable_internal = results[0]
                 stable_external = results[1]
+                delta_w = results[5]
+
+                if not delta_w is None:
+                    stability_maps['d_w'][m][j][i] = delta_w
+                else:
+                    stability_maps['d_w'][m][j][i] = delta_w
 
                 if not stable_internal:
                     stability_maps['internal'][m][j][i] = 0.
                 if not stable_external:
                     stability_maps['external'][m][j][i] = 0.
+                if stable_external and delta_w is None:
+                    stability_maps['external'][m][j][i] = -1.
 
     stability_maps['internal kink'] = (stability_maps['internal'][-1] +
                                        stability_maps['internal'][1] > 1.5).astype(int)
