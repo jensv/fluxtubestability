@@ -102,7 +102,10 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
              external_m_0=stability_maps['external'][0],
              external_m_1=stability_maps['external'][1],
              internal_kink=stability_maps['internal kink'],
-             external_kink=stability_maps['external kink']
+             external_kink=stability_maps['external kink'],
+             d_w_m_neg_1=stability_maps['d_w'][-1],
+             d_w_m_0=stability_maps['d_w'][0],
+             d_w_m_1=stability_maps['d_w'][1]
              )
 
     return lambda_a_mesh, k_a_mesh, stability_maps
