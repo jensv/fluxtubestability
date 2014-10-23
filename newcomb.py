@@ -15,6 +15,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatibility"""
 
 import numpy as np
+import numpy.ma as ma
 import scipy.integrate as inte
 import newcomb_f as f
 import newcomb_g as g
@@ -137,7 +138,6 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                    'p_prime_spl': params['p_prime'],
                    'q_spl': params['q'], 'f_func': f.newcomb_f_16,
                    'mu_0': params['mu_0']}
-
     special_case, intervals = offset_intervals(intervals, sings_wo_0,
                                                offset, suydam_result,
                                                suydam_offset)
@@ -291,7 +291,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
 
-    if np.allclose(f_func(**f_params), 0., atol=10E-5):
+    if np.isclose(f_func(**f_params), 0., atol=10E-5):
         print('singularity at r=' + str(r))
 
     y_prime[0] = y[1]/f_func(**f_params)
@@ -394,11 +394,11 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
         rs[i+1] = xi_int.t
 
     crossing = False
-    crossings = np.where(np.diff(np.sign(xi)))[0]
+    crossings = np.nonzero(ma.masked_invalid(np.diff(np.sign(xi))))[0]
     if crossings.size != 0:
         crossing = True
         if not suppress_output:
-            print('Eigenfunction crosses zero near:', np.cumsum(dr)[crossings])
+            print('Eigenfunction crosses zero near:', r_init+np.cumsum(dr)[crossings])
     rs = np.asarray(rs)
     xi_der_f = np.asarray(xi_der_f)
     xi_der = divide_by_f(rs, xi_der_f, k, m, b_z_spl,
@@ -423,15 +423,15 @@ def offset_intervals(intervals, sings, offset, suydam_result, suydam_offset):
     if intervals[0][0] <= offset:
         intervals[0][0] = offset
         special_case = 'geo'
-    elif np.sum(np.allclose(intervals[0][0], sings) and not sings.size == 0):
+    elif np.sum(np.isclose(intervals[0][0], sings) and not sings.size == 0):
         intervals[0][0] += offset
         special_case = 'sing'
     for i, interval in enumerate(intervals):
-        if np.sum(np.allclose(interval[1], sings) and not sings.size == 0):
+        if np.sum(np.isclose(interval[1], sings)) and not sings.size == 0:
             interval[1] -= offset
             if i < len(intervals)-1:
                 if (i == len(intervals)-2 and not suydam_result.size == 0 and
-                        np.sum(np.allclose(interval[1], suydam_result))):
+                        np.sum(np.isclose(interval[1], suydam_result))):
                     intervals[i+1][0] += suydam_offset
                 else:
                     intervals[i+1][0] += offset
