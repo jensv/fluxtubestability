@@ -36,7 +36,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
     stability_maps = {'internal': sub_stability_maps,
                       'external': deepcopy(sub_stability_maps),
                       'd_w': deepcopy(sub_stability_maps),
-                      'normalized_d_w': deepcopy(sub_stability_maps),
+                      'd_w_norm': deepcopy(sub_stability_maps),
                       'internal kink': np.empty(mesh_shape),
                       'external kink': np.empty(mesh_shape)}
 
@@ -66,10 +66,10 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
 
                 if delta_w is not None:
                     stability_maps['d_w'][m][j][i] = delta_w
-                    stability_maps['normalized_d_w'][m][j][i] = delta_w / delta_w_0
+                    stability_maps['d_w_norm'][m][j][i] = delta_w / delta_w_0
                 else:
                     stability_maps['d_w'][m][j][i] = np.nan
-                    stability_maps['normalized_d_w'][m][j][i] = np.nan
+                    stability_maps['d_w_norm'][m][j][i] = np.nan
 
                 if not stable_internal:
                     stability_maps['internal'][m][j][i] = 0.
@@ -114,6 +114,9 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
              d_w_m_neg_1=stability_maps['d_w'][-1],
              d_w_m_0=stability_maps['d_w'][0],
              d_w_m_1=stability_maps['d_w'][1]
+             d_w_norm_m_neg_1=stability_maps['d_w_norm'][-1]
+             d_w_norm_m_0=stability_maps['d_w_norm'][0]
+             d_w_norm_m_1=stability_maps['d_w_norm'][1]
              )
 
     return lambda_a_mesh, k_a_mesh, stability_maps
