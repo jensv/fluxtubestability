@@ -113,9 +113,9 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
              external_kink=stability_maps['external kink'],
              d_w_m_neg_1=stability_maps['d_w'][-1],
              d_w_m_0=stability_maps['d_w'][0],
-             d_w_m_1=stability_maps['d_w'][1]
-             d_w_norm_m_neg_1=stability_maps['d_w_norm'][-1]
-             d_w_norm_m_0=stability_maps['d_w_norm'][0]
+             d_w_m_1=stability_maps['d_w'][1],
+             d_w_norm_m_neg_1=stability_maps['d_w_norm'][-1],
+             d_w_norm_m_0=stability_maps['d_w_norm'][0],
              d_w_norm_m_1=stability_maps['d_w_norm'][1]
              )
 
