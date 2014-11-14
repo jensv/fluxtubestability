@@ -1,7 +1,7 @@
 # README #
 
 This program should be used for determining the ideal MHD stability of flux tubes / cylindrical pinches.
-I plan to use both Newcomb's mtethod as well as the more brute force linear ideal MHD evolution method.
+I plan to use both Newcomb's mtethod as well as the more brute force linear ideal MHD eigenvalue method.
 Eventually I plan to pack the code into a convenient GUI.
 
 ### What is this repository for? ###
