@@ -36,10 +36,10 @@ def external_stability(params, xi, xi_der):
                           'b_z': b_z})
     f_adjoint_term = f_adjoint(**{'a': a, 'k': k, 'm': m, 'b_theta': b_theta,
                                   'b_z': b_z})
-    k_0_term = k_0(**{'k': k, 'm': m, 'a': a})
+    k_0_sq_term = k_0(**{'k': k, 'm': m, 'a': a})
 
-    term1 = f_term**2*a*xi_der/(k_0_term**2*xi)
-    term2 = f_term*f_adjoint_term/(k_0_term**2)
+    term1 = f_term**2*a*xi_der/(k_0_sq_term*xi)
+    term2 = f_term*f_adjoint_term/(k_0_sq_term)
     term3 = a**2*f_term**2*lambda_term
     delta_w = (term1+term2*term3)*xi**2
     stable = delta_w > 0
