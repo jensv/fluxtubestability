@@ -490,12 +490,6 @@ class SmoothedCoreSkin(EquilSolver):
                 break
         return np.array(b_theta_array)
 
-    def __b_theta_r_prime__(self, r, y):
-        r"""
-        Return b_theta_r_prime at given r values. To be used for integration.
-        """
-        return self.splines['j_z'](r)*r*self.mu_0
-
     def b_z(self, r):
         r"""
         Returns constant axial magnetic field.
@@ -507,13 +501,6 @@ class SmoothedCoreSkin(EquilSolver):
         Return pressure_prime at given r values. To be used for integration.
         """
         return -self.splines['b_theta'](r)*self.splines['j_z'](r)
-
-    def __p_prime_for_integrating__(self, r, y):
-        r"""
-        Return pressure_prime at given r values. To be used for integration.
-        """
-        return [self.mu_0*self.splines['j_z'](r)*r,
-                -y[0]/r*self.splines['j_z'](r)]
 
     def pressure(self, r):
         r"""
@@ -600,19 +587,27 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
     def r_points(self):
         r"""
         """
+        (points_core, points_transition, 
+         points_skin)                    = (self.points_core, 
+                                            self.points_transition,
+                                            self.points_skin)
+        (core_radius, transition_width, 
+         skin_width)                     = (self.core_radius, 
+                                            self.transition_width,
+                                            self.skin_width)
         mask = np.ones(points_transition + 2, dtype=bool)
         mask[[0, -1]] = False
-        self.r1 = np.linspace(0., core_radius_norm, points_core)
-        r2 = np.linspace(core_radius_norm, core_radius_norm + 
-                         transition_width_norm, points_transition + 2)
+        self.r1 = np.linspace(0., core_radius, points_core)
+        r2 = np.linspace(core_radius, core_radius +
+                         transition_width, points_transition + 2)
         self.r2 = r2[mask]
-        self.r3 = np.linspace(core_radius_norm + transition_width_norm,
-                              core_radius_norm + transition_width_norm + 
-                              skin_width_norm, points_skin)
-        r4 = np.linspace(core_radius_norm + transition_width_norm + 
-                         skin_width_norm,
-                         core_radius_norm + 2*transition_width_norm + 
-                         skin_width_norm, points_transition + 2)
+        self.r3 = np.linspace(core_radius + transition_width,
+                              core_radius + transition_width + 
+                              skin_width, points_skin)
+        r4 = np.linspace(core_radius + transition_width + 
+                         skin_width,
+                         core_radius + 2*transition_width + 
+                         skin_width, points_transition + 2)
         self.r4 = r4[mask]
         r = np.concatenate((self.r1, self.r2, self.r3, self.r4))
         return r
@@ -704,39 +699,40 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
                                            0., self.r[points3:points4])
         return j_z     
         
-    def current_integral():
+    def b_theta_integrand():
         r"""
         """
+        b_theta_r_integrator = inte.ode(b_theta_r_prime_func)
+        b_theta_r_integrator.set_integrator('lsoda')
+        b_theta_r_integrator.set_f_params(self.splines['j_z'], 1.0)
+        b_theta_r_integrator.set_initial_value(0., t=0.)
+        b_theta_integrand_array = np.empty(r.size)
+        b_theta_integrand_array[0] = 0.
+        for i, position in enumerate(r[1:]):
+            if b_theta_r_integrator.successful():
+                b_theta_r_integrator.integrate(position)
+                b_theta_integrand_array[i+1] = (b_theta_r_integrator.y/position)
+            else:
+                break
+        return b_theta_integrand_array
         
+    def get_q_0(self):
+        r"""
+        """
+        return self.b_theta_integrand_array[-1]*4.*self.k_bar/self.lambda_bar
 
     def b_theta(self, r):
         r"""
         Return b_theta at given r values.
         """
-        b_theta_r_integrator = inte.ode(b_theta_r_prime_func)
-        b_theta_r_integrator.set_integrator('lsoda')
-        b_theta_r_integrator.set_f_params(self.splines['j_z'], self.mu_0)
-        b_theta_r_integrator.set_initial_value(0., t=0.)
-        b_theta_array = np.empty(r.size)
-        b_theta_array[0] = 0.
-        for i, position in enumerate(r[1:]):
-            if b_theta_r_integrator.successful():
-                b_theta_r_integrator.integrate(position)
-                b_theta_array[i+1] = (b_theta_r_integrator.y/position)
-            else:
-                break
-        return np.array(b_theta_array)
-
-    def __b_theta_r_prime__(self, r, y):
-        r"""
-        Return b_theta_r_prime at given r values. To be used for integration.
-        """
-        return self.splines['j_z'](r)*r*self.mu_0
+        b_theta_array = self.b_theta_integrand_array*2.*self.k_bar/self.q_0
+        return b_theta_array
 
     def b_z(self, r):
         r"""
         Returns constant axial magnetic field.
         """
+        self.b_z0 = 2.*self.b_theta_array[-1]/self.lambda_bar
         return np.ones(r.size)*self.b_z0
 
     def p_prime(self, r):
@@ -744,13 +740,6 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         Return pressure_prime at given r values. To be used for integration.
         """
         return -self.splines['b_theta'](r)*self.splines['j_z'](r)
-
-    def __p_prime_for_integrating__(self, r, y):
-        r"""
-        Return pressure_prime at given r values. To be used for integration.
-        """
-        return [self.mu_0*self.splines['j_z'](r)*r,
-                -y[0]/r*self.splines['j_z'](r)]
 
     def pressure(self, r):
         r"""
@@ -770,19 +759,19 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
             else:
                 break
         pressure_norm = pressure_unnorm - pressure_unnorm[-1]
-        return pressure_norm
+        pressure = pressure_norm*4.*self.k_bar/(self.beta*self.q_0)
+        return pressure
 
     def q(self, r):
         r"""
         Returns safety factor evaluated at points.
         """
         if r[0] == 0.:
-            q0 = self.k*self.b_z0/(0.5*self.mu_0*self.j_core)
-            q_to_return = np.ones(r.size)*q0
-            q_to_return[1:] = (r[1:]*self.k*self.splines['b_z'](r[1:]) /
+            q_to_return = np.ones(r.size)*self.q_0
+            q_to_return[1:] = (r[1:]*self.k_bar*self.splines['b_z'](r[1:]) /
                                self.splines['b_theta'](r[1:]))
         else:
-            q_to_return = (r*self.k*self.splines['b_z'](r) /
+            q_to_return = (r*self.k_bar*self.splines['b_z'](r) /
                            self.splines['b_theta'](r))
         return q_to_return
 
