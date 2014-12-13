@@ -554,7 +554,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
     """
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
                  core_radius_norm=0.7, transition_width_norm=0.1, 
-                 skin_width_norm=0.1, k_norm=1., beta=0.1,
+                 skin_width_norm=0.1, k_bar=1., beta=0.1,
                  j_0=1.0, epsilon=0.3, lambda_bar=0.5):
         r"""
         Initialize parameters defining smooth skin and core profile
@@ -567,22 +567,26 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         self.transition_width = transition_width_norm
         self.skin_width = skin_width_norm
         self.r_0 = self.core_radius + 2*self.transition_width + self.skin_width
-
-        self.r = r_points()
-
-        self.k = k_norm
-        self.epsilon = epsilon
-        self.lambda_bar = lambda_bar
+        self.r = self.r_points()
         
-        param_points = OrderedDict([('j_z', self.j_z),
-                                    ('b_theta', self.b_theta),
-                                    ('b_z', self.b_z),
-                                    ('p_prime', self.p_prime),
-                                    ('pressure', self.pressure),
-                                    ('q', self.q),
-                                    ('rho', self.rho)])
-
-        self.set_splines(param_points)
+        self.k_bar = k_bar
+        self.epsilon = epsilon
+        self.lambda_bar = lambda_bar 
+ 
+        self.splines = {}
+    
+        self.j_skin = self.get_j_skin_norm()
+        self.make_spline('j_z', self.r, self.j_z(self.r))        
+        
+        self.b_theta_integrand_array = self.b_theta_integrand()
+        self.q_0 = self.get_q_0()
+        self.make_spline('b_theta', self.r, self.b_theta(self.r))
+        self.make_spline('b_z', self.r, self.b_z(self.r))
+        self.make_spline('pressure', self.r, self.pressure(self.r))
+        self.make_spline('p_prime', self.r, )
+        self.make_spline('q', self.r)
+        self.make_spline('rho', self.r)        
+        
 
     def r_points(self):
         r"""
