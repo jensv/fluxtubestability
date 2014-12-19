@@ -16,7 +16,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 import scipy.special as spec
 
 
-def external_stability(params, xi, xi_der):
+def external_stability(params, xi, xi_der, dim_less=False):
     r"""
     Returns external external stability and dW.
     """
@@ -25,6 +25,7 @@ def external_stability(params, xi, xi_der):
     b_theta = params['b_theta'](a)
     m = params['m']
     k = params['k']
+    magnetic_potential_energy_ratio = params['magnetic_potential_energy_ratio']
 
     if params['b'] == 'infinity':
         lambda_term = lambda_infinity(**{'a': a, 'k': k, 'm': m})
@@ -42,9 +43,10 @@ def external_stability(params, xi, xi_der):
     term2 = f_term*f_adjoint_term/(k_0_sq_term)
     term3 = a**2*f_term**2*lambda_term
     delta_w = (term1+term2*term3)*xi**2
+    if dim_less:
+        delta_w = magnetic_potential_energy_ratio * delta_w
     stable = delta_w > 0
     return stable, delta_w
-
 
 def lambda_infinity(a, k, m):
     r"""
