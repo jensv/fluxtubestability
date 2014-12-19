@@ -18,7 +18,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import numpy as np
 
-def init_geometric_sing(r, k, m, b_z, b_theta, q, f_func, *args, **kwargs):
+def init_geometric_sing(r, k, m, b_z, b_theta, q, f_func, factor, *args, **kwargs):
     r"""
     Return xi found from Frobenius method at a geometric singularity (i.e. r=0)
 
@@ -71,10 +71,10 @@ def init_geometric_sing(r, k, m, b_z, b_theta, q, f_func, *args, **kwargs):
 
     y[1] = f_func(**f_params)*y[1]
 
-    return y
+    return y*factor
 
 
-def init_xi_given(xi, r, k, m, b_z, b_theta, q, f_func, *args, **kwargs):
+def init_xi_given(xi, r, k, m, b_z, b_theta, q, f_func, factor, *args, **kwargs):
     r"""
     Return y intizlized with given xi and xi_prime.
 
@@ -121,10 +121,10 @@ def init_xi_given(xi, r, k, m, b_z, b_theta, q, f_func, *args, **kwargs):
     y[0] = xi[0]
     y[1] = xi[1] * f_func(**f_params)
 
-    return y
+    return y*factor
 
 
-def init_r_sing_glasser(r, k, m, b_z, b_theta, *args, **kwargs):
+def init_r_sing_glasser(r, k, m, b_z, b_theta, factor, *args, **kwargs):
     r"""
     Returns initial condition for r close to zero.
 
@@ -165,4 +165,4 @@ def init_r_sing_glasser(r, k, m, b_z, b_theta, *args, **kwargs):
     xi = np.zeros(2)
     xi[0] = r**(m - 1)
     xi[1] = xi[0]*((k*b_z(r)*r + m*b_theta(r))/m)**2*(m - 1)
-    return xi
+    return xi*factor
