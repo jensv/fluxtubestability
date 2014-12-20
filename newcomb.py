@@ -26,7 +26,8 @@ import find_singularties as find_sing
 
 
 def stability(dr, offset, suydam_end_offset, sing_search_points, params,
-              init_value=(0.0, 1.0), suppress_output=False):
+              init_value=(0.0, 1.0), suppress_output=False,
+              external_only=True):
     r"""
     Examines the total stability of profile.
     """
@@ -35,7 +36,8 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
      xi_der, r_array) = internal_stability(dr, offset, suydam_end_offset,
                                            sing_search_points, params,
                                            init_value=(0.0, 1.0),
-                                           suppress_output=suppress_output)
+                                           suppress_output=suppress_output.
+                                           external_only=external_only)
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
 
@@ -64,7 +66,8 @@ external stability."
 
 
 def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
-                       init_value=(0.0, 1.0), suppress_output=False):
+                       init_value=(0.0, 1.0), suppress_output=False,
+                       external_only=True):
     """
     Checks for internal stability accroding to Newcomb's procedure.
 
@@ -143,40 +146,81 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                                                suydam_offset)
     intervals_dr, intervals = process_dr(dr, offset, intervals)
 
-    int_params['dr'] = intervals_dr[0]
-    int_params['r_max'] = intervals[0][1]
-    int_params['r_init'] = intervals[0][0]
-    int_params['suppress_output'] = suppress_output
+    if external_only:
+        if len(intervals) == 1:
 
-    deal_special_case = {'sing': deal_sing, 'geo': deal_geo,
-                         None: deal_norm}
-    int_params = deal_special_case[special_case](int_params, frob_params,
-                                                 intervals[0][0], offset,
-                                                 init_value)
+            int_params['dr'] = intervals_dr[0]
+            int_params['r_max'] = intervals[0][1]
+            int_params['r_init'] = intervals[0][0]
+            int_params['suppress_output'] = suppress_output
 
-    crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
-    eigenfunctions.append(eigenfunction)
-    eigen_ders.append(eigen_der)
-    rs_list.append(rs)
-    stable = False if crossing else stable
+            deal_special_case = {'sing': deal_sing, 'geo': deal_geo,
+                                 None: deal_norm}
+            int_params = deal_special_case[special_case](int_params,
+                                                         frob_params,
+                                                         intervals[0][0],
+                                                         offset,
+                                                         init_value)
 
-    for i, interval in enumerate(intervals[1:]):
-        # repeat integration for each interval
-        int_params['dr'] = intervals_dr[i+1]
-        int_params['r_init'] = interval[0]
-        int_params['init_func'] = init.init_xi_given
-        frob_params['r_sing'] = interval[0] - offset
-        int_params['xi_init'] = frob.sing_small_solution(**frob_params)
-        crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
-        eigenfunctions.append(eigenfunction)
-        eigen_ders.append(eigen_der)
-        rs_list.append(rs)
-        stable = False if crossing else stable
+            (eigenfunctions, eigen_ders, rs_list,
+             stable) = integrate_interval(int_params, eigenfunctions,
+                                          eigen_ders, rs_list, stable)
+
+         else:
+             int_params['dr'] = intervals_dr[-1]
+             int_params['r_init'] = interval[0]
+             int_params['init_func'] = init.init_xi_given
+             frob_params['r_sing'] = interval[0] - offset
+             int_params['xi_init'] = frob.sing_small_solution(**frob_params)
+
+             (eigenfunctions, eigen_ders, rs_list,
+              stable) = integrate_interval(int_params, eigenfunctions,
+                                           eigen_ders, rs_list, stable)
+    else:
+        int_params['dr'] = intervals_dr[0]
+        int_params['r_max'] = intervals[0][1]
+        int_params['r_init'] = intervals[0][0]
+        int_params['suppress_output'] = suppress_output
+
+        deal_special_case = {'sing': deal_sing, 'geo': deal_geo,
+                             None: deal_norm}
+        int_params = deal_special_case[special_case](int_params,
+                                                     frob_params,
+                                                     intervals[0][0],
+                                                     offset,
+                                                     init_value)
+
+        (eigenfunctions, eigen_ders, rs_list,
+         stable) = integrate_interval(int_params, eigenfunctions,
+                                      eigen_ders, rs_list, stable)
+
+        for i, interval in enumerate(intervals[1:]):
+            # repeat integration for each interval
+            int_params['dr'] = intervals_dr[i+1]
+            int_params['r_init'] = interval[0]
+            int_params['init_func'] = init.init_xi_given
+            frob_params['r_sing'] = interval[0] - offset
+            int_params['xi_init'] = frob.sing_small_solution(**frob_params)
+
+            (eigenfunctions, eigen_ders, rs_list,
+             stable) = integrate_interval(int_params, eigenfunctions,
+                                          eigen_ders, rs_list, stable)
 
     eigenfunctions = np.asarray(eigenfunctions)
     eigen_ders = np.asarray(eigen_ders)
     rs_array = np.asarray(rs_list)
     return stable, eigenfunctions, eigen_ders, rs_array
+
+
+def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable):
+    r"""
+    """
+    crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
+    eigenfunctions.append(eigenfunction)
+    eigen_ders.append(eigen_der)
+    rs_list.append(rs)
+    stable = False if crossing else stable
+    return eigenfunctions, eigen_ders, rs_list, stable
 
 
 def deal_geo(int_params, *args):
