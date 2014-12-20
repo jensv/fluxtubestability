@@ -148,7 +148,6 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
 
     if external_only:
         if len(intervals) == 1:
-
             int_params['dr'] = intervals_dr[0]
             int_params['r_max'] = intervals[0][1]
             int_params['r_init'] = intervals[0][0]
@@ -165,7 +164,6 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             (eigenfunctions, eigen_ders, rs_list,
              stable) = integrate_interval(int_params, eigenfunctions,
                                           eigen_ders, rs_list, stable)
-
          else:
              int_params['dr'] = intervals_dr[-1]
              int_params['r_init'] = interval[0]
