@@ -36,7 +36,7 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
      xi_der, r_array) = internal_stability(dr, offset, suydam_end_offset,
                                            sing_search_points, params,
                                            init_value=(0.0, 1.0),
-                                           suppress_output=suppress_output.
+                                           suppress_output=suppress_output,
                                            external_only=external_only)
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
