@@ -262,15 +262,14 @@ def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
     return term1 + term2 + term3
 
 
-def newcomb_g_18_dimless(r, k, m, b_z, b_theta, p_prime):
+def newcomb_g_18_dimless(r, k, m, b_z, b_theta, p_prime, q, beta_0):
     r"""
-    Return g from Newcomb's paper.
-
-
+    Return g from Newcomb's paper in dimensionless form.
     """
-    term1 = beta*2.*k**2*r**2/(f_denom(r, k, m))*p_prime*mu_0
-    term2 = (1./r*f_num_wo_r(r, k, m, b_z, b_theta)*(k**2*r**2+m**2-1.) /
-             f_denom(r, k, m))
-    term3 = (2.*k**2*r/f_denom(r, k, m)**2 *
-             (k**2*r**2*b_z**2 - m**2*b_theta**2))
-    return term1 + term2 + term3
+    term1 = beta_0*k**2*r**2/(f_denom(r, k, m))*p_prime
+    term2 = r*(k*b_z)**2*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
+    term3 = (m**2*q**2*1./r*(b_z/(k*r)**2)*(k**2*r**2+m**2-1.)/
+             (k**2*r**2 + m**2))
+    term4 = 2*k**4*r**3*b_z**2/(k**2*r**2+m**2)
+    term5 = m**2*q**2*2.*b_z**2/(r*(k**2*r**2+m**2)**2)
+    return term1 + term2 + term3 + term4 + term5
