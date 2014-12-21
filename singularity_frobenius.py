@@ -4,7 +4,7 @@ Created on Thu Aug 21 13:23:31 2014
 
 @author: Jens von der Linden
 
-Implments Frobneius expansion around a singularity to determine the "small"
+Implements Frobenius expansion around a singularity to determine the "small"
 solution and check the Suydam condition.
 """
 
@@ -84,8 +84,8 @@ def nu_1_2(alpha, beta, imaginary=False, **kwargs):
     nu_2 : ndarray of floats
          exponent 1 of Frobenius solution
     """
-    nu_1 = 0.5 + np.emath.sqrt(0.25 + beta/alpha)
-    nu_2 = 0.5 - np.emath.sqrt(0.25 + beta/alpha)
+    nu_1 = -0.5 + np.emath.sqrt(0.25 + beta/alpha)
+    nu_2 = -0.5 - np.emath.sqrt(0.25 + beta/alpha)
     return nu_1, nu_2
 
 
