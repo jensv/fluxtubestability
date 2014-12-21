@@ -57,12 +57,13 @@ external stability."
         if not stable_external:
             print("Profile is unstable to external mode k =", k, "m =", m)
             print("delta_W =", delta_w)
-        if not stable_internal:
+        if not stable_internal and not only_external:
             print("Profile is unstable to internal mode k =", k, "m =", m)
         if stable_external and stable_internal:
             print("Profile is stable to mode k = ", k, "m =", m)
             print("delta_W =", delta_w)
-    return (stable_internal, stable_external, xi, xi_der, r_array, delta_w, missing_end_params)
+    return (stable_internal, stable_external, xi, xi_der, r_array, delta_w,
+            missing_end_params)
 
 
 def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
