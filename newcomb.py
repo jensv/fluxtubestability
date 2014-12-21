@@ -127,7 +127,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             print("Non-geometric singularties identified at r =", sings)
 
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
-                                 params['p_prime'], params['mu_0'])
+                                 params['p_prime'], params['beta_0'])
     if suydam_result.size != 0:
         if (not suydam_result.size == 1 or not suydam_result[0] == 0.):
             stable = False
@@ -135,13 +135,13 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                 print("Profile is Suydam unstable at r =", suydam_result)
 
     int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18,
-                  'params': params, 'mu_0': params['mu_0']}
+                  'params': params}
     frob_params = {'offset': offset, 'k': params['k'], 'm': params['m'],
                    'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta'],
                    'p_prime_spl': params['p_prime'],
                    'q_spl': params['q'], 'f_func': f.newcomb_f_16,
-                   'mu_0': params['mu_0']}
+                   'beta_0': params['beta_0']}
     special_case, intervals = offset_intervals(intervals, sings_wo_0,
                                                offset, suydam_result,
                                                suydam_offset)
@@ -247,7 +247,7 @@ def deal_norm(int_params, frob_params, interval_start, offset, init_value):
 
 
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
-                f_func, g_func, mu_0):
+                f_func, g_func, beta_0):
     r"""
     Returns derivatives of Newcomb's Euler-Lagrange equation expressed as a set
     of 2 first order ODEs.
@@ -274,8 +274,8 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
         function which returns f of Newcomb's Euler-Lagrange equation
     g_func : function
         function which returns f of Newcomb's Euler-Lagrange equation
-    mu_0 : float
-        magnetic permeability of free space
+    beta_0 : float
+        pressure ratio on axis
 
     Returns
     -------
@@ -302,7 +302,7 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
                 'b_theta_prime': b_theta_spl.derivative()(r),
                 'p_prime': p_prime_spl(r), 'q': q_spl(r),
                 'q_prime': q_spl.derivative()(r),
-                'mu_0': mu_0}
+                'beta_0': beta_0}
 
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
@@ -343,7 +343,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     return y_prime
 
 
-def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
+def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
                 atol=None, rtol=None, reverse=False, divide_f=False,
                 xi_init=(None, None), suppress_output=False):
     r"""
@@ -395,8 +395,8 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
     Equation (23)
     """
     (k, m, b_z_spl, b_theta_spl,
-     p_prime_spl, q_spl) = map(params.get, ['k', 'm', 'b_z', 'b_theta',
-                                            'p_prime', 'q'])
+     p_prime_spl, q_spl, beta_0) = map(params.get, ['k', 'm', 'b_z', 'b_theta',
+                                            'p_prime', 'q', 'beta_0'])
 
     init_params = {'r': r_init, 'k': k, 'm': m, 'b_z': b_z_spl(r_init),
                    'b_theta': b_theta_spl(r_init), 'q': q_spl(r_init),
@@ -418,7 +418,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func, mu_0,
 
     xi_int.set_initial_value(init_func(**init_params), t=r_init)
     xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
-                        g_func, mu_0)
+                        g_func, beta_0)
 
     y_init = init_func(**init_params)
     xi[0] = y_init[0]
@@ -512,7 +512,7 @@ def process_dr(dr, offset, intervals):
     return intervals_dr, intervals
 
 
-def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, mu_0):
+def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0):
     r"""
     Return radial positions at which the Euler-Lagrange equation is singular
     and Suydam's criterion is violated.
@@ -533,6 +533,6 @@ def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, mu_0):
         positions at which plasma column is suydam unstable
     """
     params = {'r': r, 'b_z_spl': b_z_spl, 'b_theta_spl': b_theta_spl,
-              'p_prime_spl': p_prime_spl, 'mu_0': mu_0}
+              'p_prime_spl': p_prime_spl, 'beta_0': beta_0}
     unstable_mask = np.invert(frob.sings_suydam_stable(**params))
     return r[unstable_mask]
