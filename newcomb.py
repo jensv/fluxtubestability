@@ -137,8 +137,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
 
     int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18,
                   'params': params}
-    frob_params = {'offset': offset, 'k': params['k'], 'm': params['m'],
-                   'b_z_spl': params['b_z'],
+    frob_params = {'offset': offset, 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta'],
                    'p_prime_spl': params['p_prime'],
                    'q_spl': params['q'], 'f_func': f.newcomb_f_16,
