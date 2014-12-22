@@ -42,7 +42,8 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
 
         stable_external, delta_w = ext.external_stability(params, xi[-1][-1],
-                                                          xi_der[-1][-1])
+                                                          xi_der[-1][-1],
+                                                          dim_less=True)
     else:
         msg = "Integration to plasma edge did not succeed. Can not determine \
 external stability."
