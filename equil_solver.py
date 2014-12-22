@@ -553,7 +553,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
     Creates splines describing a smooth skin and core current profile.
     """
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
-                 core_radius_norm=0.7, transition_width_norm=0.1, 
+                 core_radius_norm=0.7, transition_width_norm=0.1,
                  skin_width_norm=0.1, k_bar=1., beta=0.1,
                  j_0=1.0, epsilon=0.3, lambda_bar=0.5):
         r"""
@@ -568,36 +568,36 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         self.skin_width = skin_width_norm
         self.r_bar = self.core_radius + 2*self.transition_width + self.skin_width
         self.r = self.r_points()
-        
+
         self.k_bar = k_bar
         self.epsilon = epsilon
-        self.lambda_bar = lambda_bar 
- 
+        self.lambda_bar = lambda_bar
+
         self.splines = {}
-    
+
         self.j_skin = self.get_j_skin_norm()
-        self.make_spline('j_z', self.r, self.j_z(self.r))        
-        
+        self.make_spline('j_z', self.r, self.j_z(self.r))
+
         self.b_theta_integrand_array = self.b_theta_integrand()
         self.q_0 = self.get_q_0()
-        
+
         self.make_spline('b_theta', self.r, self.b_theta(self.r))
         self.make_spline('b_z', self.r, self.b_z(self.r))
         self.make_spline('pressure', self.r, self.pressure(self.r))
         self.make_spline('p_prime', self.r, self.p_prime(self.r))
         self.make_spline('q', self.r, self.q(self.r))
-        self.make_spline('rho', self.r, self.rho(self.r))        
-        
+        self.make_spline('rho', self.r, self.rho(self.r))
+
 
     def r_points(self):
         r"""
         """
-        (points_core, points_transition, 
-         points_skin)                    = (self.points_core, 
+        (points_core, points_transition,
+         points_skin)                    = (self.points_core,
                                             self.points_transition,
                                             self.points_skin)
-        (core_radius, transition_width, 
-         skin_width)                     = (self.core_radius, 
+        (core_radius, transition_width,
+         skin_width)                     = (self.core_radius,
                                             self.transition_width,
                                             self.skin_width)
         mask = np.ones(points_transition + 2, dtype=bool)
@@ -607,16 +607,16 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
                          transition_width, points_transition + 2)
         self.r2 = r2[mask]
         self.r3 = np.linspace(core_radius + transition_width,
-                              core_radius + transition_width + 
+                              core_radius + transition_width +
                               skin_width, points_skin)
-        r4 = np.linspace(core_radius + transition_width + 
+        r4 = np.linspace(core_radius + transition_width +
                          skin_width,
-                         core_radius + 2*transition_width + 
+                         core_radius + 2*transition_width +
                          skin_width, points_transition + 2)
         self.r4 = r4[mask]
         r = np.concatenate((self.r1, self.r2, self.r3, self.r4))
         return r
-        
+
     def make_spline(self, key, r, values):
         r"""
         """
@@ -644,10 +644,10 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         r"""
         Returs j_z_skin based on j_z_core, geometry and epsilon of pinch.
         """
-        (epsilon, skin_width, 
-         transition_width, r_bar) = (self.epsilon, self.skin_width, 
-                                   self.transition_width, self.r_bar) 
-        
+        (epsilon, skin_width,
+         transition_width, r_bar) = (self.epsilon, self.skin_width,
+                                     self.transition_width, self.r_bar)
+
         factor1 = skin_width + epsilon*r_bar - r_bar
         term1 = 16.*skin_width**2
         term2 = 21.*skin_width*transition_width
@@ -655,7 +655,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         term4 = 7.*transition_width**2
         term5 = -14.*transition_width*r_bar
         term6 = 7.*r_bar**2
-        numerator = factor1*(term1 + term2 + term3 + term4)
+        numerator = factor1*(term1 + term2 + term3 + term4 + term5 + term6)
 
         term1 = 14.*skin_width**3
         term2 = 21.*skin_width**2*transition_width
@@ -670,11 +670,11 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         term9 = -7.*transition_width**2*r_bar
         term10 = -14.*transition_width*epsilon*r_bar**2
         term11 = 14.*transition_width*r_bar**2
-        denominator = (term1 + term2 + term3 + term4 + term5 + term6 + term7 
+        denominator = (term1 + term2 + term3 + term4 + term5 + term6 + term7
                        + term8 + term9 + term10 + term11)
-                       
+
         return numerator/denominator
-        
+
     def j_z(self, dummy_r):
         r"""
         For now always returns complete j_z.
@@ -702,8 +702,8 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         j_z[points2:points3] = self.j_skin
         j_z[points3:points4] = self.smooth(boundary3, boundary4, self.j_skin,
                                            0., self.r[points3:points4])
-        return j_z     
-        
+        return j_z
+
     def b_theta_integrand():
         r"""
         """
@@ -720,7 +720,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
             else:
                 break
         return b_theta_integrand_array
-        
+
     def get_q_0(self):
         r"""
         """
