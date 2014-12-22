@@ -176,7 +176,7 @@ def sing_small_solution(r_sing, offset, k, m, b_z_spl, b_theta_spl,
     Returns
     -------
     small_sol : ndarry of floats (2)
-        small solution inf y form of ODE equation set.
+        small solution xi and xi_prime to be used in an init function.
 
     References
     ----------
@@ -193,7 +193,6 @@ def sing_small_solution(r_sing, offset, k, m, b_z_spl, b_theta_spl,
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
     small_sol = small_solution(r_sing + offset, r_sing, nu_1, nu_2)
-    small_sol[1] = f_func(**f_params)*small_sol[1]
     return small_sol
 
 
