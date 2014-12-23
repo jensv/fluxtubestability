@@ -268,8 +268,9 @@ def newcomb_g_18_dimless(r, k, m, b_z, b_theta, p_prime, q, beta_0):
     """
     term1 = beta_0*k**2*r**2/(f_denom(r, k, m))*p_prime
     term2 = r*(k*b_z)**2*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
-    term3 = (m**2*q**2*1./r*(b_z/(k*r))**2*(k**2*r**2+m**2-1.)/
+    term3 = (m**2*1./r*(b_z*r*k/q)**2*(k**2*r**2+m**2-1.)/
              (k**2*r**2 + m**2))
-    term4 = 2*k**4*r**3*b_z**2/(k**2*r**2+m**2)
-    term5 = -m**2*q**2*2.*b_z**2/(r*(k**2*r**2+m**2)**2)
-    return term1 + term2 + term3 + term4 + term5
+    term4 = 2.*m*k**2*r*b_z**2/q*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
+    term5 = 2*k**4*r**3*b_z**2/(k**2*r**2+m**2)
+    term6 = -m**2*2.*k**4*r**3*b_z**2/(q**2*(k**2*r**2+m**2)**2)
+    return term1 + term2 + term3 + term4 + term5 + term6
