@@ -395,12 +395,13 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
     Equation (23)
     """
     (k, m, b_z_spl, b_theta_spl,
-     p_prime_spl, q_spl, beta_0) = map(params.get, ['k', 'm', 'b_z', 'b_theta',
-                                            'p_prime', 'q', 'beta_0'])
+     p_prime_spl, q_spl, beta_0
+     xi_factor) = map(params.get, ['k', 'm', 'b_z', 'b_theta', 'p_prime', 'q',
+                                   'beta_0', 'xi_factor'])
 
     init_params = {'r': r_init, 'k': k, 'm': m, 'b_z': b_z_spl(r_init),
                    'b_theta': b_theta_spl(r_init), 'q': q_spl(r_init),
-                   'f_func': f_func, 'xi': xi_init}
+                   'f_func': f_func, 'xi': xi_init, 'xi_factor': xi_factor}
 
     xi = np.empty(dr.size + 1)
     xi_der_f = np.empty(dr.size + 1)
