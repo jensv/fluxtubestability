@@ -135,7 +135,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             if not suppress_output:
                 print("Profile is Suydam unstable at r =", suydam_result)
 
-    int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18,
+    int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18_dimless,
                   'params': params}
     frob_params = {'offset': offset, 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta'],
@@ -329,7 +329,7 @@ def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
                 'b_theta': b_theta_spl(r),
                 'b_theta_prime': b_theta_spl.derivative()(r),
                 'p_prime': p_prime_spl(r), 'q': q_spl(r),
-                'q_prime': q_spl.derivtive()(r)}
+                'q_prime': q_spl.derivtive()(r), 'beta_0': beta_0}
 
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
                 'b_theta': b_theta_spl(r), 'q': q_spl(r)}
