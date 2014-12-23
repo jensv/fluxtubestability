@@ -15,7 +15,8 @@ import json
 
 
 def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
-                        mu_0=1., **kwargs):
+                        xi_factor=1., magnetic_potential_energy_ratio=1.,
+                        **kwargs):
     r"""
     """
     sing_search_points = 1000
@@ -44,13 +45,16 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
         print('lambda_bar:', lambda_a)
         for j, k_a in enumerate(k_a_points):
             for m in [-1, 0, 1]:
-                profile = es.SmoothedCoreSkin(mu_0=mu_0, k=k_a,
-                                              lambda_bar=lambda_a, **kwargs)
+                profile = es.SmoothedCoreSkin(k=k_a, lambda_bar=lambda_a,
+                                              **kwargs)
 
-                params = {'mu_0': mu_0, 'k': k_a, 'm': float(m),
-                          'r_0': 0., 'a': 1., 'b': 'infinity'}
+                params = {'k': k_a, 'm': float(m), 'r_0': 0., 'a': 1.,
+                          'b': 'infinity'}
                 params_wo_splines = deepcopy(params)
                 params.update(profile.get_splines())
+
+                params.update({'xi_factor': xi_factor,
+                               'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio})
 
                 results = new.stability(dr, offset, suydam_end_offset,
                                         sing_search_points, params,
@@ -60,9 +64,6 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                 xi = results[2]
                 xi_der = results[3]
                 delta_w = results[5]
-
-                delta_w_0 = (np.pi**2*params['a']*xi[-1][-1]**2*params['b_z'](0)
-                             / (mu_0*k_a))
 
                 if delta_w is not None:
                     stability_maps['d_w'][m][j][i] = delta_w
