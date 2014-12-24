@@ -554,7 +554,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
     """
     def __init__(self, points_core=20, points_transition=50, points_skin=20,
                  core_radius_norm=0.7, transition_width_norm=0.1,
-                 skin_width_norm=0.1, k_bar=1., beta=0.1,
+                 skin_width_norm=0.1, k_bar=1., beta_0=0.1,
                  j_0=1.0, epsilon=0.3, lambda_bar=0.5):
         r"""
         Initialize parameters defining smooth skin and core profile
@@ -572,14 +572,16 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         self.k_bar = k_bar
         self.epsilon = epsilon
         self.lambda_bar = lambda_bar
+        self.beta_0 = beta_0
 
         self.splines = {}
 
         self.j_skin = self.get_j_skin_norm()
         self.make_spline('j_z', self.r, self.j_z(self.r))
 
-        self.b_theta_integrand_array = self.b_theta_integrand()
+        self.b_theta_integrand_array = self.b_theta_integrand(self.r)
         self.q_0 = self.get_q_0()
+        self.b_theta_array = self.b_theta(self.r)
 
         self.make_spline('b_theta', self.r, self.b_theta(self.r))
         self.make_spline('b_z', self.r, self.b_z(self.r))
@@ -648,30 +650,26 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
          transition_width, r_bar) = (self.epsilon, self.skin_width,
                                      self.transition_width, self.r_bar)
 
-        factor1 = skin_width + epsilon*r_bar - r_bar
+        #factor1 = 2*skin_width + epsilon*r_bar - r_bar
         term1 = 16.*skin_width**2
         term2 = 21.*skin_width*transition_width
-        term3 = -21.*skin_width*r_bar
+        term3 = 14.*skin_width*epsilon*r_bar
+        term4 = -21.*skin_width*r_bar
+        term5 = 7.*transition_width**2
+        term6 = 7.*transition_width*epsilon*r_bar
+        term7 = -14.*transition_width*r_bar
+        term8 = -7.*epsilon*r_bar**2
+        term9 = 7.*r_bar**2
+        numerator = (term1 + term2 + term3 + term4 + term5 + term6 + term7 +
+                     term8 + term9)
+
+        term1 = 14.*skin_width**2
+        term2 = 21.*skin_width*transition_width
+        term3 = -14.*skin_width*r_bar
         term4 = 7.*transition_width**2
         term5 = -14.*transition_width*r_bar
-        term6 = 7.*r_bar**2
-        numerator = factor1*(term1 + term2 + term3 + term4 + term5 + term6)
 
-        term1 = 14.*skin_width**3
-        term2 = 21.*skin_width**2*transition_width
-        term3 = 9.*skin_width**2*epsilon*r_bar
-        term2 = -28.*skin_width**2*r_bar
-        term3 = 7*skin_width*transition_width**2
-        term4 = 21.*skin_width*transition_width*epsilon*r_bar
-        term5 = -35.*skin_width*transition_width*r_bar
-        term6 = -7.*skin_width*epsilon*r_bar**2
-        term7 = 14.*skin_width*r_bar**2
-        term8 = 7.*transition_width**2*epsilon*r_bar
-        term9 = -7.*transition_width**2*r_bar
-        term10 = -14.*transition_width*epsilon*r_bar**2
-        term11 = 14.*transition_width*r_bar**2
-        denominator = (term1 + term2 + term3 + term4 + term5 + term6 + term7
-                       + term8 + term9 + term10 + term11)
+        denominator = term1 + term2 + term3 + term4 + term5
 
         return numerator/denominator
 
@@ -704,7 +702,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
                                            0., self.r[points3:points4])
         return j_z
 
-    def b_theta_integrand():
+    def b_theta_integrand(self, r):
         r"""
         """
         b_theta_r_integrator = inte.ode(b_theta_r_prime_func)
@@ -744,7 +742,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         r"""
         Return pressure_prime at given r values. To be used for integration.
         """
-        factor = 4.*self.k_bar/(self.beta*self.q_0)
+        factor = 4.*self.k_bar/(self.beta_0*self.q_0)
         return -factor*self.splines['b_theta'](r)*self.splines['j_z'](r)
 
     def pressure(self, r):
@@ -765,7 +763,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
             else:
                 break
         pressure_norm = pressure_unnorm - pressure_unnorm[-1]
-        pressure = pressure_norm*4.*self.k_bar/(self.beta*self.q_0)
+        pressure = pressure_norm*4.*self.k_bar/(self.beta_0*self.q_0)
         return pressure
 
     def q(self, r):
@@ -780,6 +778,14 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
             q_to_return = (r*self.k_bar*self.splines['b_z'](r) /
                            self.splines['b_theta'](r))
         return q_to_return
+
+    def get_beta(self, r):
+        r"""
+        """
+        beta_numerator =self.beta_0*self.splines['pressure'](self.r)
+        beta_denominator = ((self.splines['b_z'](self.r))**2 +
+                            (self.splines['b_theta'](self.r))**2)
+        return interp.InterpolatedUnivariateSpline(self.r, beta_numerator/beta_denominator)
 
 
 class HardCoreZPinch(EquilSolver):
