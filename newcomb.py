@@ -168,16 +168,16 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             (eigenfunctions, eigen_ders, rs_list,
              stable) = integrate_interval(int_params, eigenfunctions,
                                           eigen_ders, rs_list, stable)
-         else:
-             int_params['dr'] = intervals_dr[-1]
-             int_params['r_init'] = interval[0]
-             int_params['init_func'] = init.init_xi_given
-             frob_params['r_sing'] = interval[0] - offset
-             int_params['xi_init'] = frob.sing_small_solution(**frob_params)
+        else:
+            int_params['dr'] = intervals_dr[-1]
+            int_params['r_init'] = interval[0]
+            int_params['init_func'] = init.init_xi_given
+            frob_params['r_sing'] = interval[0] - offset
+            int_params['xi_init'] = frob.sing_small_solution(**frob_params)
 
-             (eigenfunctions, eigen_ders, rs_list,
-              stable) = integrate_interval(int_params, eigenfunctions,
-                                           eigen_ders, rs_list, stable)
+            (eigenfunctions, eigen_ders, rs_list,
+             stable) = integrate_interval(int_params, eigenfunctions,
+                                          eigen_ders, rs_list, stable)
     else:
         int_params['dr'] = intervals_dr[0]
         int_params['r_max'] = intervals[0][1]
@@ -398,7 +398,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
     Equation (23)
     """
     (k, m, b_z_spl, b_theta_spl,
-     p_prime_spl, q_spl, beta_0
+     p_prime_spl, q_spl, beta_0,
      xi_factor) = map(params.get, ['k', 'm', 'b_z', 'b_theta', 'p_prime', 'q',
                                    'beta_0', 'xi_factor'])
 
