@@ -715,7 +715,6 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
             if b_theta_r_integrator.successful():
                 b_theta_r_integrator.integrate(position)
                 b_theta_integrand_array[i+1] = (b_theta_r_integrator.y/position)
-                print(position, b_theta_integrand_array[i+1])
             else:
                 break
         return b_theta_integrand_array
