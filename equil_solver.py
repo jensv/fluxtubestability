@@ -715,6 +715,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
             if b_theta_r_integrator.successful():
                 b_theta_r_integrator.integrate(position)
                 b_theta_integrand_array[i+1] = (b_theta_r_integrator.y/position)
+                print(position, b_theta_integrand_array[i+1])
             else:
                 break
         return b_theta_integrand_array
@@ -735,7 +736,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         r"""
         Returns constant axial magnetic field.
         """
-        self.b_z0 = 2.*self.b_theta_array[-1]/self.lambda_bar
+        self.b_z0 = 1.
         return np.ones(r.size)*self.b_z0
 
     def p_prime(self, r):
