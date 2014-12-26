@@ -58,13 +58,14 @@ external stability."
         if not stable_external:
             print("Profile is unstable to external mode k =", k, "m =", m)
             print("delta_W =", delta_w)
-        if not stable_internal and not only_external:
+        if not stable_internal and not external_only:
             print("Profile is unstable to internal mode k =", k, "m =", m)
         if (stable_external and stable_internal) or (stable_external and
-                                                     only_external):
+                                                     external_only):
             print("Profile is stable to mode k = ", k, "m =", m)
             print("delta_W =", delta_w)
-    if only_external:
+
+    if external_only:
         stable_internal = None
     return (stable_internal, stable_external, xi, xi_der, r_array, delta_w,
             missing_end_params)
@@ -168,11 +169,14 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             (eigenfunctions, eigen_ders, rs_list,
              stable) = integrate_interval(int_params, eigenfunctions,
                                           eigen_ders, rs_list, stable)
+
         else:
             int_params['dr'] = intervals_dr[-1]
-            int_params['r_init'] = interval[0]
+            int_params['r_init'] = intervals[-1][0]
+            int_params['r_max'] = intervals[-1][1]
             int_params['init_func'] = init.init_xi_given
-            frob_params['r_sing'] = interval[0] - offset
+            frob_params['r_sing'] = intervals[-1][0] - offset
+            int_params['suppress_output'] = suppress_output
             int_params['xi_init'] = frob.sing_small_solution(**frob_params)
 
             (eigenfunctions, eigen_ders, rs_list,
@@ -200,8 +204,10 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             # repeat integration for each interval
             int_params['dr'] = intervals_dr[i+1]
             int_params['r_init'] = interval[0]
+            int_params['r_max'] = intervals[-1][1]
             int_params['init_func'] = init.init_xi_given
             frob_params['r_sing'] = interval[0] - offset
+            int_params['suppress_output'] = suppress_output
             int_params['xi_init'] = frob.sing_small_solution(**frob_params)
 
             (eigenfunctions, eigen_ders, rs_list,
