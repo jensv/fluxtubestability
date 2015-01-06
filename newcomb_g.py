@@ -262,7 +262,7 @@ def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
     return term1 + term2 + term3
 
 
-def newcomb_g_18_dimless(r, k, m, b_z, b_theta, p_prime, q, beta_0):
+def newcomb_g_18_dimless(r, k, m, b_z, b_theta, p_prime, q, beta_0, **kwargs):
     r"""
     Return g from Newcomb's paper in dimensionless form.
     """
