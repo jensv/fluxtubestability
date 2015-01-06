@@ -582,7 +582,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         self.j_skin = self.get_j_skin_norm()
         self.make_spline('j_z', self.r, self.j_z(self.r))
 
-        self.b_theta_integrand_array = self.b_theta_integrand(self, r)
+        self.b_theta_integrand_array = self.b_theta_integrand(self.r)
 
         self.A = self.get_A()
 
@@ -609,12 +609,14 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
          skin_width)                     = (self.core_radius,
                                             self.transition_width,
                                             self.skin_width)
-        mask = np.ones(points_transition + 2, dtype=bool)
-        mask[[0, -1]] = False
+        mask1 = np.ones(points_transition + 2, dtype=bool)
+        mask2 = np.ones(points_transition + 2, dtype=bool)
+        mask1[[0, -1]] = False
+        mask2[0] = False
         self.r1 = np.linspace(0., core_radius, points_core)
         r2 = np.linspace(core_radius, core_radius +
                          transition_width, points_transition + 2)
-        self.r2 = r2[mask]
+        self.r2 = r2[mask1]
         self.r3 = np.linspace(core_radius + transition_width,
                               core_radius + transition_width +
                               skin_width, points_skin)
@@ -622,7 +624,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
                          skin_width,
                          core_radius + 2*transition_width +
                          skin_width, points_transition + 2)
-        self.r4 = r4[mask]
+        self.r4 = r4[mask2]
         r = np.concatenate((self.r1, self.r2, self.r3, self.r4))
         return r
 
@@ -685,13 +687,13 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         For now always returns complete j_z.
         """
         total_points = (self.points_core + 2*self.points_transition +
-                        self.points_skin)
+                        self.points_skin)+1
 
         points1 = self.points_core
         points2 = self.points_core + self.points_transition
         points3 = self.points_core + self.points_transition + self.points_skin
         points4 = (self.points_core + 2*self.points_transition +
-                   self.points_skin)
+                   self.points_skin)+1
 
         boundary1 = self.core_radius
         boundary2 = self.core_radius + self.transition_width
@@ -751,20 +753,21 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         r"""
         Return pressure_prime at given r values. To be used for integration.
         """
-        return self.B*self.splines['b_theta'](r)*self.splines['j_z'](r)
+        return -self.B*self.splines['b_theta'](r)*self.splines['j_z'](r)
 
     def pressure(self, r):
         r"""
         Return pressure_prime at given r values. To be used for integration.
         """
-        pressure_integrator = inte.ode(p_prime_func_recverse)
+        pressure_integrator = inte.ode(p_prime_func_reverse)
         pressure_integrator.set_integrator('lsoda')
-        pressure_integrator.set_initial_value(r[-1], 0.)
+        pressure_integrator.set_initial_value(0., 0.)
         pressure_integrator.set_f_params(self.splines['j_z'],
                                          self.splines['b_theta'])
         pressure_reverse = np.empty(r.size)
         pressure_reverse[0] = 0.
-        for i, position in enumerate(r[-2::-1]):
+        r_reverse_diffs = np.cumsum(np.diff(self.r)[::-1])
+        for i, position in enumerate(r_reverse_diffs):
             if pressure_integrator.successful():
                 pressure_integrator.integrate(t=position)
                 pressure_reverse[i+1] = pressure_integrator.y
@@ -918,3 +921,9 @@ def p_prime_func(r, y, j_z, b_theta):
     Return pressure_prime at given r values. To be used for integration.
     """
     return -b_theta(r)*j_z(r)
+
+def p_prime_func_reverse(r, y, j_z, b_theta):
+    r"""
+    Return negative pressure_prime at given r values. To be used for reverse integration.
+    """
+    return b_theta(1.-r)*j_z(1.-r)
