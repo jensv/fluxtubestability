@@ -16,7 +16,7 @@ import json
 
 def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                         xi_factor=1., magnetic_potential_energy_ratio=1.,
-                        beta_0=0.5, **kwargs):
+                        **kwargs):
     r"""
     """
     sing_search_points = 1000
@@ -46,7 +46,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
         for j, k_a in enumerate(k_a_points):
             for m in [-1, 0, 1]:
                 profile = es.UnitlessSmoothedCoreSkin(k_bar=k_a, lambda_bar=lambda_a,
-                                                      beta_0=beta_0, **kwargs)
+                                                      **kwargs)
 
                 params = {'k': k_a, 'm': float(m), 'r_0': 0., 'a': 1.,
                           'b': 'infinity'}
@@ -55,7 +55,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
 
                 params.update({'xi_factor': xi_factor,
                                'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio,
-                               'beta_0': beta_0})
+                               'beta_0': params['beta'](0)})
 
                 results = new.stability(dr, offset, suydam_end_offset,
                                         sing_search_points, params,
