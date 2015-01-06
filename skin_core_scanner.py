@@ -68,7 +68,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
 
                 if delta_w is not None:
                     stability_maps['d_w'][m][j][i] = delta_w
-                    stability_maps['d_w_norm'][m][j][i] = delta_w / delta_w_0
+                    stability_maps['d_w_norm'][m][j][i] = delta_w
                 else:
                     stability_maps['d_w'][m][j][i] = np.nan
                     stability_maps['d_w_norm'][m][j][i] = np.nan
