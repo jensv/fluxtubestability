@@ -32,7 +32,7 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
     Examines the total stability of profile.
     """
     missing_end_params = None
-    (stable_internal, xi,
+    (stable_internal, suydam_stable, xi,
      xi_der, r_array) = internal_stability(dr, offset, suydam_end_offset,
                                            sing_search_points, params,
                                            init_value=(0.0, 1.0),
@@ -67,7 +67,8 @@ external stability."
 
     if external_only:
         stable_internal = None
-    return (stable_internal, stable_external, xi, xi_der, r_array, delta_w,
+    return (stable_internal, suydam_stable,
+            stable_external, xi, xi_der, r_array, delta_w,
             missing_end_params)
 
 
@@ -117,6 +118,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
         list of radii for each value in the eigenfunctions arrays
     """
     stable = True
+    suydam_stable = True
     eigenfunctions = []
     eigen_ders = []
     rs_list = []
@@ -134,8 +136,11 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
                                  params['p_prime'], params['beta_0'])
     if suydam_result.size != 0:
-        if (not suydam_result.size == 1 or not suydam_result[0] == 0.):
+        if np.allclose(suydam_result[0], 0.) :
+            suydam_result.pop(0)
+        if (not suydam_result.size != 0):
             stable = False
+            suydam_stable = False
             if not suppress_output:
                 print("Profile is Suydam unstable at r =", suydam_result)
 
@@ -217,7 +222,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
     eigenfunctions = np.asarray(eigenfunctions)
     eigen_ders = np.asarray(eigen_ders)
     rs_array = np.asarray(rs_list)
-    return stable, eigenfunctions, eigen_ders, rs_array
+    return stable, suydam_stable, eigenfunctions, eigen_ders, rs_array
 
 
 def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable):
