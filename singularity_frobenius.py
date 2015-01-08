@@ -249,7 +249,7 @@ def small_solution(r, r_sing, nu_1, nu_2):
     Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch (p. 243)
     """
     x = np.abs(r - r_sing)
-    if nu_1 > nu_2:
-        return np.array([np.real(x**-nu_2), np.real(-nu_2*x**(-nu_2 - 1.))])
+    if nu_1 < nu_2:
+        return np.array([np.real(x**nu_2), np.real(nu_2*x**(nu_2 - 1.))])
     else:
-        return np.array([np.real(x**-nu_1), np.real(-nu_1*x**(-nu_1 - 1.))])
+        return np.array([np.real(x**nu_1), np.real(nu_1*x**(nu_1 - 1.))])
