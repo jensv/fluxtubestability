@@ -11,7 +11,6 @@ import numpy as np
 from copy import deepcopy
 from datetime import datetime
 import os
-import json
 import git
 import MDSplus as mds
 
