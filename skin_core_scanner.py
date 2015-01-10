@@ -100,19 +100,29 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
     stability_maps['external kink'] = (stability_maps['external'][-1] +
                                        stability_maps['external'][1] > 1.5).astype(int)
 
-    params_wo_splines.update({'lambda_a_space': lambda_a_space,
-                              'k_a_space': k_a_space,
-                              'sing_search_points': sing_search_points,
-                              'dr': dr,
-                              'offset': offset,
-                              'suydam_end_offset': suydam_end_offset})
-    params_wo_splines.update(kwargs)
-
 
     epsilon = profile.epsilon
     core_radius = profile.core_radius
     transition_width = profile.transition_width
     skin_width = profile.skin_width
+    points_core = profile.points_core
+    points_transition = profile.points_transition
+    points_skin = profile.points_skin
+
+    params_wo_splines.update({'lambda_a_space': lambda_a_space,
+                              'k_a_space': k_a_space,
+                              'sing_search_points': sing_search_points,
+                              'dr': dr,
+                              'offset': offset,
+                              'suydam_end_offset': suydam_end_offset,
+                              'core_radius': core_radius,
+                              'transition_width': transition_width,
+                              'skin_width': skin_width,
+                              'points_core': points_core,
+                              'points_transition': points_transition,
+                              'points_skin': points_skin})
+
+    params_wo_splines.update(kwargs)
 
     tree = mds.Tree('skin_core')
     shot = tree.getCurrent()
@@ -120,20 +130,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
     tree.setCurrent(shot)
     tree.createPulse(0)
     tree = mds.Tree('skin_core', shot, usage='edit')
-    tree.getNode('.params:a').putData(params['a'])
-    tree.getNode('.params:b').putData(params['b'])
-    tree.getNode('params:epsilon').putData(epsilon)
-    tree.getNode('.params:r_0').putData(params['r_0'])
-    tree.getNode('.params:dr').putData(dr)
-    tree.getNode('params:epsilon').putData(epsilon)
-    tree.getNode('params:r_core').putData(core_radius)
-    tree.getNode('params:r_trans').putData(transition_width)
-    tree.getNode('params:r_skin').putData(skin_width)
-    tree.getNode('params:k_bar').putData(k_a_space)
-    tree.getNode('params:lambda_bar').putData(lambda_a_space)
-    tree.getNode('params:offset').putData(offset)
-    tree.getNode('params:suy_offset').putData(suydam_offset)
-    tree.getNode('params:sing_points').putData(sing_search_points)
+    tree.getNode('.params:params').putData(params_wo_splines)
 
     tree.getNode('code_params:datetime').putData(date)
     tree.getNode('code_params:git_commit').putData(commit)
