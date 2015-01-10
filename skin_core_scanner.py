@@ -39,7 +39,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                       'd_w': deepcopy(sub_stability_maps),
                       'd_w_norm': deepcopy(sub_stability_maps),
                       'internal kink': np.empty(mesh_shape),
-                      'external kink': np.empty(mesh_shape)}
+                      'external kink': np.empty(mesh_shape),
+                      'suydam': deepcopy(sub_stability_maps)}
 
     for i, lambda_a in enumerate(lambda_a_points):
         print('lambda_bar:', lambda_a)
@@ -61,10 +62,12 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                                         sing_search_points, params,
                                         suppress_output=True)
                 stable_internal = results[0]
-                stable_external = results[1]
-                xi = results[2]
-                xi_der = results[3]
-                delta_w = results[5]
+                stable_suydam = results[1]
+                stable_external = results[2]
+                xi = results[3]
+                xi_der = results[4]
+                r_array = results[5]
+                delta_w = results[6]
 
                 if delta_w is not None:
                     stability_maps['d_w'][m][j][i] = delta_w
@@ -79,6 +82,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                     stability_maps['external'][m][j][i] = 0.
                 if stable_external and delta_w is None:
                     stability_maps['external'][m][j][i] = -1.
+                if not stable_suydam:
+                    stability_maps['suydam'][m][i][j] = 0.
 
     stability_maps['internal kink'] = (stability_maps['internal'][-1] +
                                        stability_maps['internal'][1] > 1.5).astype(int)
@@ -118,7 +123,10 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
              d_w_m_1=stability_maps['d_w'][1],
              d_w_norm_m_neg_1=stability_maps['d_w_norm'][-1],
              d_w_norm_m_0=stability_maps['d_w_norm'][0],
-             d_w_norm_m_1=stability_maps['d_w_norm'][1]
+             d_w_norm_m_1=stability_maps['d_w_norm'][1],
+             suydam_m_0=stability_maps['suydam'][0],
+             suydam_m_1=stability_maps['suydam'][1],
+             suydam_m_neg_1=stability_maps['suydam'][-1]
              )
 
     return lambda_a_mesh, k_a_mesh, stability_maps
