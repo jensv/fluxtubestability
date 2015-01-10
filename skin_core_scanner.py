@@ -122,7 +122,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
     tree.createPulse(0)
     tree = mds.Tree('skin_core', shot, usage='edit')
     tree.getNode('.params:a').putData(params['a'])
-    tree.getNode('.params:b').putData(params['b'])tree.getNode('params:epsilon').putData(epsilon)
+    tree.getNode('.params:b').putData(params['b'])
+    tree.getNode('params:epsilon').putData(epsilon)
     tree.getNode('.params:r_0').putData(params['r_0'])
     tree.getNode('.params:dr').putData(dr)
     tree.getNode('params:epsilon').putData(epsilon)
@@ -148,36 +149,5 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
     tree.getNode('output:suy_m_neg_1').putData(stability_maps['d_w'][-1])
     tree.write()
     tree.quit()
-
-
-    if os.getcwd().endswith('ipython_notebooks'):
-        path = '../../output/' + date
-    else:
-        path = '../output/' + date
-    os.mkdir(path)
-
-    with open(path+'/params.txt', 'w') as params_file:
-        json.dump(params_wo_splines, params_file)
-
-    np.savez(path+'/meshes.npz', lambda_a_mesh=lambda_a_mesh,
-             k_a_mesh=k_a_mesh,
-             internal_m_neg_1=stability_maps['internal'][-1],
-             internal_m_0=stability_maps['internal'][0],
-             internal_m_1=stability_maps['internal'][1],
-             external_m_neg_1=stability_maps['external'][-1],
-             external_m_0=stability_maps['external'][0],
-             external_m_1=stability_maps['external'][1],
-             internal_kink=stability_maps['internal kink'],
-             external_kink=stability_maps['external kink'],
-             d_w_m_neg_1=stability_maps['d_w'][-1],
-             d_w_m_0=stability_maps['d_w'][0],
-             d_w_m_1=stability_maps['d_w'][1],
-             d_w_norm_m_neg_1=stability_maps['d_w_norm'][-1],
-             d_w_norm_m_0=stability_maps['d_w_norm'][0],
-             d_w_norm_m_1=stability_maps['d_w_norm'][1],
-             suydam_m_0=stability_maps['suydam'][0],
-             suydam_m_1=stability_maps['suydam'][1],
-             suydam_m_neg_1=stability_maps['suydam'][-1]
-             )
 
     return lambda_a_mesh, k_a_mesh, stability_maps
