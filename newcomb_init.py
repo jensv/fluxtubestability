@@ -63,8 +63,8 @@ def init_geometric_sing(r, k, m, b_z, b_theta, q, f_func, xi_factor, *args, **kw
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta, 'q': q}
 
     if m == 0:
-        y[0] = 1/r
-        y[1] = -r**(-2)
+        y[0] = r
+        y[1] = 1
     else:
         y[0] = r**(abs(m) - 1)
         y[1] = (abs(m) - 1)*r**(abs(m) - 2)
@@ -72,7 +72,6 @@ def init_geometric_sing(r, k, m, b_z, b_theta, q, f_func, xi_factor, *args, **kw
         #y[1] = (m - 1)*r**(m - 2)
 
     y[1] = f_func(**f_params)*y[1]
-
     return y*xi_factor
 
 
