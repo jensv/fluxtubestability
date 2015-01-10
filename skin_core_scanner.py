@@ -12,6 +12,8 @@ from copy import deepcopy
 from datetime import datetime
 import os
 import json
+import git
+import MDSplus as mds
 
 
 def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
@@ -19,6 +21,15 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                         **kwargs):
     r"""
     """
+    tree = 'skin_core'
+    if os.getcwd().endswith('ipython_notebooks'):
+        repo = git.Repo('../')
+    else:
+        repo = git.Repo('.')
+    commit = str(repo.head.reference.commit)
+
+    date = datetime.now().strftime('%Y-%m-%d-%H-%M')
+
     sing_search_points = 1000
     dr = np.linspace(0, 1, integration_points)[1]
     offset = 1E-3
@@ -98,7 +109,47 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                               'suydam_end_offset': suydam_end_offset})
     params_wo_splines.update(kwargs)
 
-    date = datetime.now().strftime('%Y-%m-%d-%H-%M')
+
+    epsilon = profile.epsilon
+    core_radius = profile.core_radius
+    transition_width = profile.transition_width
+    skin_width = profile.skin_width
+
+    tree = mds.Tree('skin_core')
+    shot = tree.getCurrent()
+    shot += 1
+    tree.setCurrent(shot)
+    tree.createPulse(0)
+    tree = mds.Tree('skin_core', shot, usage='edit')
+    tree.getNode('.params:a').putData(params['a'])
+    tree.getNode('.params:b').putData(params['b'])tree.getNode('params:epsilon').putData(epsilon)
+    tree.getNode('.params:r_0').putData(params['r_0'])
+    tree.getNode('.params:dr').putData(dr)
+    tree.getNode('params:epsilon').putData(epsilon)
+    tree.getNode('params:r_core').putData(core_radius)
+    tree.getNode('params:r_trans').putData(transition_width)
+    tree.getNode('params:r_skin').putData(skin_width)
+    tree.getNode('params:k_bar').putData(k_a_space)
+    tree.getNode('params:lambda_bar').putData(lambda_a_space)
+    tree.getNode('params:offset').putData(offset)
+    tree.getNode('params:suy_offset').putData(suydam_offset)
+    tree.getNode('params:sing_points').putData(sing_search_points)
+
+    tree.getNode('code_params:datetime').putData(date)
+    tree.getNode('code_params:git_commit').putData(commit)
+
+    tree.getNode('output:k_bar_mesh').putData(k_a_mesh)
+    tree.getNode('output:lambda_mesh').putData(lambda_a_mesh)
+    tree.getNode('output:dw_m_0').putData(stability_maps['d_w'][0])
+    tree.getNode('output:dw_m_1').putData(stability_maps['d_w'][1])
+    tree.getNode('output:dw_m_neg_1').putData(stability_maps['d_w'][-1])
+    tree.getNode('output:suy_m_0').putData(stability_maps['d_w'][-1])
+    tree.getNode('output:suy_m_1').putData(stability_maps['d_w'][-1])
+    tree.getNode('output:suy_m_neg_1').putData(stability_maps['d_w'][-1])
+    tree.write()
+    tree.quit()
+
+
     if os.getcwd().endswith('ipython_notebooks'):
         path = '../../output/' + date
     else:
