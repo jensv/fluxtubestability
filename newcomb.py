@@ -136,9 +136,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
                                  params['p_prime'], params['beta_0'])
     if suydam_result.size != 0:
-        if np.allclose(suydam_result[0], 0.) :
-            suydam_result.pop(0)
-        if (not suydam_result.size != 0):
+        if (not suydam_result.size == 1 or not suydam_result[0] == 0.):
             stable = False
             suydam_stable = False
             if not suppress_output:
