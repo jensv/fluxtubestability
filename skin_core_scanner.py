@@ -124,12 +124,12 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
 
     params_wo_splines.update(kwargs)
 
-    tree = mds.Tree('skin_core')
-    shot = tree.getCurrent()
+    shot = mds.TreeGetCurrentShotId('skin_core')
     shot += 1
-    tree.setCurrent(shot)
+    mds.TreeSetCurrentShotId('skin_core', shot)
+    tree = mds.Tree('skin_core')
     tree.createPulse(0)
-    tree = mds.Tree('skin_core', shot, usage='edit')
+    tree = mds.Tree('skin_core', shot, mode='edit')
     tree.getNode('.params:params').putData(params_wo_splines)
 
     tree.getNode('code_params:datetime').putData(date)
@@ -145,5 +145,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
     tree.getNode('output:suy_m_neg_1').putData(stability_maps['d_w'][-1])
     tree.write()
     tree.quit()
+
+    print('Saved in Shot:' + str(shot))
 
     return lambda_a_mesh, k_a_mesh, stability_maps
