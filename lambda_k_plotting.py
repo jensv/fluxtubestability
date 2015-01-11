@@ -13,17 +13,15 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              str, super, zip)
 
 import numpy as np
-import skin_core_scanner as scs
-import equil_solver as es
-import newcomb as new
+import MDSplus as mds
 
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm, BoundaryNorm
 from matplotlib.ticker import FormatStrFormatter
 import seaborn as sns
 sns.set_style('white')
 sns.set_context('poster')
+
 
 def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1', lim=None,
                            levels=None, log=False, linthresh=1E-7):
@@ -41,25 +39,18 @@ def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1', lim=None,
     external_sausage_norm = epsilon_case['d_w_norm_m_0']
     epsilon_case.close()
 
-    instability_map = {'m_1': external_m_1_norm, 'm_0': external_sausage_norm, 'm_neg_1': external_m_neg_1_norm}
+    instability_map = {'m_1': external_m_1_norm, 'm_0': external_sausage_norm,
+                       'm_neg_1': external_m_neg_1_norm}
 
-
-    kink_pal = sns.blend_palette([sns.xkcd_rgb["dandelion"], sns.xkcd_rgb["white"]], 7, as_cmap=True)
-    sausage_pal = sns.blend_palette(['orange','white'], 7, as_cmap=True)
-    instability_palette = {'m_1': kink_pal, 'm_0': sausage_pal, 'm_neg_1': kink_pal}
+    kink_pal = sns.blend_palette([sns.xkcd_rgb["dandelion"],
+                                  sns.xkcd_rgb["white"]], 7, as_cmap=True)
+    sausage_pal = sns.blend_palette(['orange', 'white'], 7, as_cmap=True)
+    instability_palette = {'m_1': kink_pal, 'm_0': sausage_pal,
+                           'm_neg_1': kink_pal}
 
     values = instability_map[mode_to_plot]
     values = values / -values.min()
 
-    #if lim:
-    #    values_low_indexes = values < lim[0]
-    #    values_high_indexes = values > lim[1]
-    #
-    #    values[values_low_indexes] = lim[0]
-    #    values[values_high_indexes] = lim[1]
-
-
-    #plt.gca().patch.set_color('red')
     if levels:
         if log:
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
@@ -73,7 +64,7 @@ def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1', lim=None,
             cbar = plt.colorbar(label=r'$\delta W$',
                                 format=FormatStrFormatter('%.0e'))
             contourlines = plt.contour(lambda_a_mesh, k_a_mesh, values,
-                                       levels=levels[:-1], colors = 'grey')
+                                       levels=levels[:-1], colors='grey')
             cbar.add_lines(contourlines)
     else:
         if log:
@@ -92,10 +83,72 @@ def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1', lim=None,
     plt.xlim(0.01, 3.)
     plt.ylabel(r'$\bar{k}$', fontsize=25)
     plt.xlabel(r'$\bar{\lambda}$', fontsize=25)
-    #plt.tight_layout()
-    plt.savefig('../../output/plots/'+ name +'.png')
+    plt.savefig('../../output/plots/' + name + '.png')
     plt.show()
 
+
+def plot_dw_mdsplus(tree, shot, name, mode_to_plot='m_neg_1', lim=None,
+                    levels=None, log=False, linthresh=1E-7):
+    r"""
+    Plot lambda k spcae loaded from mds+ tree.
+    """
+    tree = mds.Tree(tree, shot, 'normal')
+    lambda_a_mesh = tree.getNode('.output:lambda_mesh').getData()
+    k_a_mesh = tree.getNode('.output:k_bar_mesh').getData()
+    external_m_1 = tree.getNode('.output:dw__m_1').getData()
+    external_m_0 = tree.getNode('.output:dw_m_0').getData()
+    external_m_neg_1 = tree.getNode('.output:dw_m_neg_1').getData()
+    suydam_m_0 = tree.getNode('.output:suy_m_0').getData()
+    suydam_m_1 = tree.getNode('.output:suy_m_1').getData()
+    suydam_m_neg_1 = tree.getNode('.output:suy_m_neg_1').getData()
+    tree.quit()
+
+    instability_map = {'m_1': external_m_1, 'm_0': external_m_0,
+                       'm_neg_1': external_m_neg_1}
+
+    kink_pal = sns.blend_palette([sns.xkcd_rgb["dandelion"],
+                                  sns.xkcd_rgb["white"]], 7, as_cmap=True)
+    sausage_pal = sns.blend_palette(['orange', 'white'], 7, as_cmap=True)
+    instability_palette = {'m_1': kink_pal, 'm_0': sausage_pal,
+                           'm_neg_1': kink_pal}
+
+    values = instability_map[mode_to_plot]
+    values = values / -values.min()
+
+    if levels:
+        if log:
+            plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
+                                cmap=instability_palette[mode_to_plot],
+                                levels=levels, norm=SymLogNorm(linthresh))
+        else:
+            norm = BoundaryNorm(levels, 256)
+            plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
+                                cmap=instability_palette[mode_to_plot],
+                                levels=levels, norm=norm)
+            cbar = plt.colorbar(label=r'$\delta W$',
+                                format=FormatStrFormatter('%.0e'))
+            contourlines = plt.contour(lambda_a_mesh, k_a_mesh, values,
+                                       levels=levels[:-1], colors='grey')
+            cbar.add_lines(contourlines)
+    else:
+        if log:
+            plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
+                                cmap=instability_palette[mode_to_plot],
+                                norm=SymLogNorm(linthresh))
+        else:
+            plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
+                                cmap=instability_palette[mode_to_plot])
+
+    if lim:
+        plot.set_clim(lim)
+    plt.plot([0.01, 0.1, 1.0, 2.0, 3.0],
+             [0.005, 0.05, 0.5, 1.0, 1.5], color='black')
+    plt.ylim(0.01, 1.5)
+    plt.xlim(0.01, 3.)
+    plt.ylabel(r'$\bar{k}$', fontsize=25)
+    plt.xlabel(r'$\bar{\lambda}$', fontsize=25)
+    plt.savefig('../../output/plots/' + name + '.png')
+    plt.show()
 
 
 def plot_lambda_k_space(filename, kink_to_plot='m_1', sausage=True,
