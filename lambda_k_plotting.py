@@ -93,15 +93,14 @@ def plot_dw_mdsplus(tree, shot, name, mode_to_plot='m_neg_1', lim=None,
     Plot lambda k spcae loaded from mds+ tree.
     """
     tree = mds.Tree(tree, shot, 'normal')
-    lambda_a_mesh = tree.getNode('.output:lambda_mesh').getData()
-    k_a_mesh = tree.getNode('.output:k_bar_mesh').getData()
-    external_m_1 = tree.getNode('.output:dw__m_1').getData()
-    external_m_0 = tree.getNode('.output:dw_m_0').getData()
-    external_m_neg_1 = tree.getNode('.output:dw_m_neg_1').getData()
-    suydam_m_0 = tree.getNode('.output:suy_m_0').getData()
-    suydam_m_1 = tree.getNode('.output:suy_m_1').getData()
-    suydam_m_neg_1 = tree.getNode('.output:suy_m_neg_1').getData()
-    tree.quit()
+    lambda_a_mesh = np.asarray(tree.getNode('.output:lambda_mesh').getData())
+    k_a_mesh = np.asarray(tree.getNode('.output:k_bar_mesh').getData())
+    external_m_1 = np.asarray(tree.getNode('.output:dw_m_1').getData())
+    external_m_0 = np.asarray(tree.getNode('.output:dw_m_0').getData())
+    external_m_neg_1 = np.asarray(tree.getNode('.output:dw_m_neg_1').getData())
+    suydam_m_0 = np.asarray(tree.getNode('.output:suy_m_0').getData())
+    suydam_m_1 = np.asarray(tree.getNode('.output:suy_m_1').getData())
+    suydam_m_neg_1 = np.asarray(tree.getNode('.output:suy_m_neg_1').getData())
 
     instability_map = {'m_1': external_m_1, 'm_0': external_m_0,
                        'm_neg_1': external_m_neg_1}
