@@ -87,8 +87,9 @@ def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1', lim=None,
     plt.show()
 
 
-def plot_dw_mdsplus(tree, shot, name, mode_to_plot='m_neg_1', lim=None,
-                    levels=None, log=False, linthresh=1E-7):
+def plot_dw_mdsplus(tree, shot, name, mode_to_plot='m_neg_1',
+                    show_points=False, lim=None, levels=None, log=False,
+                    linthresh=1E-7):
     r"""
     Plot lambda k spcae loaded from mds+ tree.
     """
@@ -137,6 +138,9 @@ def plot_dw_mdsplus(tree, shot, name, mode_to_plot='m_neg_1', lim=None,
         else:
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
                                 cmap=instability_palette[mode_to_plot])
+
+    if show_points:
+        plt.scatter(lambda_a_mesh, k_a_mesh, marker='o', c='b', s=5)
 
     if lim:
         plot.set_clim(lim)
