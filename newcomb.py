@@ -207,7 +207,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             # repeat integration for each interval
             int_params['dr'] = intervals_dr[i+1]
             int_params['r_init'] = interval[0]
-            int_params['r_max'] = intervals[-1][1]
+            int_params['r_max'] = interval[1]
             int_params['init_func'] = init.init_xi_given
             frob_params['r_sing'] = interval[0] - offset
             int_params['suppress_output'] = suppress_output
