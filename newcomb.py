@@ -27,7 +27,7 @@ import find_singularties as find_sing
 
 def stability(dr, offset, suydam_end_offset, sing_search_points, params,
               init_value=(0.0, 1.0), suppress_output=False,
-              external_only=True):
+              external_only=True, atol=None, rtol=None):
     r"""
     Examines the total stability of profile.
     """
@@ -37,7 +37,8 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
                                            sing_search_points, params,
                                            init_value=(0.0, 1.0),
                                            suppress_output=suppress_output,
-                                           external_only=external_only)
+                                           external_only=external_only,
+                                           atol=atol, rtol=rtol)
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
 
@@ -74,7 +75,7 @@ external stability."
 
 def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                        init_value=(0.0, 1.0), suppress_output=False,
-                       external_only=True):
+                       external_only=True, atol=None, rtol=None):
     """
     Checks for internal stability accroding to Newcomb's procedure.
 
@@ -142,8 +143,8 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             if not suppress_output:
                 print("Profile is Suydam unstable at r =", suydam_result)
 
-    int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18_dimless,
-                  'params': params}
+    int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18_dimless_wo_q,
+                  'params': params, 'atol': atol, 'rtol': rtol}
     frob_params = {'offset': offset, 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta'],
                    'p_prime_spl': params['p_prime'],
