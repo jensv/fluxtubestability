@@ -128,9 +128,10 @@ def scan_lambda_k_space_mds(lambda_a_space, k_a_space, integration_points=250,
     shot = mds.TreeGetCurrentShotId('skin_core')
     shot += 1
     mds.TreeSetCurrentShotId('skin_core', shot)
-    tree = mds.Tree('skin_core', shot, mode='edit')
+    tree = mds.Tree('skin_core', -1, 'edit')
+    #mds.TreeCreatePulseFile('skin_core', -1, 0)
     tree.createPulse(0)
-    #tree = mds.Tree('skin_core', shot, mode='edit')
+    tree = mds.Tree('skin_core', shot, mode='edit')
     tree.getNode('.params:params').putData(params_wo_splines)
 
     tree.getNode('code_params:datetime').putData(date)
