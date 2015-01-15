@@ -143,7 +143,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             if not suppress_output:
                 print("Profile is Suydam unstable at r =", suydam_result)
 
-    int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18_dimless_wo_q,
+    int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18_dimless,
                   'params': params, 'atol': atol, 'rtol': rtol}
     frob_params = {'offset': offset, 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta'],
