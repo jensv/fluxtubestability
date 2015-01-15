@@ -204,3 +204,13 @@ def f_num_wo_r(r, k, m, b_z, b_theta):
     Equation (16)
     """
     return (k*r*b_z + m*b_theta)**2
+
+
+def f_prime(r, k, m, b_z, b_theta, b_theta_prime, **kwargs):
+    r"""
+    return f_prime
+    """
+    term1 = -2.*k**2*r**2/(k**2*r**2 + m**2)**2 * (b_z*k*r + m*b_theta)**2
+    term2 = r/(k**2*r*2 + m**2)*(2*b_z*k + 2*m*b_theta_prime)*(b_z*k*r + m*b_theta)
+    term3 = 1/(k**2*r**2 + m**2)*(b_z*k*r + m*b_theta)**2
+    return term1 + term2 + term3
