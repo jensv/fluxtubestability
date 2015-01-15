@@ -262,15 +262,80 @@ def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
     return term1 + term2 + term3
 
 
-def newcomb_g_18_dimless(r, k, m, b_z, b_theta, p_prime, q, beta_0, **kwargs):
+def newcomb_g_18_dimless(r, k, m, b_z, p_prime, q, beta_0, **kwargs):
+    r"""
+    Return g from Newcomb's paper in dimensionless form. g only depends on b_z,
+    b_theta is caclulated from q and b_z.
+
+    Parameters
+    ----------
+    r : radial position
+    k : axial periodicity number
+    m : azimuthal periodicity number
+    b_z : axial magnetic field
+    p_prime: pressure gradient
+    q : safety factor
+    beta_0 : beta on axis
+
+    Returns
+    -------
+    g : dimensionless g
+
+    Notes
+    -----
+    Implements equation
+
+    .. math::
+        \beta_{0} \frac{k^{2} r^{2}}{k^{2} r^{2} + m^{2}} \frac{dp}{dr} +
+        r(k B_{z})^{2} \frac{k^{2}r^{2}+m^{2}-1}{k^{2}r^{2}+m^{2}}+
+        \frac{1}{r}(m B_{\theta})^{2}\frac{k^{2}r^{2}+m^{2}-1}{k^{2}r^{2}+m^{2}}+
+        2kmB_{z}B_{\theta}\frac{k^{2}r^{2}+m^{2}-1}{k^{2}r^{2}+m^{2}}+
+        \frac{2k^{4}r^{3}B_{z}^{2}}{k^{2}r^{2}+m^{2}}-
+        \frac{2k^{2}m^{2}rB_{\theta}^{2}}{k^{2}r^{2}+m^{2}}^{2}
+
+    """
+    term1 = beta_0*k**2*r**2/f_denom(r, k, m)*p_prime
+    term2 = r*(k*b_z)**2*(k**2*r**2 + m**2-1.)/f_denom(r, k, m)
+    term3 = m**2*1./r*(b_z*r*k/q)**2*(k**2*r**2+m**2-1.)/ f_denom(r, k, m)
+    term4 = 2.*m*k**2*r*b_z**2/q*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
+    term5 = 2*k**4*r**3*b_z**2/f_denom(r, k, m)
+    term6 = -m**2*2.*k**4*r**3*b_z**2/(q**2*f_denom(r, k, m)**2)
+    return term1 + term2 + term3 + term4 + term5 + term6
+
+
+def newcomb_g_18_dimless_wo_q(r, k, m, b_z, b_theta, p_prime, q, beta_0, **kwargs):
     r"""
     Return g from Newcomb's paper in dimensionless form.
+
+    Parameters
+    ----------
+    r : radial position
+    k : axial periodicity number
+    m : azimuthal periodicity number
+    b_z : axial magnetic field
+    p_prime: pressure gradient
+    q : safety factor
+    beta_0 : beta on axis
+
+    Returns
+    -------
+    g : dimensionless g
+
+    Notes
+    -----
+    Implements equation
+
+    .. math::
+        \frac{2 k^{2} r^{2}}{k^{2} r^{2} + m^{2}} \frac{dP}{dr} +
+        \frac{1}{r}(k r B_{z}+m B_{\theta})^{2}
+        \frac{k^{2}r^{2}+m^{2}-1}{k^{2}r^{2}+m^{2}}+
+        \frac{2k^{2}r}{(k^{2}r^{2}+m^{2})^{2}}
+        (k^{2}r^{2}B_{z}^{2}-m^{2}B_{\theta}^{2})eturn g from Newcomb's paper in dimensionless form.
     """
-    term1 = beta_0*k**2*r**2/(f_denom(r, k, m))*p_prime
-    term2 = r*(k*b_z)**2*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
-    term3 = (m**2*1./r*(b_z*r*k/q)**2*(k**2*r**2+m**2-1.)/
-             (k**2*r**2 + m**2))
-    term4 = 2.*m*k**2*r*b_z**2/q*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
-    term5 = 2*k**4*r**3*b_z**2/(k**2*r**2+m**2)
-    term6 = -m**2*2.*k**4*r**3*b_z**2/(q**2*(k**2*r**2+m**2)**2)
+    term1 = beta_0*k**2*r**2/f_denom(r, k, m)*p_prime
+    term2 = r*(k*b_z)**2*(k**2*r**2 + m**2-1.)/f_denom(r, k, m)
+    term3 = 1/r*(m*b_theta)**2*(k**2*r**2+m**2-1.)/ f_denom(r, k, m)
+    term4 = 2.*m*k*r*b_z*b_theta*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
+    term5 = 2*k**4*r**3*b_z**2/f_denom(r, k, m)
+    term6 = -2*k**2*m**2*r*b_theta**2/f_denom(r, k, m)**2
     return term1 + term2 + term3 + term4 + term5 + term6
