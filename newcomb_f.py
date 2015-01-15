@@ -16,7 +16,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 import eigenvalue_goedbloed as eg
 
 
-def newcomb_f_16(r, k, m, b_z, b_theta, q):
+def newcomb_f_16(r, k, m, b_z, b_theta, q, **kwargs):
     r"""
     Return f from Newcomb's paper.
 
