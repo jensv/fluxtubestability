@@ -17,8 +17,8 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 import numpy as np
 import numpy.ma as ma
 import scipy.integrate as inte
-import newcomb_f as f
-import newcomb_g as g
+import newcomb_f as new_f
+import newcomb_g as new_g
 import newcomb_init as init
 import singularity_frobenius as frob
 import external_stability as ext
@@ -32,13 +32,13 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
     Examines the total stability of profile.
     """
     missing_end_params = None
-    (stable_internal, suydam_stable, xi,
-     xi_der, r_array) = internal_stability(dr, offset, suydam_end_offset,
-                                           sing_search_points, params,
-                                           init_value=(0.0, 1.0),
-                                           suppress_output=suppress_output,
-                                           external_only=external_only,
-                                           atol=atol, rtol=rtol)
+    (stable_internal, suydam_stable, xi, xi_der, r_array,
+     residual_array) = internal_stability(dr, offset, suydam_end_offset,
+                                          sing_search_points, params,
+                                          init_value=(0.0, 1.0),
+                                          suppress_output=suppress_output,
+                                          external_only=external_only,
+                                          atol=atol, rtol=rtol)
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
 
@@ -69,7 +69,7 @@ external stability."
     if external_only:
         stable_internal = None
     return (stable_internal, suydam_stable,
-            stable_external, xi, xi_der, r_array, delta_w,
+            stable_external, xi, xi_der, r_array, residual_array, delta_w,
             missing_end_params)
 
 
@@ -123,6 +123,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
     eigenfunctions = []
     eigen_ders = []
     rs_list = []
+    residual_list = []
 
     sing_params = {'a': params['r_0'], 'b': params['a'],
                    'points': sing_search_points, 'k': params['k'],
@@ -143,12 +144,12 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             if not suppress_output:
                 print("Profile is Suydam unstable at r =", suydam_result)
 
-    int_params = {'f_func': f.newcomb_f_16, 'g_func': g.newcomb_g_18_dimless,
+    int_params = {'f_func': new_f.newcomb_f_16, 'g_func': new_g.newcomb_g_18_dimless,
                   'params': params, 'atol': atol, 'rtol': rtol}
     frob_params = {'offset': offset, 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta'],
                    'p_prime_spl': params['p_prime'],
-                   'q_spl': params['q'], 'f_func': f.newcomb_f_16,
+                   'q_spl': params['q'], 'f_func': new_f.newcomb_f_16,
                    'beta_0': params['beta_0']}
     special_case, intervals = offset_intervals(intervals, sings_wo_0,
                                                offset, suydam_result,
@@ -170,9 +171,9 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                                                          offset,
                                                          init_value)
 
-            (eigenfunctions, eigen_ders, rs_list,
-             stable) = integrate_interval(int_params, eigenfunctions,
-                                          eigen_ders, rs_list, stable)
+            (eigenfunctions, eigen_ders, rs_list, stable,
+             residual_list) = integrate_interval(int_params, eigenfunctions,
+                                            eigen_ders, rs_list, stable, residual_list)
 
         else:
             int_params['dr'] = intervals_dr[-1]
@@ -183,9 +184,9 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             int_params['suppress_output'] = suppress_output
             int_params['xi_init'] = frob.sing_small_solution(**frob_params)
 
-            (eigenfunctions, eigen_ders, rs_list,
-             stable) = integrate_interval(int_params, eigenfunctions,
-                                          eigen_ders, rs_list, stable)
+            (eigenfunctions, eigen_ders, rs_list, stable,
+             residual_list) = integrate_interval(int_params, eigenfunctions,
+                                            eigen_ders, rs_list, stable, residual_list)
     else:
         int_params['dr'] = intervals_dr[0]
         int_params['r_max'] = intervals[0][1]
@@ -200,9 +201,9 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                                                      offset,
                                                      init_value)
 
-        (eigenfunctions, eigen_ders, rs_list,
-         stable) = integrate_interval(int_params, eigenfunctions,
-                                      eigen_ders, rs_list, stable)
+        (eigenfunctions, eigen_ders, rs_list, stable,
+         residual_list) = integrate_interval(int_params, eigenfunctions,
+                                        eigen_ders, rs_list, stable, residual_list)
 
         for i, interval in enumerate(intervals[1:]):
             # repeat integration for each interval
@@ -214,25 +215,27 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             int_params['suppress_output'] = suppress_output
             int_params['xi_init'] = frob.sing_small_solution(**frob_params)
 
-            (eigenfunctions, eigen_ders, rs_list,
-             stable) = integrate_interval(int_params, eigenfunctions,
-                                          eigen_ders, rs_list, stable)
+            (eigenfunctions, eigen_ders, rs_list, stable,
+             residual_list) = integrate_interval(int_params, eigenfunctions,
+                                            eigen_ders, rs_list, stable, residual_list)
 
     eigenfunctions = np.asarray(eigenfunctions)
     eigen_ders = np.asarray(eigen_ders)
     rs_array = np.asarray(rs_list)
+    residual_array = np.asarray(residual_list)
     return stable, suydam_stable, eigenfunctions, eigen_ders, rs_array
 
 
-def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable):
+def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable, residual_list):
     r"""
     """
-    crossing, eigenfunction, eigen_der, rs = newcomb_int(**int_params)
+    crossing, eigenfunction, eigen_der, rs, residual = newcomb_int(**int_params)
     eigenfunctions.append(eigenfunction)
     eigen_ders.append(eigen_der)
     rs_list.append(rs)
+    residual_list.append(residual)
     stable = False if crossing else stable
-    return eigenfunctions, eigen_ders, rs_list, stable
+    return eigenfunctions, eigen_ders, rs_list, stable, residual
 
 
 def deal_geo(int_params, *args):
@@ -396,6 +399,9 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
         xi and derivative of xi.
     rs : ndarray of floats (M)
         radial positions of xi
+    residual : ndarray of floats (M)
+        residual of 2nd order euler-lagrange ODE.
+        Useful as indicator if the ODE is being solved correctly.
 
     Notes
     -----
@@ -416,9 +422,14 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
                    'b_theta': b_theta_spl(r_init), 'q': q_spl(r_init),
                    'f_func': f_func, 'xi': xi_init, 'xi_factor': xi_factor}
 
+    residual_params = {'k': k, 'm': m, 'b_z': b_z_spl, 'b_theta': b_theta_spl,
+                       'p_prime': p_prime_spl, 'q': q_spl, 'f_func': f_func,
+                       'g_func': g_func, 'beta_0': beta_0}
+
     xi = np.empty(dr.size + 1)
     xi_der_f = np.empty(dr.size + 1)
     rs = np.empty(dr.size + 1)
+    residual = np.empty(dr.size)
 
     if divide_f:
         xi_int = inte.ode(newcomb_der_divide_f)
@@ -460,7 +471,31 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
     xi_der_f = np.asarray(xi_der_f)
     xi_der = divide_by_f(rs, xi_der_f, k, m, b_z_spl,
                          b_theta_spl, q_spl, f_func)
-    return crossing, np.asarray(xi), xi_der, rs
+    residual = determine_residual(xi, xi_der, rs, residual_params)
+    return crossing, np.asarray(xi), xi_der, rs, residual
+
+
+def determine_residual(xi, xi_der, rs, residual_params):
+    r"""
+    Returns the residual of the 2nd order ODE form of the Euler-Lagrange
+    equation.
+
+    Notes
+    -----
+    :math:`residual = f' \xi' + f \xi'' - g \xi`
+    :math:`\xi''` is approximated by the difference between neighboring
+    :math:`\xi` values.
+    """
+    xi_der_der = np.diff(xi_der) / np.diff(rs)
+    residual_params.update({'r': rs[1:]})
+    g_params = {'b_theta_prime': residual_params['b_theta'].derivative(rs[1:]),
+                'b_z_prime': residual_params['b_z'].derivatives(rs[1:])}
+    g_params.update(residual_params)
+    f = residual_params['f_func'](**residual_params)
+    f_prime = new_f.f_prime(**residual_params)
+    g = residual_params['g_func'](**residual_params)
+    residual = f_prime * xi_der[1:] + f * xi_der_der - g * xi[1:]
+    return residual
 
 
 def divide_by_f(r, xi_der_f, k, m, b_z_spl, b_theta_spl, q_spl, f_func):
