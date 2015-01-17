@@ -223,7 +223,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
     eigen_ders = np.asarray(eigen_ders)
     rs_array = np.asarray(rs_list)
     residual_array = np.asarray(residual_list)
-    return stable, suydam_stable, eigenfunctions, eigen_ders, rs_array
+    return stable, suydam_stable, eigenfunctions, eigen_ders, rs_array, residual_array
 
 
 def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable, residual_list):
@@ -488,9 +488,14 @@ def determine_residual(xi, xi_der, rs, residual_params):
     """
     xi_der_der = np.diff(xi_der) / np.diff(rs)
     residual_params.update({'r': rs[1:]})
-    g_params = {'b_theta_prime': residual_params['b_theta'].derivative(rs[1:]),
-                'b_z_prime': residual_params['b_z'].derivatives(rs[1:])}
-    g_params.update(residual_params)
+    residual_params['b_theta_prime'] = residual_params['b_theta'].derivative()(rs[1:])
+    residual_params['b_z_prime'] = residual_params['b_z'].derivative()(rs[1:])
+
+    residual_params['b_z'] = residual_params['b_z'](rs[1:])
+    residual_params['b_theta'] = residual_params['b_theta'](rs[1:])
+    residual_params['q'] = residual_params['q'](rs[1:])
+    residual_params['p_prime'] = residual_params['p_prime'](rs[1:])
+
     f = residual_params['f_func'](**residual_params)
     f_prime = new_f.f_prime(**residual_params)
     g = residual_params['g_func'](**residual_params)
