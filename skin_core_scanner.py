@@ -78,7 +78,8 @@ def scan_lambda_k_space_mds(lambda_a_space, k_a_space, integration_points=250,
                 xi = results[3]
                 xi_der = results[4]
                 r_array = results[5]
-                delta_w = results[6]
+                residual_array = results[6]
+                delta_w = results[7]
 
                 if delta_w is not None:
                     stability_maps['d_w'][m][j][i] = delta_w
@@ -206,7 +207,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                 xi = results[3]
                 xi_der = results[4]
                 r_array = results[5]
-                delta_w = results[6]
+                residual_array = results[6]
+                delta_w = results[7]
 
                 if delta_w is not None:
                     stability_maps['d_w'][m][j][i] = delta_w
