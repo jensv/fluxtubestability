@@ -35,7 +35,7 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
     (stable_internal, suydam_stable, xi, xi_der, r_array,
      residual_array) = internal_stability(dr, offset, suydam_end_offset,
                                           sing_search_points, params,
-                                          init_value=(0.0, 1.0),
+                                          init_value=init_value,
                                           suppress_output=suppress_output,
                                           external_only=external_only,
                                           atol=atol, rtol=rtol)
@@ -490,6 +490,7 @@ def determine_residual(xi, xi_der, rs, residual_params):
     residual_params.update({'r': rs[1:]})
     residual_params['b_theta_prime'] = residual_params['b_theta'].derivative()(rs[1:])
     residual_params['b_z_prime'] = residual_params['b_z'].derivative()(rs[1:])
+    residual_params['q_prime'] = residual_params['q'].derivative()(rs[1:])
 
     residual_params['b_z'] = residual_params['b_z'](rs[1:])
     residual_params['b_theta'] = residual_params['b_theta'](rs[1:])
