@@ -206,7 +206,7 @@ def goedbloed_g_9_107(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime,
 
 
 def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
-                 q_prime, mu_0):
+                 q_prime, mu_0=1., **kwargs):
     r"""
     Return g from Newcomb's paper.
 
@@ -298,7 +298,7 @@ def newcomb_g_18_dimless(r, k, m, b_z, p_prime, q, beta_0, **kwargs):
     term2 = r*(k*b_z)**2*(k**2*r**2 + m**2-1.)/f_denom(r, k, m)
     term3 = m**2*1./r*(b_z*r*k/q)**2*(k**2*r**2+m**2-1.)/ f_denom(r, k, m)
     term4 = 2.*m*k**2*r*b_z**2/q*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
-    term5 = 2*k**4*r**3*b_z**2/f_denom(r, k, m)
+    term5 = 2*k**4*r**3*b_z**2/f_denom(r, k, m)**2
     term6 = -m**2*2.*k**4*r**3*b_z**2/(q**2*f_denom(r, k, m)**2)
     return term1 + term2 + term3 + term4 + term5 + term6
 
@@ -336,6 +336,6 @@ def newcomb_g_18_dimless_wo_q(r, k, m, b_z, b_theta, p_prime, q, beta_0, **kwarg
     term2 = r*(k*b_z)**2*(k**2*r**2 + m**2-1.)/f_denom(r, k, m)
     term3 = 1/r*(m*b_theta)**2*(k**2*r**2+m**2-1.)/ f_denom(r, k, m)
     term4 = 2.*m*k*r*b_z*b_theta*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
-    term5 = 2*k**4*r**3*b_z**2/f_denom(r, k, m)
+    term5 = 2*k**4*r**3*b_z**2/f_denom(r, k, m)**2
     term6 = -2*k**2*m**2*r*b_theta**2/f_denom(r, k, m)**2
     return term1 + term2 + term3 + term4 + term5 + term6
