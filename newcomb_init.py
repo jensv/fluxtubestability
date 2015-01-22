@@ -64,10 +64,10 @@ def init_geometric_sing(r, k, m, b_z, b_theta, q, f_func, xi_factor, *args, **kw
 
     if m == 0:
         y[0] = r
-        y[1] = 1
+        y[1] = 1.
     else:
-        y[0] = r**(abs(m) - 1)
-        y[1] = (abs(m) - 1)*r**(abs(m) - 2)
+        y[0] = r**(abs(m) - 1.)
+        y[1] = (abs(m) - 1.)*r**(abs(m) - 2.)
         #y[0] = r**(m - 1)
         #y[1] = (m - 1)*r**(m - 2)
 
