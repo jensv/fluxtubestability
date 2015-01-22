@@ -269,6 +269,7 @@ class NewcombConstantPressure(EquilSolver):
         self.k = k
         self.b_z0 = b_z0
         self.b_thetai = b_thetai
+        self.beta_0 = 0.
         r = self.r
         param_points = {'j_z': self.get_j_z, 'b_theta': self.b_theta,
                         'b_z': self.b_z, 'p_prime': self.p_prime,
