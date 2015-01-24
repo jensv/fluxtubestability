@@ -25,7 +25,7 @@ sns.set_context('poster')
 
 def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1',
                            show_points=False, lim=None, levels=None, log=False,
-                           linthresh=1E-7):
+                           linthresh=1E-7, bounds=(1.5, 3.0)):
     r"""
     Plot the delta_w of external instabilities in the lambda-k space.
     """
@@ -83,8 +83,8 @@ def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1',
 
     if show_points:
         plt.scatter(lambda_a_mesh, k_a_mesh, marker='o', c='b', s=5)
-    plt.ylim(0.01, 1.5)
-    plt.xlim(0.01, 3.)
+    plt.ylim(0.01, bounds[0])
+    plt.xlim(0.01, bounds[1])
     plt.ylabel(r'$\bar{k}$', fontsize=25)
     plt.xlabel(r'$\bar{\lambda}$', fontsize=25)
     plt.savefig('../../output/plots/' + name + '.png')
