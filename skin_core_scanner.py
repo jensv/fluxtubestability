@@ -156,13 +156,12 @@ def scan_lambda_k_space_mds(lambda_a_space, k_a_space, integration_points=250,
 
 def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                         xi_factor=1., magnetic_potential_energy_ratio=1.,
-                        **kwargs):
+                        offset=1E-3, r_0=0., init_value=(0.0, 1.0), **kwargs):
     r"""
     """
     sing_search_points = 1000
     dr = np.linspace(0, 1, integration_points)[1]
-    offset = 1E-3
-    suydam_end_offset = 1E-3
+    suydam_end_offset = offset
 
     k_a_points = np.linspace(k_a_space[0], k_a_space[1], num=k_a_space[2])
     lambda_a_points = np.linspace(lambda_a_space[0], lambda_a_space[1],
@@ -189,7 +188,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                 profile = es.UnitlessSmoothedCoreSkin(k_bar=k_a, lambda_bar=lambda_a,
                                                       **kwargs)
 
-                params = {'k': k_a, 'm': float(m), 'r_0': 0., 'a': 1.,
+                params = {'k': k_a, 'm': float(m), 'r_0': r_0, 'a': 1.,
                           'b': 'infinity'}
                 params_wo_splines = deepcopy(params)
                 params.update(profile.get_splines())
@@ -200,7 +199,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
 
                 results = new.stability(dr, offset, suydam_end_offset,
                                         sing_search_points, params,
-                                        suppress_output=True)
+                                        suppress_output=True,
+                                        init_value=init_value)
                 stable_internal = results[0]
                 stable_suydam = results[1]
                 stable_external = results[2]
