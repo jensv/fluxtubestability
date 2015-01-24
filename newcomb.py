@@ -17,6 +17,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 import numpy as np
 import numpy.ma as ma
 import scipy.integrate as inte
+import scipy.interpolate as interp
 import newcomb_f as new_f
 import newcomb_g as new_g
 import newcomb_init as init
@@ -487,6 +488,9 @@ def determine_residual(xi, xi_der, rs, residual_params):
     :math:`\xi` values.
     """
     xi_der_der = np.diff(xi_der) / np.diff(rs)
+    #xi_der_der = interp.InterpolatedUnivariateSpline(rs, xi_der).derivative()(rs)[1:]
+
+
     residual_params.update({'r': rs[1:]})
     residual_params['b_theta_prime'] = residual_params['b_theta'].derivative()(rs[1:])
     residual_params['b_z_prime'] = residual_params['b_z'].derivative()(rs[1:])
