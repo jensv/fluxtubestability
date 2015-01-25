@@ -156,7 +156,8 @@ def scan_lambda_k_space_mds(lambda_a_space, k_a_space, integration_points=250,
 
 def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                         xi_factor=1., magnetic_potential_energy_ratio=1.,
-                        offset=1E-3, r_0=0., init_value=(0.0, 1.0), **kwargs):
+                        offset=1E-3, r_0=0., init_value=(0.0, 1.0),
+                        external_only=True, **kwargs):
     r"""
     """
     sing_search_points = 1000
@@ -200,7 +201,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                 results = new.stability(dr, offset, suydam_end_offset,
                                         sing_search_points, params,
                                         suppress_output=True,
-                                        init_value=init_value)
+                                        init_value=init_value,
+                                        external_only=external_only)
                 stable_internal = results[0]
                 stable_suydam = results[1]
                 stable_external = results[2]
