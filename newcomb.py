@@ -205,7 +205,6 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
         (eigenfunctions, eigen_ders, rs_list, stable,
          residual_list) = integrate_interval(int_params, eigenfunctions,
                                         eigen_ders, rs_list, stable, residual_list)
-
         for i, interval in enumerate(intervals[1:]):
             # repeat integration for each interval
             int_params['dr'] = intervals_dr[i+1]
@@ -229,6 +228,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
 
 def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable, residual_list):
     r"""
+    Returns results of interval integration.
     """
     crossing, eigenfunction, eigen_der, rs, residual = newcomb_int(**int_params)
     eigenfunctions.append(eigenfunction)
@@ -236,7 +236,7 @@ def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable, 
     rs_list.append(rs)
     residual_list.append(residual)
     stable = False if crossing else stable
-    return eigenfunctions, eigen_ders, rs_list, stable, residual
+    return eigenfunctions, eigen_ders, rs_list, stable, residual_list
 
 
 def deal_geo(int_params, *args):
