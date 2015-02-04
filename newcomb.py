@@ -24,6 +24,15 @@ import newcomb_init as init
 import singularity_frobenius as frob
 import external_stability as ext
 import find_singularties as find_sing
+import all_f_g
+all_f_g.all_f = []
+all_f_g.all_g = []
+all_f_g.all_g_term1 = []
+all_f_g.all_g_term2 = []
+all_f_g.all_g_term3 = []
+all_f_g.all_g_term4 = []
+all_f_g.all_g_term5 = []
+all_f_g.all_g_term6 = []
 
 
 def stability(dr, offset, suydam_end_offset, sing_search_points, params,
@@ -69,9 +78,11 @@ external stability."
 
     if external_only:
         stable_internal = None
+    all_g_terms = [all_f_g.all_g_term1, all_f_g.all_g_term2, all_f_g.all_g_term3,
+                   all_f_g.all_g_term4, all_f_g.all_g_term5, all_f_g.all_g_term6]
     return (stable_internal, suydam_stable,
             stable_external, xi, xi_der, r_array, residual_array, delta_w,
-            missing_end_params)
+            missing_end_params, all_f_g.all_f, all_f_g.all_g, all_g_terms)
 
 
 def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
