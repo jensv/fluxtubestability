@@ -25,14 +25,7 @@ import singularity_frobenius as frob
 import external_stability as ext
 import find_singularties as find_sing
 import all_f_g
-all_f_g.all_f = []
-all_f_g.all_g = []
-all_f_g.all_g_term1 = []
-all_f_g.all_g_term2 = []
-all_f_g.all_g_term3 = []
-all_f_g.all_g_term4 = []
-all_f_g.all_g_term5 = []
-all_f_g.all_g_term6 = []
+
 
 
 def stability(dr, offset, suydam_end_offset, sing_search_points, params,
@@ -41,6 +34,22 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
     r"""
     Examines the total stability of profile.
     """
+
+    all_f_g.all_f = []
+    all_f_g.all_g = []
+    all_f_g.all_g_term1 = []
+    all_f_g.all_g_term2 = []
+    all_f_g.all_g_term3 = []
+    all_f_g.all_g_term4 = []
+    all_f_g.all_g_term5 = []
+    all_f_g.all_g_term6 = []
+    all_f_g.all_pressure_prime = []
+    all_f_g.all_b_theta = []
+    all_f_g.all_b_z = []
+    all_f_g.all_beta_0 = []
+    all_f_g.all_m = []
+    all_f_g.all_k = []
+
     missing_end_params = None
     (stable_internal, suydam_stable, xi, xi_der, r_array,
      residual_array) = internal_stability(dr, offset, suydam_end_offset,
@@ -80,9 +89,14 @@ external stability."
         stable_internal = None
     all_g_terms = [all_f_g.all_g_term1, all_f_g.all_g_term2, all_f_g.all_g_term3,
                    all_f_g.all_g_term4, all_f_g.all_g_term5, all_f_g.all_g_term6]
+    all_checks = {'g_terms': all_g_terms, 'b_theta': all_f_g.all_b_theta,
+                  'b_z': all_f_g.all_b_z,
+                  'pressure_prime': all_f_g.all_pressure_prime,
+                  'beta_0': all_f_g.all_beta_0, 'm': all_f_g.all_m,
+                  'k': all_f_g.all_k}
     return (stable_internal, suydam_stable,
             stable_external, xi, xi_der, r_array, residual_array, delta_w,
-            missing_end_params, all_f_g.all_f, all_f_g.all_g, all_g_terms)
+            missing_end_params, all_f_g.all_f, all_f_g.all_g, all_checks)
 
 
 def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
@@ -156,7 +170,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             if not suppress_output:
                 print("Profile is Suydam unstable at r =", suydam_result)
 
-    int_params = {'f_func': new_f.newcomb_f_16, 'g_func': new_g.newcomb_g_18_dimless,
+    int_params = {'f_func': new_f.newcomb_f_16, 'g_func': new_g.newcomb_g_18_dimless_wo_q,
                   'params': params, 'atol': atol, 'rtol': rtol}
     frob_params = {'offset': offset, 'b_z_spl': params['b_z'],
                    'b_theta_spl': params['b_theta'],
