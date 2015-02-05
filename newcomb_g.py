@@ -205,8 +205,7 @@ def goedbloed_g_9_107(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime,
     return term1 + term2 - term3
 
 
-def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
-                 q_prime, mu_0=1., **kwargs):
+def newcomb_g_18(r, k, m, b_z, b_theta, p_prime, mu_0, **kwargs):
     r"""
     Return g from Newcomb's paper.
 
@@ -222,14 +221,10 @@ def newcomb_g_18(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
         axial magnetic field
     b_theta : ndarray of floats
         azimuthal mangetic field
-    b_theta_prime: ndarray of floats
-        azimuthal magnetic field
     p_prime : ndarray of floats
         pressure prime
     q : ndarray of floats
         safety factor
-    q_prime : ndarray of floats
-        derivative of safety factor
     mu_0 : float
         magnetic permeability of free space
 
@@ -269,13 +264,19 @@ def newcomb_g_18_dimless(r, k, m, b_z, p_prime, q, beta_0, **kwargs):
 
     Parameters
     ----------
-    r : radial position
-    k : axial periodicity number
-    m : azimuthal periodicity number
-    b_z : axial magnetic field
-    p_prime: pressure gradient
+    r : float
+        radial position
+    k : float
+        axial periodicity number
+    m : float
+        azimuthal periodicity number
+    b_z : float
+        axial magnetic field
+    p_prime : float
+        pressure gradient
     q : safety factor
-    beta_0 : beta on axis
+    beta_0 : float
+        beta on axis
 
     Returns
     -------
@@ -303,19 +304,24 @@ def newcomb_g_18_dimless(r, k, m, b_z, p_prime, q, beta_0, **kwargs):
     return term1 + term2 + term3 + term4 + term5 + term6
 
 
-def newcomb_g_18_dimless_wo_q(r, k, m, b_z, b_theta, p_prime, q, beta_0, **kwargs):
+def newcomb_g_18_dimless_wo_q(r, k, m, b_z, b_theta, p_prime, beta_0, **kwargs):
     r"""
     Return g from Newcomb's paper in dimensionless form.
 
     Parameters
     ----------
-    r : radial position
-    k : axial periodicity number
-    m : azimuthal periodicity number
-    b_z : axial magnetic field
-    p_prime: pressure gradient
-    q : safety factor
-    beta_0 : beta on axis
+    r : float
+        radial position
+    k : float
+        axial periodicity number
+    m : float
+        azimuthal periodicity number
+    b_z : float
+        axial magnetic field
+    p_prime: float
+        pressure gradient
+    beta_0 : float
+        beta on axis
 
     Returns
     -------
