@@ -42,7 +42,7 @@ all_f_g.all_g_term6 = []
 
 def stability(dr, offset, suydam_end_offset, sing_search_points, params,
               init_value=(0.0, 1.0), suppress_output=False,
-              external_only=True, atol=None, rtol=None):
+              external_only=True, atol=None, rtol=None, debug_f_g=False):
     r"""
     Examines the total stability of profile: internal, external, Suydam.
 
@@ -114,7 +114,7 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
                                                           xi_der[-1][-1],
                                                           dim_less=True)
     else:
-        msg = ("Integration to plasma edge did not succeed. +
+        msg = ("Integration to plasma edge did not succeed." +
                "Can not determine external stability.")
         print(msg)
         missing_end_params = params
@@ -129,7 +129,7 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
         if not stable_external:
             print("Profile is unstable to external mode k =", k, "m =", m)
             print("delta_W =", delta_w)
-        if not stable_internal and not external_only:flag to suppres internal stability checks, only integrate last interval
+        if not stable_internal and not external_only:
             print("Profile is unstable to internal mode k =", k, "m =", m)
         if (stable_external and stable_internal) or (stable_external and
                                                      external_only):
@@ -140,9 +140,15 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
         stable_internal = None
     all_g_terms = [all_f_g.all_g_term1, all_f_g.all_g_term2, all_f_g.all_g_term3,
                    all_f_g.all_g_term4, all_f_g.all_g_term5, all_f_g.all_g_term6]
-    return (stable_internal, suydam_stable,
-            stable_external, xi, xi_der, r_array, residual_array, delta_w,
-            missing_end_params, all_f_g.all_f, all_f_g.all_g, all_g_terms)
+
+    if debug_f_g:
+        return (stable_internal, suydam_stable,
+                stable_external, xi, xi_der, r_array, residual_array, delta_w,
+                missing_end_params, all_f_g.all_f, all_f_g.all_g, all_g_terms)
+    else:
+        return (stable_internal, suydam_stable,
+                stable_external, xi, xi_der, r_array, residual_array, delta_w,
+                missing_end_params)
 
 
 def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
@@ -258,10 +264,10 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
             frob_params['r_sing'] = intervals[-1][0] - offset
             int_params['xi_init'] = frob.sing_small_solution(**frob_params)
 
-       (eigenfunctions, eigen_ders, rs_list, stable,
-        residual_list) = integrate_interval(int_params, eigenfunctions,
-                                            eigen_ders, rs_list, stable,
-                                            residual_list)
+        (eigenfunctions, eigen_ders, rs_list, stable,
+         residual_list) = integrate_interval(int_params, eigenfunctions,
+                                             eigen_ders, rs_list, stable,
+                                             residual_list)
     # integrate all intervals
     else:
         int_params['dr'] = intervals_dr[0]
@@ -563,7 +569,9 @@ def determine_residual(xi, xi_der, rs, residual_params):
     :math:`\xi''` is approximated by the difference between neighboring
     :math:`\xi` values.
     """
-    xi_der_der = np.gradient(xi_der) / np.diff(rs)
+    delta_r = np.diff(rs)
+    delta_r = np.insert(delta_r, 0, [delta_r[0]])
+    xi_der_der = np.gradient(xi_der) / delta_r
 
     residual_params.update({'r': rs})
     residual_params['b_theta_prime'] = residual_params['b_theta'].derivative()(rs)
