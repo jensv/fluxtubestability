@@ -18,7 +18,7 @@ import all_f_g
 
 
 
-def newcomb_f_16(r, k, m, b_z, b_theta, q, **kwargs):
+def newcomb_f_16(r, k, m, b_z, b_theta, **kwargs):
     r"""
     Return f from Newcomb's paper.
 
@@ -26,21 +26,14 @@ def newcomb_f_16(r, k, m, b_z, b_theta, q, **kwargs):
     ----------
     r : ndarray of floats
         radius
-
     k : float
         axial periodicity number
-
     m : float
         azimuthal periodicity number
-
     b_z : ndarray of floats
         axial magnetic field
-
     b_theta : ndarray of floats
         azimuthal mangetic field
-
-    q: ndarray of floats
-        safety factor
 
     Returns
     -------
@@ -65,7 +58,7 @@ def newcomb_f_16(r, k, m, b_z, b_theta, q, **kwargs):
     return r*f_num_wo_r(**params_num)/f_denom(**params_denom)
 
 
-def goedbloed_f_9_106(r, k, m, b_z, b_theta, q):
+def goedbloed_f_9_106(r, k, m, b_z, b_theta):
     r"""
     Return f from Newcomb's paper.
 
@@ -73,22 +66,14 @@ def goedbloed_f_9_106(r, k, m, b_z, b_theta, q):
     ----------
     r : ndarray of floats
         radius
-
     k : float
         axial periodicity number
-
     m : float
         azimuthal periodicity number
-
     b_z : ndarray of floats
         axial magnetic field
-
     b_theta : ndarray of floats
         azimuthal mangetic field
-
-    q: ndarray of floats
-        safety factor
-
     Returns
     -------
     f : ndarray of floats
@@ -112,19 +97,14 @@ def jardin_f_8_78(r, k, m, b_z, b_theta, q):
     ----------
     r : ndarray of floats
         radius
-
     k : float
         axial periodicity number
-
     m : float
         azimuthal periodicity number
-
     b_z : ndarray of floats
         axial magnetic field
-
     b_theta : ndarray of floats
         azimuthal mangetic field
-
     q: ndarray of floats
         safety factor
 
@@ -149,10 +129,8 @@ def f_denom(r, k, m):
     ----------
     r: ndarray of floats
         radius
-
     k: float
         axial periodicity number
-
     m: float
         azimuthal periodicity number
 
@@ -180,16 +158,12 @@ def f_num_wo_r(r, k, m, b_z, b_theta):
     ----------
     r : ndarray of floats
         radius
-
     k : float
         axial periodicity number
-
     m : float
         azimuthal periodicity number
-
     b_z : ndarray of floats
         axial magnetic field
-
     b_theta : ndarray of floats
         azimuthal mangetic field
 
