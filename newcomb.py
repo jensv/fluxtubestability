@@ -3,6 +3,11 @@
 Created on Mon May 19 10:03:00 2014
 
 @author: Jens von der Linden
+
+Module containing functions to test marginal stability of Equilibrium Profiles,
+by integrating Newcomb's Euler-Lagrange equation.
+
+The profiles are assumed to be created with equil_solver.py.
 """
 
 
@@ -30,7 +35,57 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
               init_value=(0.0, 1.0), suppress_output=False,
               external_only=True, atol=None, rtol=None):
     r"""
-    Examines the total stability of profile.
+    Examines the total stability of profile: internal, external, Suydam.
+
+    Parameters
+    ----------
+    dr : float or ndarray
+        spacing of requested integration points, can be varying
+    offset : float
+        offset after which to start integrating after singularties
+    suydam_end_offset : float
+        offset after which to start integrating after suydam unstable
+        singularties
+    sing_search_points : int
+        number of points at which to look for sign changes
+    params : dict
+        dictionary of equilibrium and mode params
+    init_value : tuple
+        initial value, useful for inner conductor boundaries
+    suppress_output : bool
+        flag to suppress print statments
+    external_only : bool
+        flag to suppres internal stability checks, only integrate last interval
+    atol : float
+        absolute tolerance setting for ODE integrator
+    rtol : float
+        relative tolerance setting for ODE integrator
+
+    Returns
+    -------
+    stable_internal : bool
+        True if no zero corssings of xi are found
+    suydam_stable : bool
+        True if all singularties (except r=0) are Suydam stable
+    stable_external : bool
+        True if delta_w > 0
+    xi : ndarray
+        xi values
+    xi_der : ndarray
+        derivative of xi
+    r_array : ndarray
+        radii
+    residual_array : ndarray
+        array of residuals
+    delta_w : foat
+        total perturbed potential energy
+
+    Notes
+    -----
+    Calls interal_stability function.
+    If integration succeds to plasma edge external_stability function is called.
+    Optional flag only integrates last interval and uses result for
+    external_stability.
     """
     missing_end_params = None
     (stable_internal, suydam_stable, xi, xi_der, r_array,
@@ -40,6 +95,9 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
                                           suppress_output=suppress_output,
                                           external_only=external_only,
                                           atol=atol, rtol=rtol)
+
+    # Test if integration to plasma edge was successful,
+    # Can external stability be determined?
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
 
@@ -47,20 +105,22 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
                                                           xi_der[-1][-1],
                                                           dim_less=True)
     else:
-        msg = "Integration to plasma edge did not succeed. Can not determine \
-external stability."
+        msg = ("Integration to plasma edge did not succeed. +
+               "Can not determine external stability.")
         print(msg)
         missing_end_params = params
         stable_external = True
         delta_w = None
 
+    # Output stability messages
+    # Can external stability be determined?
     k = params['k']
     m = params['m']
     if not suppress_output:
         if not stable_external:
             print("Profile is unstable to external mode k =", k, "m =", m)
             print("delta_W =", delta_w)
-        if not stable_internal and not external_only:
+        if not stable_internal and not external_only:flag to suppres internal stability checks, only integrate last interval
             print("Profile is unstable to internal mode k =", k, "m =", m)
         if (stable_external and stable_internal) or (stable_external and
                                                      external_only):
@@ -89,12 +149,29 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
         offset from geometric (r=0) and f=0 singularties
     sing_seach_points: int
         number of points used to search for sign reversals in f.
-    params :
+    params : dict
         dictionary of plasma column parameters, including splines, geometry and
         periodicity numbers.
     init_value : optional tuple (2) of float
         intial values for non singularity inital condition. Optionally if not
         provided (0.0, 1.0) is assumed.
+    suppress_output : bool
+        flag to suppress print statments
+    external_only : bool
+        flag to suppres internal stability checks, only integrate last interval
+    atol : float
+        absolute tolerance setting for ODE integrator
+    rtol : float
+        relative tolerance setting for ODE integrator
+
+    Returns
+    -------
+    stable : bool
+        stability of input profile
+    eigenfunctions: list of ndarray
+        list of eigenfunctions for each interval
+    rs: list of ndarray
+        list of radii for each value in the eigenfunctions arrays
 
     Notes
     -----
@@ -107,17 +184,6 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
     scipy.ode using the lsoda solver. At each integration step a check for
     zeros is conducted by looking for sign changes in the integrated
     pertubation function.
-
-    Returns
-    -------
-    stable : boolean
-            stability of input profile
-
-    eigenfunctions: list of ndarray
-                    list of eigenfunctions for each interval
-
-    rs: list of ndarray
-        list of radii for each value in the eigenfunctions arrays
     """
     stable = True
     suydam_stable = True
@@ -126,6 +192,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
     rs_list = []
     residual_list = []
 
+    # Search for singularties
     sing_params = {'a': params['r_0'], 'b': params['a'],
                    'points': sing_search_points, 'k': params['k'],
                    'm': params['m'], 'b_z_spl': params['b_z'],
@@ -136,6 +203,7 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
         if not sings.size == 0:
             print("Non-geometric singularties identified at r =", sings)
 
+    # Check singularties for Suydam stability
     suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
                                  params['p_prime'], params['beta_0'])
     if suydam_result.size != 0:
@@ -152,18 +220,21 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                    'p_prime_spl': params['p_prime'],
                    'q_spl': params['q'], 'f_func': new_f.newcomb_f_16,
                    'beta_0': params['beta_0']}
+
+    #set up integration intervals
     special_case, intervals = offset_intervals(intervals, sings_wo_0,
                                                offset, suydam_result,
                                                suydam_offset)
     intervals_dr, intervals = process_dr(dr, offset, intervals)
 
+    # if external_only integrate last interval
     if external_only:
-        if len(intervals) == 1:
-            int_params['dr'] = intervals_dr[0]
-            int_params['r_max'] = intervals[0][1]
-            int_params['r_init'] = intervals[0][0]
-            int_params['suppress_output'] = suppress_output
+        int_params['dr'] = intervals_dr[-1]
+        int_params['r_max'] = intervals[-1][1]
+        int_params['r_init'] = intervals[-1][0]
+        int_params['suppress_output'] = suppress_output
 
+        if len(intervals) == 1:
             deal_special_case = {'sing': deal_sing, 'geo': deal_geo,
                                  None: deal_norm}
             int_params = deal_special_case[special_case](int_params,
@@ -171,29 +242,21 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                                                          intervals[0][0],
                                                          offset,
                                                          init_value)
-
-            (eigenfunctions, eigen_ders, rs_list, stable,
-             residual_list) = integrate_interval(int_params, eigenfunctions,
-                                            eigen_ders, rs_list, stable, residual_list)
-
         else:
-            int_params['dr'] = intervals_dr[-1]
-            int_params['r_init'] = intervals[-1][0]
-            int_params['r_max'] = intervals[-1][1]
             int_params['init_func'] = init.init_xi_given
             frob_params['r_sing'] = intervals[-1][0] - offset
-            int_params['suppress_output'] = suppress_output
             int_params['xi_init'] = frob.sing_small_solution(**frob_params)
 
-            (eigenfunctions, eigen_ders, rs_list, stable,
-             residual_list) = integrate_interval(int_params, eigenfunctions,
-                                            eigen_ders, rs_list, stable, residual_list)
+       (eigenfunctions, eigen_ders, rs_list, stable,
+        residual_list) = integrate_interval(int_params, eigenfunctions,
+                                            eigen_ders, rs_list, stable,
+                                            residual_list)
+    # integrate all intervals
     else:
         int_params['dr'] = intervals_dr[0]
         int_params['r_max'] = intervals[0][1]
         int_params['r_init'] = intervals[0][0]
         int_params['suppress_output'] = suppress_output
-
         deal_special_case = {'sing': deal_sing, 'geo': deal_geo,
                              None: deal_norm}
         int_params = deal_special_case[special_case](int_params,
@@ -201,10 +264,10 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
                                                      intervals[0][0],
                                                      offset,
                                                      init_value)
-
         (eigenfunctions, eigen_ders, rs_list, stable,
          residual_list) = integrate_interval(int_params, eigenfunctions,
-                                        eigen_ders, rs_list, stable, residual_list)
+                                             eigen_ders, rs_list, stable,
+                                             residual_list)
         for i, interval in enumerate(intervals[1:]):
             # repeat integration for each interval
             int_params['dr'] = intervals_dr[i+1]
@@ -217,18 +280,48 @@ def internal_stability(dr, offset, suydam_offset, sing_search_points, params,
 
             (eigenfunctions, eigen_ders, rs_list, stable,
              residual_list) = integrate_interval(int_params, eigenfunctions,
-                                            eigen_ders, rs_list, stable, residual_list)
+                                                 eigen_ders, rs_list, stable,
+                                                 residual_list)
 
     eigenfunctions = np.asarray(eigenfunctions)
     eigen_ders = np.asarray(eigen_ders)
     rs_array = np.asarray(rs_list)
     residual_array = np.asarray(residual_list)
-    return stable, suydam_stable, eigenfunctions, eigen_ders, rs_array, residual_array
+    return (stable, suydam_stable, eigenfunctions, eigen_ders, rs_array,
+            residual_array)
 
 
-def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable, residual_list):
+def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable,
+                       residual_list):
     r"""
     Returns results of interval integration.
+
+    Parameters
+    ----------
+    int_params : dict
+        dictionary with integration info
+    eigenfunctions : list (M)
+        list of xi ndarrays for each interval
+    eigen_ders : list (M)
+        list of xi_der ndarrays for each interval
+    rs_list :  list (M)
+        list of r ndarrays for each interval
+    stable : bool
+        cumalative stability of all intervals up till now
+    residual_list : list (M)
+        list of residual ndarrys for each interval
+    Returns
+    -------
+    eigenfunction : list (M+1)
+        list of xi ndarrays for each interval
+    eigen_ders : list (M+1)
+        list of xi_der ndarrays for each interval
+    rs_list : list (M+1)
+        list of r ndarrays for each interval
+    stable : bool
+        cumulative stability of all intervals up till now
+    residual_list : list (M+1)
+        list of residual ndarrys for each interval
     """
     crossing, eigenfunction, eigen_der, rs, residual = newcomb_int(**int_params)
     eigenfunctions.append(eigenfunction)
@@ -241,6 +334,8 @@ def integrate_interval(int_params, eigenfunctions, eigen_ders, rs_list, stable, 
 
 def deal_geo(int_params, *args):
     r"""
+    Returns inital values for r=0 geometric singularity.
+    Part of "switch statement" dictionary handeling intial conditions.
     """
     int_params['init_func'] = init.init_geometric_sing
     return int_params
@@ -248,6 +343,8 @@ def deal_geo(int_params, *args):
 
 def deal_sing(int_params, frob_params, interval_start, offset, *args):
     r"""
+    Returns inital values for :math:`r \neq 0` geometric singularity.
+    Part of "switch statement" dictionary handeling intial conditions.
     """
     int_params['init_func'] = init.init_xi_given
     frob_params['r_sing'] = interval_start - offset
@@ -257,6 +354,8 @@ def deal_sing(int_params, frob_params, interval_start, offset, *args):
 
 def deal_norm(int_params, frob_params, interval_start, offset, init_value):
     r"""
+    Returns gicen initial values. e.g. solid inner conductor boundary.
+    Part of "switch statement" dictionary handeling intial conditions.
     """
     int_params['init_func'] = init.init_xi_given
     int_params['xi_init'] = init_value
@@ -326,37 +425,6 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
     y_prime[0] = y[1] / f_func(**f_params)
     y_prime[1] = y[0]*g_func(**g_params)
-    return y_prime
-
-
-def newcomb_der_divide_f(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
-                         f_func, g_func):
-    r"""
-    This is another formulation of the Euler-Lagrange equation as a set of 2
-    ODEs. Alan Glasser used this formulation.
-
-    Reference
-    ---------
-    Newcomb (1960) Hydromagnetic Stability of a diffuse linear pinch.
-    """
-    y_prime = np.zeros(2)
-
-    g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
-                'b_z_prime': b_z_spl.derivative()(r),
-                'b_theta': b_theta_spl(r),
-                'b_theta_prime': b_theta_spl.derivative()(r),
-                'p_prime': p_prime_spl(r), 'q': q_spl(r),
-                'q_prime': q_spl.derivtive()(r), 'beta_0': beta_0}
-
-    f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
-                'b_theta': b_theta_spl(r), 'q': q_spl(r)}
-
-    if np.isclose(f_func(**f_params), 0., atol=10E-5):
-        print('singularity at r=' + str(r))
-
-    y_prime[0] = y[1]/f_func(**f_params)
-
-    y_prime[1] = y[0]*(g_func(**g_params)/f_func(**f_params))
     return y_prime
 
 
@@ -432,25 +500,21 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
     rs = np.empty(dr.size + 1)
     residual = np.empty(dr.size)
 
-    if divide_f:
-        xi_int = inte.ode(newcomb_der_divide_f)
-    else:
-        xi_int = inte.ode(newcomb_der)
-
+    # setup integrator, inital values
+    xi_int = inte.ode(newcomb_der)
     if not (atol and rtol):
         xi_int.set_integrator('lsoda')
     else:
         xi_int.set_integrator('lsoda', atol, rtol)
-
     xi_int.set_initial_value(init_func(**init_params), t=r_init)
     xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
                         g_func, beta_0)
-
     y_init = init_func(**init_params)
     xi[0] = y_init[0]
     xi_der_f[0] = y_init[1]
     rs[0] = r_init
 
+    #integration loop
     for i in range(dr.size):
         if not xi_int.successful():
             rs[i+1:] = np.nan
@@ -462,6 +526,7 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
         xi_der_f[i+1] = xi_int.y[1]
         rs[i+1] = xi_int.t
 
+    # Check for crossings, prepare outputs
     crossing = False
     crossings = np.nonzero(ma.masked_invalid(np.diff(np.sign(xi))))[0]
     if crossings.size != 0:
@@ -487,24 +552,22 @@ def determine_residual(xi, xi_der, rs, residual_params):
     :math:`\xi''` is approximated by the difference between neighboring
     :math:`\xi` values.
     """
-    xi_der_der = np.diff(xi_der) / np.diff(rs)
-    #xi_der_der = interp.InterpolatedUnivariateSpline(rs, xi_der).derivative()(rs)[1:]
+    xi_der_der = np.gradient(xi_der) / np.diff(rs)
 
+    residual_params.update({'r': rs})
+    residual_params['b_theta_prime'] = residual_params['b_theta'].derivative()(rs)
+    residual_params['b_z_prime'] = residual_params['b_z'].derivative()(rs)
+    residual_params['q_prime'] = residual_params['q'].derivative()(rs)
 
-    residual_params.update({'r': rs[1:]})
-    residual_params['b_theta_prime'] = residual_params['b_theta'].derivative()(rs[1:])
-    residual_params['b_z_prime'] = residual_params['b_z'].derivative()(rs[1:])
-    residual_params['q_prime'] = residual_params['q'].derivative()(rs[1:])
-
-    residual_params['b_z'] = residual_params['b_z'](rs[1:])
-    residual_params['b_theta'] = residual_params['b_theta'](rs[1:])
-    residual_params['q'] = residual_params['q'](rs[1:])
-    residual_params['p_prime'] = residual_params['p_prime'](rs[1:])
+    residual_params['b_z'] = residual_params['b_z'](rs)
+    residual_params['b_theta'] = residual_params['b_theta'](rs)
+    residual_params['q'] = residual_params['q'](rs)
+    residual_params['p_prime'] = residual_params['p_prime'](rs)
 
     f = residual_params['f_func'](**residual_params)
     f_prime = new_f.f_prime(**residual_params)
     g = residual_params['g_func'](**residual_params)
-    residual = f_prime * xi_der[1:] + f * xi_der_der - g * xi[1:]
+    residual = f_prime * xi_der + f * xi_der_der - g * xi
     return residual
 
 
@@ -586,6 +649,8 @@ def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0):
         azimuthal magnetic field
     p_prime_spl : scipy spline object
         derivative of pressure
+    beta_0 : float
+        beta on axis
     Returns
     -------
     unstable_r : ndarray of floats (N)
