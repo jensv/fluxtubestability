@@ -18,7 +18,7 @@ import json
 
 def scan_lambda_k_space_mds(lambda_a_space, k_a_space, integration_points=250,
                             xi_factor=1., magnetic_potential_energy_ratio=1.,
-                            **kwargs):
+                            rtol=None, **kwargs):
     r"""
     """
     tree = 'skin_core'
@@ -71,7 +71,7 @@ def scan_lambda_k_space_mds(lambda_a_space, k_a_space, integration_points=250,
 
                 results = new.stability(dr, offset, suydam_end_offset,
                                         sing_search_points, params,
-                                        suppress_output=True)
+                                        suppress_output=True, rtol=rtol)
                 stable_internal = results[0]
                 stable_suydam = results[1]
                 stable_external = results[2]
@@ -157,7 +157,7 @@ def scan_lambda_k_space_mds(lambda_a_space, k_a_space, integration_points=250,
 def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                         xi_factor=1., magnetic_potential_energy_ratio=1.,
                         offset=1E-3, r_0=0., init_value=(0.0, 1.0),
-                        external_only=True, **kwargs):
+                        external_only=True, rtol=None, **kwargs):
     r"""
     """
     sing_search_points = 1000
@@ -197,12 +197,12 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                 params.update({'xi_factor': xi_factor,
                                'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio,
                                'beta_0': params['beta'](0)})
-
+                dr = np.insert(np.diff(profile.r[profile.r > offset]), 0, offset)
                 results = new.stability(dr, offset, suydam_end_offset,
                                         sing_search_points, params,
                                         suppress_output=True,
                                         init_value=init_value,
-                                        external_only=external_only)
+                                        external_only=external_only, rtol=rtol)
                 stable_internal = results[0]
                 stable_suydam = results[1]
                 stable_external = results[2]
@@ -248,6 +248,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
         path = '../output/' + date
     os.mkdir(path)
 
+    params_wo_splines.pop('dr', None)
     with open(path+'/params.txt', 'w') as params_file:
         json.dump(params_wo_splines, params_file)
 
