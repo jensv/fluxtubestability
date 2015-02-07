@@ -355,10 +355,7 @@ def newcomb_g_18_dimless_wo_q(r, k, m, b_z, b_theta, p_prime, beta_0, **kwargs):
     term4 = 2.*m*k*r*b_z*b_theta*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
     term5 = 2*k**4*r**3*b_z**2/f_denom(r, k, m)**2
     term6 = -2*k**2*m**2*r*b_theta**2/f_denom(r, k, m)**2
-    if m==0:
-        term2 = r*(k*b_z)**2*(k**2*r**2 + m**2)/f_denom(r, k, m)
-        term5 = b_z**2/r
-    if type(r) == float:
+    if type(r) == type(r):
         all_f_g.all_g.append([r, term1 + term2 + term3 + term4 + term5 + term6])
         all_f_g.all_g_term1.append([r, term1])
         all_f_g.all_g_term2.append([r, term2])
