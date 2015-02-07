@@ -149,11 +149,11 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
         stable_internal = None
     all_g_terms = [all_f_g.all_g_term1, all_f_g.all_g_term2, all_f_g.all_g_term3,
                    all_f_g.all_g_term4, all_f_g.all_g_term5, all_f_g.all_g_term6]
-        all_checks = {'g_terms': all_g_terms, 'b_theta': all_f_g.all_b_theta,
-                      'b_z': all_f_g.all_b_z,
-                      'pressure_prime': all_f_g.all_pressure_prime,
-                      'beta_0': all_f_g.all_beta_0, 'm': all_f_g.all_m,
-                      'k': all_f_g.all_k}
+    all_checks = {'g_terms': all_g_terms, 'b_theta': all_f_g.all_b_theta,
+                  'b_z': all_f_g.all_b_z,
+                  'pressure_prime': all_f_g.all_pressure_prime,
+                  'beta_0': all_f_g.all_beta_0, 'm': all_f_g.all_m,
+                  'k': all_f_g.all_k}
     if debug_f_g:
         return (stable_internal, suydam_stable,
                 stable_external, xi, xi_der, r_array, residual_array, delta_w,
@@ -567,7 +567,12 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
     xi_der_f = np.asarray(xi_der_f)
     xi_der = divide_by_f(rs, xi_der_f, k, m, b_z_spl,
                          b_theta_spl, q_spl, f_func)
-    residual = determine_residual(xi, xi_der, rs, residual_params)
+    try:
+        residual = determine_residual(xi, xi_der, rs, residual_params)
+    except:
+        print(rs)
+        print(k)
+    #residual=None
     return crossing, np.asarray(xi), xi_der, rs, residual
 
 

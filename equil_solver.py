@@ -803,6 +803,257 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         return q_to_return
 
 
+class UnitlessTanhCoreSkin(EquilSolver):
+    r"""
+    Creates splines describing a smooth skin and core current profile.
+    """
+    def __init__(self, points_core=100, points_transition=100, points_skin=100,
+                 core_radius_norm=0.7, transition_width_norm=0.1,
+                 skin_width_norm=0.1, k_bar=1.,
+                 epsilon=0.3, lambda_bar=0.5):
+        r"""
+        Initialize parameters defining smooth skin and core profile
+        and create splines.
+        """
+        self.points_core = points_core
+        self.points_transition = points_transition
+        self.points_skin = points_skin
+        self.core_radius = core_radius_norm
+        self.transition_width = transition_width_norm
+        self.skin_width = skin_width_norm
+        self.r_bar = self.core_radius + 2*self.transition_width + self.skin_width
+        self.r = self.r_points()
+
+        self.k_bar = k_bar
+        self.epsilon = epsilon
+        self.lambda_bar = lambda_bar
+
+        self.splines = {}
+
+        self.b_z0 = 1.
+        self.make_spline('b_z', self.r, self.b_z(self.r))
+
+        self.j_core = 1.
+        self.j_skin = self.get_j_skin_norm()
+        self.make_spline('j_z', self.r, self.j_z(self.r))
+
+        self.b_theta_integrand_array = self.b_theta_integrand(self.r)
+
+        self.A = self.get_A()
+
+        self.make_spline('b_theta', self.r, self.b_theta(self.r))
+
+        self.make_spline('pressure', self.r, self.pressure(self.r))
+        self.make_spline('p_prime', self.r, self.p_prime(self.r))
+
+        self.q_0 = self.get_q_0()
+        self.make_spline('q', self.r, self.q(self.r))
+        self.make_spline('beta', self.r, self.beta(self.r))
+
+        self.make_spline('rho', self.r, self.rho(self.r))
+
+
+    def r_points(self):
+        r"""
+        """
+        (points_core, points_transition,
+         points_skin)                    = (self.points_core,
+                                            self.points_transition,
+                                            self.points_skin)
+        (core_radius, transition_width,
+         skin_width)                     = (self.core_radius,
+                                            self.transition_width,
+                                            self.skin_width)
+        mask1 = np.ones(points_transition + 2, dtype=bool)
+        mask2 = np.ones(points_transition + 2, dtype=bool)
+        mask1[[0, -1]] = False
+        mask2[0] = False
+        self.r1 = np.linspace(0., core_radius, points_core)
+        r2 = np.linspace(core_radius, core_radius +
+                         transition_width, points_transition + 2)
+        self.r2 = r2[mask1]
+        self.r3 = np.linspace(core_radius + transition_width,
+                              core_radius + transition_width +
+                              skin_width, points_skin)
+        r4 = np.linspace(core_radius + transition_width +
+                         skin_width,
+                         core_radius + 2*transition_width +
+                         skin_width, points_transition + 2)
+        self.r4 = r4[mask2]
+        r = np.concatenate((self.r1, self.r2, self.r3, self.r4))
+        return r
+
+    def make_spline(self, key, r, values):
+        r"""
+        """
+        self.splines[key] = interp.InterpolatedUnivariateSpline(r,
+                                                                values,
+                                                                k=3)
+    def smooth(self, x1, x2, g1, g2, x):
+        """
+        Smoothing method by Alan Glasser.
+        """
+        delta_x = (x2 - x1) / 2.
+        x_bar = (x2 + x1) / 2.
+        delta_g = (g2 - g1) / 2.
+        g_bar = (g1 + g2) / 2.
+        z = (x - x_bar) / delta_x
+        return g_bar + self.smooth_f(z)*delta_g
+
+    def smooth_f(self, z):
+        r"""
+        Smoothing polynominal by Alan Glasser.
+        """
+        return z/8.*(3.*z**4 - 10.*z**2 + 15.)
+
+    def get_j_skin_norm(self):
+        r"""
+        Returs j_z_skin based on j_z_core, geometry and epsilon of pinch.
+        """
+        (epsilon, skin_width,
+         transition_width, r_bar) = (self.epsilon, self.skin_width,
+                                     self.transition_width, self.r_bar)
+
+        #factor1 = 2*skin_width + epsilon*r_bar - r_bar
+        term1 = 16.*skin_width**2
+        term2 = 21.*skin_width*transition_width
+        term3 = 14.*skin_width*epsilon*r_bar
+        term4 = -21.*skin_width*r_bar
+        term5 = 7.*transition_width**2
+        term6 = 7.*transition_width*epsilon*r_bar
+        term7 = -14.*transition_width*r_bar
+        term8 = -7.*epsilon*r_bar**2
+        term9 = 7.*r_bar**2
+        numerator = (term1 + term2 + term3 + term4 + term5 + term6 + term7 +
+                     term8 + term9)
+
+        term1 = 14.*skin_width**2
+        term2 = 21.*skin_width*transition_width
+        term3 = -14.*skin_width*r_bar
+        term4 = 7.*transition_width**2
+        term5 = -14.*transition_width*r_bar
+
+        denominator = term1 + term2 + term3 + term4 + term5
+
+        return self.j_core*numerator/denominator
+
+    def j_z(self, dummy_r):
+        r"""
+        For now always returns complete j_z.
+        """
+        total_points = (self.points_core + 2*self.points_transition +
+                        self.points_skin)+1
+
+        points1 = self.points_core
+        points2 = self.points_core + self.points_transition
+        points3 = self.points_core + self.points_transition + self.points_skin
+        points4 = (self.points_core + 2*self.points_transition +
+                   self.points_skin)+1
+
+        boundary1 = self.core_radius
+        boundary2 = self.core_radius + self.transition_width
+        boundary3 = self.core_radius + self.transition_width + self.skin_width
+        boundary4 = (self.core_radius + 2*self.transition_width +
+                     self.skin_width)
+
+        j_z = np.zeros(total_points)
+        j_z[:points1] = self.j_core
+        j_z[points1:points2] = np.tanh((self.r[points1:points2]-boundary1)/(self.transition_width)*4*np.pi-2*np.pi)*(self.j_skin - self.j_core)/2. + 1. *(self.j_skin - self.j_core)/2. + self.j_core
+        j_z[points2:points3] = self.j_skin
+        j_z[points3:points4] = np.tanh((self.r[points3:points4]-boundary3)/(self.transition_width)*4*np.pi-2*np.pi)*(0. - self.j_skin)/2. + 1. *(0. - self.j_skin)/2. + self.j_skin
+        return j_z
+
+    def b_theta_integrand(self, r):
+        r"""
+        """
+        b_theta_r_integrator = inte.ode(b_theta_r_prime_func)
+        b_theta_r_integrator.set_integrator('lsoda')
+        b_theta_r_integrator.set_f_params(self.splines['j_z'], 1.0)
+        b_theta_r_integrator.set_initial_value(0., t=0.)
+        b_theta_integrand_array = np.empty(r.size)
+        b_theta_integrand_array[0] = 0.
+        for i, position in enumerate(r[1:]):
+            if b_theta_r_integrator.successful():
+                b_theta_r_integrator.integrate(position)
+                b_theta_integrand_array[i+1] = (b_theta_r_integrator.y/position)
+            else:
+                break
+        return b_theta_integrand_array
+
+    def get_A(self):
+        return self.lambda_bar*self.b_z0/(2*self.b_theta_integrand_array[-1])
+
+    def get_q_0(self):
+        r"""
+        """
+        return 2.*self.k_bar*self.b_z0/(self.A*self.j_core)
+
+    def b_theta(self, r):
+        r"""
+        Return b_theta at given r values.
+        """
+        b_theta_array = self.b_theta_integrand_array*self.A
+        return b_theta_array
+
+    def b_z(self, r):
+        r"""
+        Returns constant axial magnetic field.
+        """
+        return np.ones(r.size)*self.b_z0
+
+    def p_prime(self, r):
+        r"""
+        Return pressure_prime at given r values. To be used for integration.
+        """
+        return -self.B*self.splines['b_theta'](r)*self.splines['j_z'](r)
+
+    def pressure(self, r):
+        r"""
+        Return pressure_prime at given r values. To be used for integration.
+        """
+        pressure_integrator = inte.ode(p_prime_func_reverse)
+        pressure_integrator.set_integrator('lsoda')
+        pressure_integrator.set_initial_value(0., 0.)
+        pressure_integrator.set_f_params(self.splines['j_z'],
+                                         self.splines['b_theta'])
+        pressure_reverse = np.empty(r.size)
+        pressure_reverse[0] = 0.
+        r_reverse_diffs = np.cumsum(np.diff(self.r)[::-1])
+        for i, position in enumerate(r_reverse_diffs):
+            if pressure_integrator.successful():
+                pressure_integrator.integrate(t=position)
+                pressure_reverse[i+1] = pressure_integrator.y
+            else:
+                break
+        pressure = pressure_reverse[::-1]
+        self.B = 1./pressure[0]
+        pressure_norm = pressure*self.B
+        return pressure_norm
+
+    def beta_0(self, r):
+        r"""
+        """
+        return 2.*self.A/(self.b_z0**2*self.B)*self.splines['pressure'](0)
+
+    def beta(self, r):
+        r"""
+        """
+        return 2.*self.A/(self.b_z0**2*self.B)*self.splines['pressure'](r)
+
+    def q(self, r):
+        r"""
+        Returns safety factor evaluated at points.
+        """
+        if r[0] == 0.:
+            q_to_return = np.ones(r.size)*self.q_0
+            q_to_return[1:] = (r[1:]*self.k_bar*self.splines['b_z'](r[1:]) /
+                               self.splines['b_theta'](r[1:]))
+        else:
+            q_to_return = (r*self.k_bar*self.splines['b_z'](r) /
+                           self.splines['b_theta'](r))
+        return q_to_return
+
+
 class HardCoreZPinch(EquilSolver):
     r"""
     Create profiles for the Hard-Core Z-pinch as described in Freidberg Ideal
