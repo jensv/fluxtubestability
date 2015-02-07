@@ -94,3 +94,41 @@ def capital_f(a, k, m, b_theta, b_z):
     Return F.
     """
     return k*b_z - m*b_theta/a
+
+
+def external_stability_from_notes(params, xi, xi_der, dim_less=False):
+    a = params['a']
+    b_z = params['b_z'](a)
+    b_theta = params['b_theta'](a)
+    m = params['m']
+    k_bar = params['k']
+    magnetic_potential_energy_ratio = params['magnetic_potential_energy_ratio']
+
+    term_params = {'a': a, 'k_bar': k_bar, 'm': m, 'b_z': b_z,
+                   'b_theta': b_theta, 'xi': xi, 'xi_der': xi_der}
+    delta_w = (plasma_term_from_notes(**term_params) +
+               vacuum_term_from_notes(**term_params))
+    if dim_less:
+        delta_w = magnetic_potential_energy_ratio * delta_w
+    stable = delta_w > 0
+
+    return stable, delta_w
+
+def plasma_term_from_notes(a, k_bar, m, b_z, b_theta, xi, xi_der):
+    r"""
+    Returns plasma energy term as in my derivation.
+    """
+    f_term = a*(k_bar*b_z + m*b_theta)**2/(k_bar**2 + m**2)
+    h_term = (k_bar*b_z - m*b_theta)**2/(k_bar**2 + m**2)
+    return xi**2 * (f_term*xi_der / xi + h_term)
+
+
+def vacuum_term_from_notes(a, k_bar, m, b_z, b_theta, xi, xi_der):
+    r"""
+    Returns vacuum energy term as in my derivation.
+    """
+    k_a = spec.kv(m, abs(k_bar)*a)
+    k_a_prime = spec.kvp(m, abs(k_bar)*a)
+    term1 = (k_bar*b_z + m*b_theta)**2
+    term2 = xi**2/k_bar*k_a/k_a_prime
+    return term1*term2
