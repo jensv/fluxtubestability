@@ -532,10 +532,10 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
 
     # setup integrator, inital values
     xi_int = inte.ode(newcomb_der)
-    if not (atol and rtol):
+    if not (rtol):
         xi_int.set_integrator('lsoda')
     else:
-        xi_int.set_integrator('lsoda', atol, rtol)
+        xi_int.set_integrator('lsoda', rtol=rtol)
     xi_int.set_initial_value(init_func(**init_params), t=r_init)
     xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
                         g_func, beta_0)
