@@ -189,6 +189,6 @@ def f_prime(r, k, m, b_z, b_theta, b_theta_prime, **kwargs):
     return f_prime
     """
     term1 = -2.*k**2*r**2/(k**2*r**2 + m**2)**2 * (b_z*k*r + m*b_theta)**2
-    term2 = r/(k**2*r*2 + m**2)*(2.*b_z*k + 2.*m*b_theta_prime)*(b_z*k*r + m*b_theta)
+    term2 = r/(k**2*r**2 + m**2)*(2.*b_z*k + 2.*m*b_theta_prime)*(b_z*k*r + m*b_theta)
     term3 = 1./(k**2*r**2 + m**2)*(b_z*k*r + m*b_theta)**2
     return term1 + term2 + term3
