@@ -114,6 +114,7 @@ def external_stability_from_notes(params, xi, xi_der, dim_less=False):
 
     return stable, delta_w
 
+
 def plasma_term_from_notes(a, k_bar, m, b_z, b_theta, xi, xi_der):
     r"""
     Returns plasma energy term as in my derivation.
@@ -127,8 +128,8 @@ def vacuum_term_from_notes(a, k_bar, m, b_z, b_theta, xi, xi_der):
     r"""
     Returns vacuum energy term as in my derivation.
     """
-    k_a = spec.kv(m, abs(k_bar)*a)
-    k_a_prime = spec.kvp(m, abs(k_bar)*a)
+    k_a = spec.kv(m, abs(k_bar))
+    k_a_prime = spec.kvp(m, abs(k_bar))
     term1 = (k_bar*b_z + m*b_theta)**2
     term2 = xi**2/k_bar*k_a/k_a_prime
     return term1*term2
