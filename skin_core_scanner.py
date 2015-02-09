@@ -170,6 +170,11 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
 
     lambda_a_mesh, k_a_mesh = np.meshgrid(lambda_a_points, k_a_points)
     mesh_shape = lambda_a_mesh.shape
+
+    delta_map = {-1: np.zeros(mesh_shape),
+                  0: np.zeros(mesh_shape),
+                  1: np.zeros(mesh_shape)}
+
     sub_stability_maps = {-1: np.ones(mesh_shape),
                           0: np.ones(mesh_shape),
                           1: np.ones(mesh_shape)}
@@ -197,7 +202,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                 params.update({'xi_factor': xi_factor,
                                'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio,
                                'beta_0': params['beta'](0)})
-                dr = np.insert(np.diff(profile.r[profile.r > offset]), 0, offset)
+                #dr = np.insert(np.diff(profile.r[profile.r > offset]), 0, offset)
                 results = new.stability(dr, offset, suydam_end_offset,
                                         sing_search_points, params,
                                         suppress_output=True,
@@ -211,6 +216,9 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                 r_array = results[5]
                 residual_array = results[6]
                 delta_w = results[7]
+                delta = xi_der / xi
+
+                delta_map[m][i][j] = delta
 
                 if delta_w is not None:
                     stability_maps['d_w'][m][j][i] = delta_w
@@ -270,7 +278,10 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
              d_w_norm_m_1=stability_maps['d_w_norm'][1],
              suydam_m_0=stability_maps['suydam'][0],
              suydam_m_1=stability_maps['suydam'][1],
-             suydam_m_neg_1=stability_maps['suydam'][-1]
+             suydam_m_neg_1=stability_maps['suydam'][-1],
+             delta_m_0=delta_map[0]
+             delta_m_1=delta_map[1]
+             delta_m_neg_1=delta_map[-1]
              )
 
     print('Saved in Directory:' + str(date))
