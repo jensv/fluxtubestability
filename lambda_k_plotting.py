@@ -50,7 +50,7 @@ def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1',
                            'm_neg_1': kink_pal}
 
     values = instability_map[mode_to_plot]
-    values = values / -values.min()
+    values = values / -np.nanmin(values)
 
     if levels:
         if log:
