@@ -236,6 +236,12 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                 if not stable_suydam:
                     stability_maps['suydam'][m][i][j] = 0.
 
+    #normalize
+    for m in [-1, 0, 1]:
+        delta_w[m] = delta_w[m] / np.abs(stability_maps['d_w'][m]).max()
+
+
+
     stability_maps['internal kink'] = (stability_maps['internal'][-1] +
                                        stability_maps['internal'][1] > 1.5).astype(int)
     stability_maps['external kink'] = (stability_maps['external'][-1] +
