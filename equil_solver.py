@@ -660,26 +660,23 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
          transition_width, r_bar) = (self.epsilon, self.skin_width,
                                      self.transition_width, self.r_bar)
 
-        #factor1 = 2*skin_width + epsilon*r_bar - r_bar
-        term1 = 16.*skin_width**2
-        term2 = 21.*skin_width*transition_width
-        term3 = 14.*skin_width*epsilon*r_bar
-        term4 = -21.*skin_width*r_bar
-        term5 = 7.*transition_width**2
-        term6 = 7.*transition_width*epsilon*r_bar
-        term7 = -14.*transition_width*r_bar
-        term8 = -7.*epsilon*r_bar**2
-        term9 = 7.*r_bar**2
+        term1 = 16.*skin_width**2*epsilon
+        term2 = 21.*skin_width*transition_width*epsilon
+        term3 = -21*skin_width*epsilon*r_bar
+        term4 = 14.*skin_width*r_bar
+        term5 = 7.*transition_width**2*epsilon
+        term6 = -14.*transition_width*r_bar*epsilon
+        term7 = 7.*transition_width*r_bar
+        term8 = 7.*epsilon*r_bar**2
+        term9 = -7.*r_bar**2
         numerator = (term1 + term2 + term3 + term4 + term5 + term6 + term7 +
                      term8 + term9)
 
-        term1 = 14.*skin_width**2
-        term2 = 21.*skin_width*transition_width
-        term3 = -14.*skin_width*r_bar
-        term4 = 7.*transition_width**2
-        term5 = -14.*transition_width*r_bar
+        factor1 = 7.*epsilon
+        factor2 = (skin_width + transition_width)
+        factor3 = (2.*skin_width + transition_width - 2.*r_bar)
 
-        denominator = term1 + term2 + term3 + term4 + term5
+        denominator = factor1*factor2*factor3
 
         return self.j_core*numerator/denominator
 
@@ -914,26 +911,23 @@ class UnitlessTanhCoreSkin(EquilSolver):
          transition_width, r_bar) = (self.epsilon, self.skin_width,
                                      self.transition_width, self.r_bar)
 
-        #factor1 = 2*skin_width + epsilon*r_bar - r_bar
-        term1 = 16.*skin_width**2
-        term2 = 21.*skin_width*transition_width
-        term3 = 14.*skin_width*epsilon*r_bar
-        term4 = -21.*skin_width*r_bar
-        term5 = 7.*transition_width**2
-        term6 = 7.*transition_width*epsilon*r_bar
-        term7 = -14.*transition_width*r_bar
-        term8 = -7.*epsilon*r_bar**2
-        term9 = 7.*r_bar**2
+        term1 = 16.*skin_width**2*epsilon
+        term2 = 21.*skin_width*transition_width*epsilon
+        term3 = -21*skin_width*epsilon*r_bar
+        term4 = 14.*skin_width*r_bar
+        term5 = 7.*transition_width**2*epsilon
+        term6 = -14.*transition_width*r_bar*epsilon
+        term7 = 7.*transition_width*r_bar
+        term8 = 7.*epsilon*r_bar**2
+        term9 = -7.*r_bar**2
         numerator = (term1 + term2 + term3 + term4 + term5 + term6 + term7 +
                      term8 + term9)
 
-        term1 = 14.*skin_width**2
-        term2 = 21.*skin_width*transition_width
-        term3 = -14.*skin_width*r_bar
-        term4 = 7.*transition_width**2
-        term5 = -14.*transition_width*r_bar
+        factor1 = 7.*epsilon
+        factor2 = (skin_width + transition_width)
+        factor3 = (2.*skin_width + transition_width - 2.*r_bar)
 
-        denominator = term1 + term2 + term3 + term4 + term5
+        denominator = factor1*factor2*factor3
 
         return self.j_core*numerator/denominator
 
