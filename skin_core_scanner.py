@@ -216,7 +216,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
                 r_array = results[5]
                 residual_array = results[6]
                 delta_w = results[7]
-                delta = xi_der / xi
+
+                delta = xi_der[-1][-1] / xi[-1][-1]
 
                 delta_map[m][i][j] = delta
 
@@ -238,7 +239,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
 
     #normalize
     for m in [-1, 0, 1]:
-        delta_w[m] = delta_w[m] / np.abs(stability_maps['d_w'][m]).max()
+        stability_maps['d_w'][m] = (stability_maps['d_w'][m] /
+                                    np.nanmax(np.abs(stability_maps['d_w'][m])))
 
 
 
@@ -285,8 +287,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space, integration_points=250,
              suydam_m_0=stability_maps['suydam'][0],
              suydam_m_1=stability_maps['suydam'][1],
              suydam_m_neg_1=stability_maps['suydam'][-1],
-             delta_m_0=delta_map[0]
-             delta_m_1=delta_map[1]
+             delta_m_0=delta_map[0],
+             delta_m_1=delta_map[1],
              delta_m_neg_1=delta_map[-1]
              )
 
