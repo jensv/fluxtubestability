@@ -119,11 +119,12 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
     if (r_array.size != 0 and not np.isnan(r_array[-1][-1]) and
         np.abs(r_array[-1][-1] - params['a']) < 1E-1):
 
-        stable_external, delta_w = ext.external_stability(params, xi[-1][-1],
-                                                          xi_der[-1][-1],
-                                                          dim_less=True)
+        (stable_external,
+         delta_w) = ext.external_stability_from_notes(params, xi[-1][-1],
+                                                      xi_der[-1][-1],
+                                                      dim_less=True)
     else:
-        msg = ("Integration to plasma edge did not succeed." +
+        msg = ("Integration to plasma edge did not succeed. " +
                "Can not determine external stability.")
         print(msg)
         missing_end_params = params
@@ -147,6 +148,7 @@ def stability(dr, offset, suydam_end_offset, sing_search_points, params,
 
     if external_only:
         stable_internal = None
+
     all_g_terms = [all_f_g.all_g_term1, all_f_g.all_g_term2, all_f_g.all_g_term3,
                    all_f_g.all_g_term4, all_f_g.all_g_term5, all_f_g.all_g_term6]
     all_checks = {'g_terms': all_g_terms, 'b_theta': all_f_g.all_b_theta,
@@ -536,14 +538,14 @@ def newcomb_int(r_init, dr, r_max, params, init_func, f_func, g_func,
         xi_int.set_integrator('lsoda')
     else:
         xi_int.set_integrator('lsoda', rtol=rtol)
-    xi_int.set_initial_value(init_func(**init_params), t=r_init)
-    xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
-                        g_func, beta_0)
+
     y_init = init_func(**init_params)
     xi[0] = y_init[0]
     xi_der_f[0] = y_init[1]
     rs[0] = r_init
-
+    xi_int.set_initial_value(y_init, t=r_init)
+    xi_int.set_f_params(k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl, f_func,
+                        g_func, beta_0)
     #integration loop
     for i in range(dr.size):
         if not xi_int.successful():
@@ -587,8 +589,7 @@ def determine_residual(xi, xi_der, rs, residual_params):
     :math:`\xi''` is approximated by the difference between neighboring
     :math:`\xi` values.
     """
-    delta_r = np.diff(rs)
-    delta_r = np.insert(delta_r, 0, [delta_r[0]])
+    delta_r = np.gradient(rs)[1]
     xi_der_der = np.gradient(xi_der) / delta_r
 
     residual_params.update({'r': rs})
