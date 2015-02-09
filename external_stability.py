@@ -86,14 +86,14 @@ def f_adjoint(a, k, m, b_theta, b_z):
     r"""
     Return adjoint F.
     """
-    return k*b_z + m*b_theta/a
+    return k*b_z - m*b_theta/a
 
 
 def capital_f(a, k, m, b_theta, b_z):
     r"""
     Return F.
     """
-    return k*b_z - m*b_theta/a
+    return k*b_z + m*b_theta/a
 
 
 def external_stability_from_notes(params, xi, xi_der, dim_less=False):
@@ -106,7 +106,7 @@ def external_stability_from_notes(params, xi, xi_der, dim_less=False):
 
     term_params = {'a': a, 'k_bar': k_bar, 'm': m, 'b_z': b_z,
                    'b_theta': b_theta, 'xi': xi, 'xi_der': xi_der}
-    delta_w = (plasma_term_from_notes(**term_params) +
+    delta_w = (plasma_term_from_notes(**term_params) -
                vacuum_term_from_notes(**term_params))
     if dim_less:
         delta_w = magnetic_potential_energy_ratio * delta_w
@@ -120,7 +120,7 @@ def plasma_term_from_notes(a, k_bar, m, b_z, b_theta, xi, xi_der):
     Returns plasma energy term as in my derivation.
     """
     f_term = a*(k_bar*b_z + m*b_theta)**2/(k_bar**2 + m**2)
-    h_term = (k_bar*b_z - m*b_theta)**2/(k_bar**2 + m**2)
+    h_term = (k_bar**2*b_z**2 - m**2*b_theta**2)/(k_bar**2 + m**2)
     return xi**2 * (f_term*xi_der / xi + h_term)
 
 
