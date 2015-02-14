@@ -13,7 +13,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              str, super, zip)
 
 import numpy as np
-import MDSplus as mds
+#import MDSplus as mds
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm, BoundaryNorm
@@ -64,6 +64,7 @@ def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1',
                                 levels=levels, norm=norm)
             cbar = plt.colorbar(label=r'$\delta W$',
                                 format=FormatStrFormatter('%.0e'))
+            cbar.set_label(label=r'$\delta W$', size=45)
             contourlines = plt.contour(lambda_a_mesh, k_a_mesh, values,
                                        levels=levels[:-1], colors='grey')
             cbar.add_lines(contourlines)
@@ -85,8 +86,12 @@ def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1',
         plt.scatter(lambda_a_mesh, k_a_mesh, marker='o', c='b', s=5)
     plt.ylim(0.01, bounds[0])
     plt.xlim(0.01, bounds[1])
-    plt.ylabel(r'$\bar{k}$', fontsize=25)
-    plt.xlabel(r'$\bar{\lambda}$', fontsize=25)
+    axes = plt.gca()
+    plt.setp(axes.get_xticklabels(), fontsize=40)
+    plt.setp(axes.get_yticklabels(), fontsize=40)
+    plt.ylabel(r'$\bar{k}$', fontsize=45)
+    plt.xlabel(r'$\bar{\lambda}$', fontsize=45)
+    cbar.ax.tick_params(labelsize=40)
     plt.savefig('../../output/plots/' + name + '.png')
     plt.show()
 
