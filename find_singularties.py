@@ -59,14 +59,14 @@ def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl, offset,
         if np.allclose(sign[i] + sign[i+1], 0.):
             zero_pos = opt.brentq(f_relevant_part, r[i], r[i+1], args=params)
             zero = f_relevant_part(r[i], k, m, b_z_spl, b_theta_spl)
-            if np.isnan(zero) or abs(zero) > 1e-2:
+            if np.isnan(zero) or abs(zero) > tol:
                 continue
             else:
                 zero_positions.append(zero_pos)
 
     sings = np.array(zero_positions)
 
-    if not sings.size == 0 and sings[0] == 0.:
+    if not sings.size == 0 and np.allclose(sings[0], 0.):
         sings_wo_0 = np.delete(sings, 0)
     else:
         sings_wo_0 = sings
