@@ -776,7 +776,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         pressure_norm = pressure*self.B
         return pressure_norm
 
-    def beta_0(self, r):
+    def beta_0(self):
         r"""
         """
         return 2.*self.A/(self.b_z0**2*self.B)*self.splines['pressure'](0)
@@ -1024,7 +1024,7 @@ class UnitlessTanhCoreSkin(EquilSolver):
         pressure_norm = pressure*self.B
         return pressure_norm
 
-    def beta_0(self, r):
+    def beta_0(self):
         r"""
         """
         return 2.*self.A/(self.b_z0**2*self.B)*self.splines['pressure'](0)
