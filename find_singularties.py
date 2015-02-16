@@ -18,7 +18,7 @@ import scipy.optimize as opt
 
 
 def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl, offset,
-                          tol):
+                          tol, **kwargs):
     """
     Return list of singular points.
 
