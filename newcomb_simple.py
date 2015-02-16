@@ -5,87 +5,69 @@ Created on Sun Feb 08 15:36:58 2015
 @author: Jens von der Linden
 """
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                             int, map, next, oct, open, pow, range, round,
+                             str, super, zip)
+"""Python 3.x compatibility"""
+
+import numpy as np
 import scipy.integrate
 import newcomb_init as init
 import singularity_frobenius as frob
+import find_singularties as find_sing
+import external_stability as ext
+import newcomb_f as new_f
+import newcomb_g as new_g
+from copy import deepcopy
 
 
 def stability(params, offset, suydam_offset, suppress_output=False,
               method='lsoda', rtol=None, max_step=1E-2, nsteps=1000,
-              xi_given=[0., 1.], diagnose=False, suppress_output=True):
+              xi_given=[0., 1.], diagnose=False, sing_search_points=1000,
+              f_func=new_f.newcomb_f_16, g_func=new_g.newcomb_g_18_dimless_wo_q):
     r"""
     Determine external stability.
     """
-
+    params.update({'f_func': f_func, 'g_func': g_func})
     missing_end_params = None
 
     if params['m'] == -1:
         sing_params = {'a': params['r_0'], 'b': params['a'],
                        'points': sing_search_points, 'k': params['k'],
                        'm': params['m'], 'b_z_spl': params['b_z'],
-                       'b_theta_spl': params['b_theta'], 'offset': offset,
-                       'tol': 1E-2}
+                       'b_theta_spl': params['b_theta'],
+                       'p_prime_spl': params['p_prime'], 'offset': offset,
+                       'tol': 1E-2, 'beta_0': params['beta_0']}
         (interval,
-         starts_with_sing) = intervals_with_singularties(suydam_stable,
-                                                         suppress_output,
-                                                         **sing_params)[-1]
+         starts_with_sing,
+         suydam_stable,
+         suydam_unstable_interval) = intervals_with_singularties(suppress_output,
+                                                                 **sing_params)
     else:
+        suydam_stable = True
+        starts_with_sing = False
+        suydam_unstable_interval = False
         interval = [params['r_0'], params['a']]
 
-    setup_initial_conditions(interval, starts_with_sing, off_set,
-                             suydam_offset, **params)
+    interval, init_value = setup_initial_conditions(interval, starts_with_sing,
+                                                    offset, suydam_offset,
+                                                    **params)
 
-    if diagnose:
-        r_array = np.linspace(interval[0], interval[1], 250)
+    if not suydam_unstable_interval:
+        (stable_external, delta_w,
+         missing_end_params) = newcomb_int(params, interval, init_value,
+                                           method, diagnose, max_step, nsteps)
     else:
-        r_array = np.asarray(interval)
-    args = (params['k'], params['m'], params['b_z_spl'], params['b_theta_spl'],
-            params['p_prime_spl'], params['q_spl'], params['f_func'],
-            params['g_func'], params['beta_0'])
-
-    if method == 'lsoda':
-        transition_points = np.asarray([params['core_radius'],
-                                        parmas['core_radius'] +
-                                        params['transition_width'],
-                                        params['core_radius'] +
-                                        params['transition_width'] +
-                                        params['skin_width']])
-        tcrit = transition_points[np.less(trasition_points, interval[0])]
-
-        resuts = scipy.integrate.odeint(newcomb_der, init_value, r_array,
-                                        args=args, tcrit=tcrit, hmax=max_step,
-                                        mxstep=nsteps)
-
-    else:
-        integrator = scipy.integrate.ode(newcomb_der)
-        integrator.set_integrator(method)
-        integrator.set_f_params(args)
-        integrator.set_initial_value()
-        results = np.empty(r_array.size, 2)
-        for i, r in enumerate(r_array[1:]):
-            integrator.integrate(r)
-            if not integrator.sucessful():
-                break
-        else:
-            results[-1, :] = [np.nan, np.nan]
-
-    xi = results[:, 0]
-    xi_der = results[:, 1]
-
-    if np.all(np.isfinite(results[-1])):
-        (stable_external,
-         delta_w) = ext.external_stability_from_notes(params, xi[-1],
-                                                      xi_der[-1],
-                                                      dim_less=True)
-        stable = True if delta_w >= 0. else False
-    else:
-        msg = ("Integration to plasma edge did not succeed. " +
-               "Can not determine external stability.")
-        print(msg)
-        missing_end_params = params
-        stable = None
+        if not suppress_output:
+            msg = ("Last singularity is suydam unstable." +
+                   "Unable to deterime external instability")
+            print(msg)
         delta_w = None
-    return (stable, suydam_stable, delta_w, missing_end_params)
+        stable_external = None
+    return (stable_external, suydam_stable, delta_w, missing_end_params)
 
 
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
@@ -110,38 +92,52 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     return y_prime
 
 
-def intervals_with_singularties(stable, suydam_stable, suppress_output,
-                                **sing_params):
+def newcomb_der_odeint(y, r, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
+                       f_func, g_func, beta_0):
+    return newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
+                       f_func, g_func, beta_0)
+
+
+def intervals_with_singularties(suppress_output, **sing_params):
     r"""
-    """"
+    """
     starts_with_sing = False
+    suydam_unstable_interval = False
+    suydam_stable = False
+    interval = [sing_params['a'], sing_params['b']]
     (sings,
      sings_wo_0, intervals) = find_sing.identify_singularties(**sing_params)
 
-    if not suppress_output:
-        if not sings_wo_0.size == 0:
+    if not sings_wo_0.size == 0:
+        if not suppress_output:
             print("Non-geometric singularties identified at r =", sings_wo_0)
-            starts_with_sing = True
-            interval = [sings_wo_0[-1], sing_params['b']]
+        interval = [sings_wo_0[-1], sing_params['b']]
+        starts_with_sing = True
     # Check singularties for Suydam stability
-    suydam_result = check_suydam(sings, params['b_z'], params['b_theta'],
-                                 params['p_prime'], params['beta_0'])
+    suydam_result = check_suydam(sings_wo_0, **sing_params)
     if suydam_result.size != 0:
-        if (not suydam_result.size == 1 or not suydam_result[0] == 0.):
-            suydam_stable = False
-            if not suppress_output:
-                print("Profile is Suydam unstable at r =", suydam_result)
+        suydam_stable = False
+        if not suppress_output:
+            print("Profile is Suydam unstable at r =", suydam_result)
+        if sings_wo_0.size > 0 and np.allclose(suydam_result[-1], sings_wo_0[-1]):
+            suydam_unstable_interval = True
     else:
         suydam_stable = True
-    return interval, starts_with_sing, suydam_stable
+    return interval, starts_with_sing, suydam_stable, suydam_unstable_interval
 
 
-def setup_initial_conditions(interval, starts_with_sing, off_set,
+def setup_initial_conditions(interval, starts_with_sing, offset,
                              suydam_offset, **params):
+    r"""
+    """
 
     if interval[0] == 0.:
         interval[0] += offset
-        init_values = init.init_geometric_sing(offset, **params)
+        init_params = deepcopy(params)
+        init_params.update({'b_z': params['b_z'](interval[0]),
+                           'b_theta': params['b_theta'](interval[0]),
+                            'q': params['q'](interval[0])})
+        init_value = init.init_geometric_sing(interval[0], **init_params)
     else:
         if starts_with_sing:
             frob_params = {'offset': suydam_offset, 'b_z_spl': params['b_z'],
@@ -149,11 +145,102 @@ def setup_initial_conditions(interval, starts_with_sing, off_set,
                            'p_prime_spl': params['p_prime'],
                            'q_spl': params['q'], 'f_func': new_f.newcomb_f_16,
                            'beta_0': params['beta_0'], 'r_sing': interval[0]}
-            xi_given = frob.small_solution(**frob_params)
+            xi_given = frob.sing_small_solution(**frob_params)
             interval[0] += suydam_offset
-            init_values = init.init_xi_given(xi_given, interval[0], **params)
+            init_params = deepcopy(params)
+            init_params.update({'b_z': params['b_z'](interval[0]),
+                                'b_theta': params['b_theta'](interval[0]),
+                                'q': params['q'](interval[0])})
+            init_value = init.init_xi_given(xi_given, interval[0], **init_params)
 
         else:
             init_value = init.init_xi_given(xi_given, interval[0], **params)
 
     return interval, init_value
+
+
+def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0, **kwargs):
+    r"""
+    Return radial positions at which the Euler-Lagrange equation is singular
+    and Suydam's criterion is violated.
+
+    Parameters
+    ----------
+    r : ndarray of floats (M)
+        positions at which f=0.
+    b_z_spl : scipy spline object
+        axial magnetic field
+    b_theta_spl : scipy spline object
+        azimuthal magnetic field
+    p_prime_spl : scipy spline object
+        derivative of pressure
+    beta_0 : float
+        beta on axis
+    Returns
+    -------
+    unstable_r : ndarray of floats (N)
+        positions at which plasma column is suydam unstable
+    """
+    params = {'r': r, 'b_z_spl': b_z_spl, 'b_theta_spl': b_theta_spl,
+              'p_prime_spl': p_prime_spl, 'beta_0': beta_0}
+    unstable_mask = np.invert(frob.sings_suydam_stable(**params))
+    return r[unstable_mask]
+
+
+def newcomb_int(params, interval, init_value, method, diagnose, max_step,
+                nsteps):
+    r"""
+    """
+    missing_end_params = None
+    if diagnose:
+        r_array = np.linspace(interval[0], interval[1], 250)
+    else:
+        r_array = np.asarray(interval)
+    args = (params['k'], params['m'], params['b_z'], params['b_theta'],
+            params['p_prime'], params['q'], params['f_func'],
+            params['g_func'], params['beta_0'])
+
+    if method == 'lsoda':
+        transition_points = np.asarray([params['core_radius'],
+                                        params['core_radius'] +
+                                        params['transition_width'],
+                                        params['core_radius'] +
+                                        params['transition_width'] +
+                                        params['skin_width']])
+        tcrit = transition_points[np.less(transition_points, interval[0])]
+
+        results = scipy.integrate.odeint(newcomb_der_odeint, init_value,
+                                         r_array, args=args, tcrit=tcrit,
+                                         hmax=max_step, mxstep=nsteps)
+
+    else:
+        integrator = scipy.integrate.ode(newcomb_der)
+        integrator.set_integrator(method)
+        integrator.set_f_params(args)
+        integrator.set_initial_value(init_value, interval[0])
+        results = np.empty((r_array.size, 2))
+        results[0] = init_value
+        for i, r in enumerate(r_array[1:]):
+            integrator.integrate(r)
+            results[i+1, :] = integrator.y
+            if not integrator.successful():
+                break
+        else:
+            results[i+1:-1, :] = [np.nan, np.nan]
+
+    xi = results[:, 0]
+    xi_der = results[:, 1]
+
+    if np.all(np.isfinite(results[-1])):
+        (stable_external,
+         delta_w) = ext.external_stability_from_notes(params, xi[-1],
+                                                      xi_der[-1],
+                                                      dim_less=True)
+    else:
+        msg = ("Integration to plasma edge did not succeed. " +
+               "Can not determine external stability.")
+        print(msg)
+        missing_end_params = params
+        stable_external = None
+        delta_w = None
+    return (stable_external, delta_w, missing_end_params)
