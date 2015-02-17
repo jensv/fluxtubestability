@@ -25,8 +25,8 @@ from copy import deepcopy
 
 
 def stability(params, offset, suydam_offset, suppress_output=False,
-              method='lsoda', rtol=None, max_step=1E-2, nsteps=1000,
-              xi_given=[0., 1.], diagnose=False, sing_search_points=1000,
+              method='lsoda', rtol=None, max_step=None, nsteps=None,
+              xi_given=[0., 1.], diagnose=False, sing_search_points=10000,
               f_func=new_f.newcomb_f_16, g_func=new_g.newcomb_g_18_dimless_wo_q):
     r"""
     Determine external stability.
@@ -59,12 +59,14 @@ def stability(params, offset, suydam_offset, suppress_output=False,
     if not suydam_unstable_interval:
         (stable_external, delta_w,
          missing_end_params) = newcomb_int(params, interval, init_value,
-                                           method, diagnose, max_step, nsteps)
+                                           method, diagnose, max_step, nsteps,
+                                           rtol)
     else:
         if not suppress_output:
             msg = ("Last singularity is suydam unstable." +
                    "Unable to deterime external instability")
             print(msg)
+            print(params['k'])
         delta_w = None
         stable_external = None
     return (stable_external, suydam_stable, delta_w, missing_end_params)
@@ -94,6 +96,8 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
 
 def newcomb_der_odeint(y, r, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
                        f_func, g_func, beta_0):
+    r"""
+    """
     return newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
                        f_func, g_func, beta_0)
 
@@ -133,6 +137,8 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
 
     if interval[0] == 0.:
         interval[0] += offset
+        if interval[0] > interval[1]:
+            interval[0] = interval[1]
         init_params = deepcopy(params)
         init_params.update({'b_z': params['b_z'](interval[0]),
                            'b_theta': params['b_theta'](interval[0]),
@@ -140,6 +146,8 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
         init_value = init.init_geometric_sing(interval[0], **init_params)
     else:
         if starts_with_sing:
+            if interval[0]+suydam_offset > interval[1]:
+                suydam_offset = interval[1] - interval[0]
             frob_params = {'offset': suydam_offset, 'b_z_spl': params['b_z'],
                            'b_theta_spl': params['b_theta'],
                            'p_prime_spl': params['p_prime'],
@@ -188,10 +196,11 @@ def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0, **kwargs):
 
 
 def newcomb_int(params, interval, init_value, method, diagnose, max_step,
-                nsteps):
+                nsteps, rtol):
     r"""
     """
     missing_end_params = None
+    #print('k_bar', params['k'], 'interval:', interval[0], interval[1], init_value)
     if diagnose:
         r_array = np.linspace(interval[0], interval[1], 250)
     else:
@@ -200,23 +209,40 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
             params['p_prime'], params['q'], params['f_func'],
             params['g_func'], params['beta_0'])
 
-    if method == 'lsoda':
+    if method == 'lsoda_odeint':
         transition_points = np.asarray([params['core_radius'],
                                         params['core_radius'] +
                                         params['transition_width'],
                                         params['core_radius'] +
                                         params['transition_width'] +
                                         params['skin_width']])
-        tcrit = transition_points[np.less(transition_points, interval[0])]
+        tcrit = np.asarray(transition_points[np.less(interval[0], transition_points)])
 
-        results = scipy.integrate.odeint(newcomb_der_odeint, init_value,
-                                         r_array, args=args, tcrit=tcrit,
-                                         hmax=max_step, mxstep=nsteps)
+        integrator_args = {}
+        if rtol is not None:
+            integrator_args['rtol'] = rtol
+        if nsteps is not None:
+            integrator_args['mxstep'] = nsteps
+        if max_step is not None:
+            integrator_args['hmax'] = max_step
+
+        results, output = scipy.integrate.odeint(newcomb_der_odeint, np.asarray(init_value),
+                                                 np.asarray(r_array), args=args, tcrit=tcrit,
+                                                 **integrator_args)
 
     else:
         integrator = scipy.integrate.ode(newcomb_der)
-        integrator.set_integrator(method)
-        integrator.set_f_params(args)
+
+        integrator_args = {}
+        if rtol is not None:
+            integrator_args['rtol'] = rtol
+        if nsteps is not None:
+            integrator_args['nsteps'] = nsteps
+        if max_step is not None:
+            integrator_args['max_step'] = max_step
+
+        integrator.set_integrator(method, **integrator_args)
+        integrator.set_f_params(*args)
         integrator.set_initial_value(init_value, interval[0])
         results = np.empty((r_array.size, 2))
         results[0] = init_value
@@ -227,7 +253,7 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
                 break
         else:
             results[i+1:-1, :] = [np.nan, np.nan]
-
+    #print(results)
     xi = results[:, 0]
     xi_der = results[:, 1]
 
@@ -236,6 +262,7 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
          delta_w) = ext.external_stability_from_notes(params, xi[-1],
                                                       xi_der[-1],
                                                       dim_less=True)
+        #print(delta_w)
     else:
         msg = ("Integration to plasma edge did not succeed. " +
                "Can not determine external stability.")
