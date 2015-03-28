@@ -13,18 +13,30 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              str, super, zip)
 
 import numpy as np
+from scipy.special import kv, kvp
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm, BoundaryNorm
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.ticker import FormatStrFormatter, FixedFormatter
 import seaborn as sns
 sns.set_style('white')
 sns.set_context('poster')
 
 
-def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1',
+def conditions(k_bar, lambda_bar, epsilon, m, delta):
+    term1 = (2*k_bar - m*epsilon*lambda_bar)*((delta + 1)*2*k_bar -
+                                              (delta - 1)*m*epsilon*
+                                              lambda_bar)/(k_bar**2 + m**2)
+    term2 = (epsilon**2 - 1) * lambda_bar**2
+    term3 = (m*lambda_bar - 2* k_bar)**2/k_bar * (kv(m, np.abs(k_bar)) /
+                                                  kvp(m, np.abs(k_bar)))
+    return term1 + term2 - term3
+
+
+def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
                            show_points=False, lim=None, levels=None, log=False,
-                           linthresh=1E-7, bounds=(1.5, 3.0), floor_norm=False):
+                           linthresh=1E-7, bounds=(1.5, 3.0), floor_norm=False,
+                           analytic_compare=False):
     r"""
     Plot the delta_w of external instabilities in the lambda-k space.
     """
@@ -90,6 +102,34 @@ def plot_lambda_k_space_dw(filename, name, mode_to_plot='m_neg_1',
 
     axes = plt.gca()
     axes.set_axis_bgcolor(sns.xkcd_rgb['grey'])
+
+    lambda_bar = np.linspace(0.01, 3., 750)
+    k_bar = np.linspace(0.01, 1.5, 750)
+    lambda_bar_mesh, k_bar_mesh = np.meshgrid(lambda_bar, k_bar)
+    if analytic_compare:
+        line_labels = FixedFormatter(['-1', '0', '1'])
+        if mode_to_plot == 'm_neg_1':
+            m = 1
+            color = 'red'
+        if mode_to_plot == 'm_0':
+            m = 0
+            color = 'red'
+
+        stability_kink_d_neg_1 = conditions(k_bar_mesh, lambda_bar_mesh, epsilon, m, -1.)
+        stability_kink_d_0 = conditions(k_bar_mesh, lambda_bar_mesh, epsilon, m, 0.)
+        stability_kink_d_1 = conditions(k_bar_mesh, lambda_bar_mesh, epsilon, m, 1)
+
+        stability_kink = stability_kink_d_neg_1 < 0
+        stability_kink = stability_kink.astype(float)
+        stability_kink[stability_kink_d_neg_1 >= 0] = -1.5
+        stability_kink[stability_kink_d_neg_1 < 0] = -0.5
+        stability_kink[stability_kink_d_0 < 0] = 0.5
+        stability_kink[stability_kink_d_1 < 0] = 1.5
+
+        cs = plt.contour(lambda_bar_mesh, k_bar_mesh, stability_kink,
+                         levels=[-1, 0, 1], colors=color, linewidths=5, linestyles = 'dotted')
+
+        plt.clabel(cs, fmt={-1: r'$\delta = -1$', 0: r'$\delta = 0$', 1: r'$\delta = 1$'}, fontsize=40, manual=((0.5,0.4),(2.1,0.4),(2.8, 0.2)))
 
     if show_points:
         plt.scatter(lambda_a_mesh, k_a_mesh, marker='o', c='b', s=5)
