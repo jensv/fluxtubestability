@@ -36,8 +36,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
     mesh_shape = lambda_a_mesh.shape
 
 
-    # delta_map = {-1: np.zeros(mesh_shape),
-    #              0: np.zeros(mesh_shape)}
+    delta_map = {-1: np.zeros(mesh_shape),
+                 0: np.zeros(mesh_shape)}
 
     sub_stability_maps = {-1: np.ones(mesh_shape),
                           0: np.ones(mesh_shape)}
@@ -75,10 +75,12 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                 stable_external = results[0]
                 stable_suydam = results[1]
                 delta_w = results[2]
+                xi = results[4]
+                xi_der = results[5]
 
-                # delta = xi_der[-1][-1] / xi[-1][-1]
+                delta = xi_der[-1] / xi[-1]
 
-                # delta_map[m][i][j] = delta
+                delta_map[m][j][i] = delta
 
                 if delta_w is not None:
                     stability_maps['d_w'][m][j][i] = delta_w
@@ -126,9 +128,9 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
              d_w_norm_m_neg_1=stability_maps['d_w_norm'][-1],
              d_w_norm_m_0=stability_maps['d_w_norm'][0],
              suydam_m_0=stability_maps['suydam'][0],
-             suydam_m_neg_1=stability_maps['suydam'][-1]
-             # delta_m_0=delta_map[0],
-             # delta_m_neg_1=delta_map[-1]
+             suydam_m_neg_1=stability_maps['suydam'][-1],
+             delta_m_0=delta_map[0],
+             delta_m_neg_1=delta_map[-1]
              )
 
     print('Saved in Directory:' + str(date))

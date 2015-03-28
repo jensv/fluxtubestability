@@ -58,9 +58,10 @@ def stability(params, offset, suydam_offset, suppress_output=False,
 
     if not suydam_unstable_interval:
         (stable_external, delta_w,
-         missing_end_params) = newcomb_int(params, interval, init_value,
-                                           method, diagnose, max_step, nsteps,
-                                           rtol)
+         missing_end_params, xi, xi_der) = newcomb_int(params, interval,
+                                                       init_value, method,
+                                                       diagnose, max_step,
+                                                       nsteps, rtol)
     else:
         if not suppress_output:
             msg = ("Last singularity is suydam unstable." +
@@ -69,7 +70,10 @@ def stability(params, offset, suydam_offset, suppress_output=False,
             print(params['k'])
         delta_w = None
         stable_external = None
-    return (stable_external, suydam_stable, delta_w, missing_end_params)
+        xi = np.asarray([np.nan])
+        xi_der = np.asarray([np.nan])
+    return (stable_external, suydam_stable, delta_w, missing_end_params, xi,
+            xi_der)
 
 
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
@@ -270,4 +274,4 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
         missing_end_params = params
         stable_external = None
         delta_w = None
-    return (stable_external, delta_w, missing_end_params)
+    return (stable_external, delta_w, missing_end_params, xi, xi_der)
