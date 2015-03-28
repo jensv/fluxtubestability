@@ -30,6 +30,7 @@ c-----------------------------------------------------------------------
 c     declarations.
 c-----------------------------------------------------------------------
       MODULE spline_mod
+      USE iso_c_binding, only: c_double, c_int
       USE local_mod
       IMPLICIT NONE
 

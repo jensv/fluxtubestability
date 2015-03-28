@@ -6,14 +6,13 @@ c-----------------------------------------------------------------------
 c     module declarations.
 c-----------------------------------------------------------------------
       MODULE io_mod
-      USE iso_c_binding, only: c_double, c_int
       IMPLICIT NONE
 
-      INTEGER(c_int) :: in_unit=1
-      INTEGER(c_int) :: out_unit=2
-      INTEGER(c_int) :: bin_unit=3
-      INTEGER(c_int) :: term_unit=6
-      INTEGER(c_int) :: sum_unit=10
-      INTEGER(c_int) :: debug_unit=99
+      INTEGER :: in_unit=1
+      INTEGER :: out_unit=2
+      INTEGER :: bin_unit=3
+      INTEGER :: term_unit=6
+      INTEGER :: sum_unit=10
+      INTEGER :: debug_unit=99
 
       END MODULE io_mod
