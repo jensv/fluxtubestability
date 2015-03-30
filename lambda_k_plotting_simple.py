@@ -36,7 +36,7 @@ def conditions(k_bar, lambda_bar, epsilon, m, delta):
 def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
                            show_points=False, lim=None, levels=None, log=False,
                            linthresh=1E-7, bounds=(1.5, 3.0), floor_norm=False,
-                           analytic_compare=False):
+                           analytic_compare=False, label_pos=((0.5,0.4),(2.1,0.4),(2.8, 0.2))):
     r"""
     Plot the delta_w of external instabilities in the lambda-k space.
     """
@@ -129,7 +129,7 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
         cs = plt.contour(lambda_bar_mesh, k_bar_mesh, stability_kink,
                          levels=[-1, 0, 1], colors=color, linewidths=5, linestyles = 'dotted')
 
-        plt.clabel(cs, fmt={-1: r'$\delta = -1$', 0: r'$\delta = 0$', 1: r'$\delta = 1$'}, fontsize=40, manual=((0.5,0.4),(2.1,0.4),(2.8, 0.2)))
+        plt.clabel(cs, fmt={-1: r'$\delta = -1$', 0: r'$\delta = 0$', 1: r'$\delta = 1$'}, fontsize=40, manual=label_pos)
 
     if show_points:
         plt.scatter(lambda_a_mesh, k_a_mesh, marker='o', c='b', s=5)
