@@ -24,6 +24,7 @@ import newcomb_g as new_g
 from copy import deepcopy
 
 
+
 def stability(params, offset, suydam_offset, suppress_output=False,
               method='lsoda', rtol=None, max_step=None, nsteps=None,
               xi_given=[0., 1.], diagnose=False, sing_search_points=10000,
@@ -79,6 +80,7 @@ def stability(params, offset, suydam_offset, suppress_output=False,
 def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
                 f_func, g_func, beta_0):
     r"""
+    Return the derivative of y
     """
     y_prime = np.zeros(2)
 
@@ -98,16 +100,9 @@ def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
     return y_prime
 
 
-def newcomb_der_odeint(y, r, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
-                       f_func, g_func, beta_0):
-    r"""
-    """
-    return newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
-                       f_func, g_func, beta_0)
-
-
 def intervals_with_singularties(suppress_output, **sing_params):
     r"""
+    Determines if an interval starts with a singularity, is Suydam unstable.
     """
     starts_with_sing = False
     suydam_unstable_interval = False
@@ -137,6 +132,7 @@ def intervals_with_singularties(suppress_output, **sing_params):
 def setup_initial_conditions(interval, starts_with_sing, offset,
                              suydam_offset, **params):
     r"""
+    Returns the initial condition to use for integrating an interval.
     """
 
     if interval[0] == 0.:
@@ -202,6 +198,8 @@ def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0, **kwargs):
 def newcomb_int(params, interval, init_value, method, diagnose, max_step,
                 nsteps, rtol):
     r"""
+    Integrates newcomb's euler Lagrange equation in a given interval with lsoda
+    either with the scipy.ode object oriented interface or with scipy.odeint.
     """
     missing_end_params = None
     #print('k_bar', params['k'], 'interval:', interval[0], interval[1], init_value)
@@ -230,7 +228,7 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
         if max_step is not None:
             integrator_args['hmax'] = max_step
 
-        results, output = scipy.integrate.odeint(newcomb_der_odeint, np.asarray(init_value),
+        results, output = scipy.integrate.odeint(newcomb_der, np.asarray(init_value),
                                                  np.asarray(r_array), args=args, tcrit=tcrit,
                                                  **integrator_args)
 

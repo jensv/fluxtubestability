@@ -21,6 +21,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                         nsteps=1000, method='lsoda', suppress_output=True,
                         **kwargs):
     r"""
+    Scans space given by lambda_a_space and k_a_space for m=0, 1 stability and
+    saves several 2D numpy arrays (stability maps) to an npz file.
     """
     sing_search_points = 1000
     suydam_end_offset = offset
