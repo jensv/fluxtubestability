@@ -64,6 +64,27 @@ class EquilSolver(object):
         """
         return np.ones(r.size)
 
+    def convert_spline_objects_to_tck(self, spline_dict):
+	   r"""
+        Returns tck tuples for use with procedural scipy spline interface,
+        which is slightly faster than the object-oriented interface.
+
+        Parameters
+        ----------
+        spline_dict: dict
+            dict of splines
+
+        Returns
+        -------
+        splines_tck: dict
+            dict of tck_splines
+	   """
+        splines_tck = {}
+	   for key in spline_dict.keys():
+            tck = spline_dict[key]._eval_args
+            spline_tck.update({key: tck})
+        return splines_tck
+
 
 class ParabolicNu2(EquilSolver):
     r"""
@@ -597,6 +618,16 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         self.make_spline('beta', self.r, self.beta(self.r))
 
         self.make_spline('rho', self.r, self.rho(self.r))
+
+	   b_theta_prime = self.splines['b_theta'].derivative()
+	   b_theta_prime_prime = b_theta_prime.derivative()
+	   b_z_prime = self.splines['b_z'].derivative()
+
+        self.splines.update({'b_theta_prime': b_theta_prime,
+				        'b_theta_prime_prime': b_theta_prime,
+					   'b_z_prime': b_z_prime})
+
+        self.tck_splines = self.convert_spline_objects_to_tck(self.splines)
 
 
     def r_points(self):
