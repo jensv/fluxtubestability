@@ -46,6 +46,13 @@ class EquilSolver(object):
         """
         return self.splines
 
+    def get_tck_splines(self):
+        r"""
+        Returns tck splines lists, to be used with scipy procedural spline
+        interface.
+        """
+        return self.tck_splines
+
     def q(self, r):
         r"""
         Returns safety factor evaluated at points.
@@ -65,7 +72,7 @@ class EquilSolver(object):
         return np.ones(r.size)
 
     def convert_spline_objects_to_tck(self, spline_dict):
-	   r"""
+        r"""
         Returns tck tuples for use with procedural scipy spline interface,
         which is slightly faster than the object-oriented interface.
 
@@ -78,12 +85,12 @@ class EquilSolver(object):
         -------
         splines_tck: dict
             dict of tck_splines
-	   """
-        splines_tck = {}
-	   for key in spline_dict.keys():
+        """
+        tck_splines = {}
+        for key in spline_dict.keys():
             tck = spline_dict[key]._eval_args
-            spline_tck.update({key: tck})
-        return splines_tck
+            tck_splines.update({key: tck})
+        return tck_splines
 
 
 class ParabolicNu2(EquilSolver):
@@ -619,13 +626,13 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
 
         self.make_spline('rho', self.r, self.rho(self.r))
 
-	   b_theta_prime = self.splines['b_theta'].derivative()
-	   b_theta_prime_prime = b_theta_prime.derivative()
-	   b_z_prime = self.splines['b_z'].derivative()
+        b_theta_prime = self.splines['b_theta'].derivative()
+        b_theta_prime_prime = b_theta_prime.derivative()
+        b_z_prime = self.splines['b_z'].derivative()
 
         self.splines.update({'b_theta_prime': b_theta_prime,
-				        'b_theta_prime_prime': b_theta_prime,
-					   'b_z_prime': b_z_prime})
+                             'b_theta_prime_prime': b_theta_prime,
+                             'b_z_prime': b_z_prime})
 
         self.tck_splines = self.convert_spline_objects_to_tck(self.splines)
 
