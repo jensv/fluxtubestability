@@ -17,6 +17,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatibility"""
 
 import numpy as np
+from scipy.integrate import splev
 
 
 def alpha_func(r, b_z, b_z_prime, b_theta, b_theta_prime, **kwargs):

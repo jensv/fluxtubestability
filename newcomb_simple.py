@@ -15,6 +15,8 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import numpy as np
 import scipy.integrate
+from scipy.interpolate import splev
+
 import newcomb_init as init
 import singularity_frobenius as frob
 import find_singularties as find_sing
@@ -140,9 +142,9 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
         if interval[0] > interval[1]:
             interval[0] = interval[1]
         init_params = deepcopy(params)
-        init_params.update({'b_z': params['b_z'](interval[0]),
-                           'b_theta': params['b_theta'](interval[0]),
-                            'q': params['q'](interval[0])})
+        init_params.update({'b_z': splev(interval[0], params['b_z']),
+                           'b_theta': splev(interval[0], params['b_theta']),
+                            'q': splev((interval[0]), params['q'])})
         init_value = init.init_geometric_sing(interval[0], **init_params)
     else:
         if starts_with_sing:
@@ -156,9 +158,9 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
             xi_given = frob.sing_small_solution(**frob_params)
             interval[0] += suydam_offset
             init_params = deepcopy(params)
-            init_params.update({'b_z': params['b_z'](interval[0]),
-                                'b_theta': params['b_theta'](interval[0]),
-                                'q': params['q'](interval[0])})
+            init_params.update({'b_z': splev(interval[0], params['b_z']),
+                                'b_theta': splev(interval[0], params['b_theta']),
+                                'q': splev(interval[0], params['q'])})
             init_value = init.init_xi_given(xi_given, interval[0], **init_params)
 
         else:
