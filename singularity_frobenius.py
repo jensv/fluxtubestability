@@ -90,7 +90,8 @@ def nu_1_2(alpha, beta, imaginary=False, **kwargs):
     return nu_1, nu_2
 
 
-def sings_alpha_beta(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0):
+def sings_alpha_beta(r, b_z_spl, b_z_prime_spl, b_theta_spl, b_theta_prime_spl,
+                     p_prime_spl, beta_0):
     r"""
     Returns alpha and beta at the singularties.
 
@@ -113,11 +114,11 @@ def sings_alpha_beta(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0):
     beta : ndarray of floats
         beta of quadratic equation for the exponents of the Forbenius solutions
     """
-    b_z = b_z_spl(r)
-    b_z_prime = b_z_spl.derivative()(r)
-    b_theta = b_theta_spl(r)
-    b_theta_prime = b_theta_spl.derivative()(r)
-    p_prime = p_prime_spl(r)
+    b_z = splev(r, b_z_spl)
+    b_z_prime = splev(r, b_z_prime_spl)
+    b_theta = splev(r, b_theta_spl)
+    b_theta_prime = splev(r, b_theta_prime_spl)
+    p_prime = splev(r, p_prime_spl)
     params = {'r': r, 'b_z': b_z, 'b_z_prime': b_z_prime, 'b_theta': b_theta,
               'b_theta_prime': b_theta_prime, 'p_prime': p_prime, 'beta_0': beta_0}
     alpha = alpha_func(**params)
@@ -125,7 +126,8 @@ def sings_alpha_beta(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0):
     return alpha, beta
 
 
-def sings_suydam_stable(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0):
+def sings_suydam_stable(r, b_z_spl, b_z_prime, b_theta_spl, b_theta_prime_spl,
+                        p_prime_spl, beta_0):
     r"""
     Returns bool array. True for singularities that are Suydam stable and False
     for unstable singularities.
@@ -147,12 +149,14 @@ def sings_suydam_stable(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0):
         bool array of Suydam stable singularities can be used as a mask for
         indexing.
     """
-    alpha, beta = sings_alpha_beta(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0)
+    alpha, beta = sings_alpha_beta(r, b_z_spl, b_z_prime_spl, b_theta_spl,
+                                   b_theta_prime_spl, p_prime_spl, beta_0)
     return suydam_stable(alpha, beta)
 
 
-def sing_small_solution(r_sing, offset, b_z_spl, b_theta_spl,
-                        p_prime_spl, q_spl, f_func, beta_0, r_request=None):
+def sing_small_solution(r_sing, offset, b_z_spl, b_z_prime_spl, b_theta_spl,
+                        b_theta_prime_spl, p_prime_spl, q_spl, f_func, beta_0,
+                        r_request=None):
     r"""
     Returns small solution of Frobenius expansion near singularity in y form of
     ODE set.
@@ -183,8 +187,8 @@ def sing_small_solution(r_sing, offset, b_z_spl, b_theta_spl,
     ----------
     Newcomb (1960) Hydromagnetic Stability of a Diffuse Linear Pinch
     """
-    alpha, beta = sings_alpha_beta(r_sing, b_z_spl, b_theta_spl, p_prime_spl,
-                                   beta_0)
+    alpha, beta = sings_alpha_beta(r_sing, b_z_spl, b_z_prime_spl, b_theta_spl,
+                                   b_theta_prime_spl, p_prime_spl, beta_0)
 
     nu_1, nu_2 = nu_1_2(alpha, beta)
     if not r_request:

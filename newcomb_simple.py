@@ -152,6 +152,7 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
                 suydam_offset = interval[1] - interval[0]
             frob_params = {'offset': suydam_offset, 'b_z_spl': params['b_z'],
                            'b_theta_spl': params['b_theta'],
+                           'b_theta_prime_spl': params['b_theta_prime'],
                            'p_prime_spl': params['p_prime'],
                            'q_spl': params['q'], 'f_func': new_f.newcomb_f_16,
                            'beta_0': params['beta_0'], 'r_sing': interval[0]}
