@@ -41,7 +41,9 @@ def stability(params, offset, suydam_offset, suppress_output=False,
         sing_params = {'a': params['r_0'], 'b': params['a'],
                        'points': sing_search_points, 'k': params['k'],
                        'm': params['m'], 'b_z_spl': params['b_z'],
+                       'b_z_prime': params['b_z_prime'],
                        'b_theta_spl': params['b_theta'],
+                       'b_theta_prime_spl': params['b_theta_prime'],
                        'p_prime_spl': params['p_prime'], 'offset': offset,
                        'tol': 1E-2, 'beta_0': params['beta_0']}
         (interval,
@@ -79,23 +81,24 @@ def stability(params, offset, suydam_offset, suppress_output=False,
             xi_der)
 
 
-def newcomb_der(r, y, k, m, b_z_spl, b_theta_spl, p_prime_spl, q_spl,
+def newcomb_der(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
+                b_theta_prime_spl, p_prime_spl, q_spl, q_prime_spl,
                 f_func, g_func, beta_0):
     r"""
     Return the derivative of y
     """
     y_prime = np.zeros(2)
 
-    g_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
-                'b_z_prime': b_z_spl.derivative()(r),
-                'b_theta': b_theta_spl(r),
-                'b_theta_prime': b_theta_spl.derivative()(r),
-                'p_prime': p_prime_spl(r), 'q': q_spl(r),
-                'q_prime': q_spl.derivative()(r),
+    g_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r, b_z_spl),
+                'b_z_prime': splev(r, b_z_prime_spl),
+                'b_theta': splev(r, b_theta_spl),
+                'b_theta_prime': splev(r, b_theta_prime_spl),
+                'p_prime': splev(r, p_prime_spl), 'q': splev(r, q_spl),
+                'q_prime': splev(r, q_prime_spl),
                 'beta_0': beta_0}
 
-    f_params = {'r': r, 'k': k, 'm': m, 'b_z': b_z_spl(r),
-                'b_theta': b_theta_spl(r), 'q': q_spl(r)}
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r, b_z_spl),
+                'b_theta': splev(r, b_theta_spl), 'q': splev(r, q_spl)}
 
     y_prime[0] = y[1] / f_func(**f_params)
     y_prime[1] = y[0]*g_func(**g_params)
@@ -151,10 +154,11 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
             if interval[0]+suydam_offset > interval[1]:
                 suydam_offset = interval[1] - interval[0]
             frob_params = {'offset': suydam_offset, 'b_z_spl': params['b_z'],
+                           'b_z_prime_spl': params['b_z_prime'],
                            'b_theta_spl': params['b_theta'],
                            'b_theta_prime_spl': params['b_theta_prime'],
-                           'p_prime_spl': params['p_prime'],
                            'q_spl': params['q'], 'f_func': new_f.newcomb_f_16,
+                           'p_prime_spl': params['p_prime'],
                            'beta_0': params['beta_0'], 'r_sing': interval[0]}
             xi_given = frob.sing_small_solution(**frob_params)
             interval[0] += suydam_offset
@@ -166,11 +170,11 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
 
         else:
             init_value = init.init_xi_given(xi_given, interval[0], **params)
-
     return interval, init_value
 
 
-def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0, **kwargs):
+def check_suydam(r, b_z_spl, b_z_prime_spl, b_theta_spl, b_theta_prime_spl,
+                 p_prime_spl, beta_0, **kwargs):
     r"""
     Return radial positions at which the Euler-Lagrange equation is singular
     and Suydam's criterion is violated.
@@ -192,7 +196,9 @@ def check_suydam(r, b_z_spl, b_theta_spl, p_prime_spl, beta_0, **kwargs):
     unstable_r : ndarray of floats (N)
         positions at which plasma column is suydam unstable
     """
-    params = {'r': r, 'b_z_spl': b_z_spl, 'b_theta_spl': b_theta_spl,
+    params = {'r': r, 'b_z_spl': b_z_spl, 'b_z_prime_spl': b_z_prime_spl,
+              'b_theta_spl': b_theta_spl,
+              'b_theta_prime_spl': b_theta_prime_spl,
               'p_prime_spl': p_prime_spl, 'beta_0': beta_0}
     unstable_mask = np.invert(frob.sings_suydam_stable(**params))
     return r[unstable_mask]
@@ -210,9 +216,10 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
         r_array = np.linspace(interval[0], interval[1], 250)
     else:
         r_array = np.asarray(interval)
-    args = (params['k'], params['m'], params['b_z'], params['b_theta'],
-            params['p_prime'], params['q'], params['f_func'],
-            params['g_func'], params['beta_0'])
+    args = (params['k'], params['m'], params['b_z'], params['b_z_prime'],
+            params['b_theta'], params['b_theta_prime'], params['p_prime'],
+            params['q'], params['q_prime'], params['f_func'], params['g_func'],
+            params['beta_0'])
 
     if method == 'lsoda_odeint':
         transition_points = np.asarray([params['core_radius'],
