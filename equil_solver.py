@@ -629,10 +629,11 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         b_theta_prime = self.splines['b_theta'].derivative()
         b_theta_prime_prime = b_theta_prime.derivative()
         b_z_prime = self.splines['b_z'].derivative()
+        q_prime = self.splines['q'].derivative()
 
         self.splines.update({'b_theta_prime': b_theta_prime,
                              'b_theta_prime_prime': b_theta_prime,
-                             'b_z_prime': b_z_prime})
+                             'b_z_prime': b_z_prime, 'q_prime': q_prime})
 
         self.tck_splines = self.convert_spline_objects_to_tck(self.splines)
 
