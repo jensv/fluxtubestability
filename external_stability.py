@@ -14,15 +14,15 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatibility"""
 
 import scipy.special as spec
-
+from scipy.interpolate import splev
 
 def external_stability(params, xi, xi_der, dim_less=False):
     r"""
     Returns external external stability and dW.
     """
     a = params['a']
-    b_z = params['b_z'](a)
-    b_theta = params['b_theta'](a)
+    b_z = splev(a, params['b_z'])
+    b_theta = splev(a, params['b_theta'])
     m = params['m']
     k = params['k']
     magnetic_potential_energy_ratio = params['magnetic_potential_energy_ratio']
@@ -98,8 +98,8 @@ def capital_f(a, k, m, b_theta, b_z):
 
 def external_stability_from_notes(params, xi, xi_der, dim_less=False):
     a = params['a']
-    b_z = params['b_z'](a)
-    b_theta = params['b_theta'](a)
+    b_z = splev(a, params['b_z'])
+    b_theta = splev(a, params['b_theta'])
     m = params['m']
     k_bar = params['k']
     magnetic_potential_energy_ratio = params['magnetic_potential_energy_ratio']
