@@ -15,7 +15,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import numpy as np
 import scipy.optimize as opt
-from scipy.integrate import splev
+from scipy.interpolate import splev
 
 
 def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl, offset,
