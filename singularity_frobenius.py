@@ -17,7 +17,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatibility"""
 
 import numpy as np
-from scipy.integrate import splev
+from scipy.interpolate import splev
 
 
 def alpha_func(r, b_z, b_z_prime, b_theta, b_theta_prime, **kwargs):
@@ -114,20 +114,24 @@ def sings_alpha_beta(r, b_z_spl, b_z_prime_spl, b_theta_spl, b_theta_prime_spl,
     beta : ndarray of floats
         beta of quadratic equation for the exponents of the Forbenius solutions
     """
-    b_z = splev(r, b_z_spl)
-    b_z_prime = splev(r, b_z_prime_spl)
-    b_theta = splev(r, b_theta_spl)
-    b_theta_prime = splev(r, b_theta_prime_spl)
-    p_prime = splev(r, p_prime_spl)
-    params = {'r': r, 'b_z': b_z, 'b_z_prime': b_z_prime, 'b_theta': b_theta,
-              'b_theta_prime': b_theta_prime, 'p_prime': p_prime, 'beta_0': beta_0}
-    alpha = alpha_func(**params)
-    beta = beta_func(**params)
-    return alpha, beta
+    if r.size == 0:
+        return np.empty(0), np.empty(0)
+    else:
+        b_z = splev(r, b_z_spl)
+        b_z_prime = splev(r, b_z_prime_spl)
+        b_theta = splev(r, b_theta_spl)
+        b_theta_prime = splev(r, b_theta_prime_spl)
+        p_prime = splev(r, p_prime_spl)
+        params = {'r': r, 'b_z': b_z, 'b_z_prime': b_z_prime,
+                  'b_theta': b_theta, 'b_theta_prime': b_theta_prime,
+                  'p_prime': p_prime, 'beta_0': beta_0}
+        alpha = alpha_func(**params)
+        beta = beta_func(**params)
+        return alpha, beta
 
 
-def sings_suydam_stable(r, b_z_spl, b_z_prime, b_theta_spl, b_theta_prime_spl,
-                        p_prime_spl, beta_0):
+def sings_suydam_stable(r, b_z_spl, b_z_prime_spl, b_theta_spl,
+                        b_theta_prime_spl, p_prime_spl, beta_0):
     r"""
     Returns bool array. True for singularities that are Suydam stable and False
     for unstable singularities.
