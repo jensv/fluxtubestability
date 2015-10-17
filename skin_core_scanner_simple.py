@@ -60,7 +60,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                 params = {'k': k_a, 'm': float(m), 'r_0': r_0, 'a': 1.,
                           'b': 'infinity'}
                 params_wo_splines = deepcopy(params)
-                params.update(profile.get_splines())
+                params.update(profile.get_tck_splines())
 
                 params.update({'xi_factor': xi_factor,
                                'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio,
