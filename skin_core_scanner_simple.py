@@ -12,6 +12,11 @@ from copy import deepcopy
 from datetime import datetime
 import os
 import json
+import sys
+sys.path.append('../../provenance_scripts/')
+import call_provenance as cp
+import sqlite3
+
 
 
 def scan_lambda_k_space(lambda_a_space, k_a_space,
@@ -24,14 +29,13 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
     Scans space given by lambda_a_space and k_a_space for m=0, 1 stability and
     saves several 2D numpy arrays (stability maps) to an npz file.
     """
+    call_parameters = locals()
     sing_search_points = 1000
     suydam_end_offset = offset
 
     k_a_points = np.linspace(k_a_space[0], k_a_space[1], num=k_a_space[2])
     lambda_a_points = np.linspace(lambda_a_space[0], lambda_a_space[1],
                                   num=lambda_a_space[2])
-
-
 
     lambda_a_mesh, k_a_mesh = np.meshgrid(lambda_a_points, k_a_points)
 
@@ -57,11 +61,17 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                                                       lambda_bar=lambda_a,
                                                       **kwargs)
 
+
                 params = {'k': k_a, 'm': float(m), 'r_0': r_0, 'a': 1.,
                           'b': 'infinity'}
                 params_wo_splines = deepcopy(params)
                 params.update(profile.get_tck_splines())
+    call = 'scan_lambda_k_space('
+    for key in locals().keys():
+        call += key + '=' locals()[key] + ' '
+    call = call[:-1] + ')'
 
+    cp.call_and_git_commit()
                 params.update({'xi_factor': xi_factor,
                                'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio,
                                'beta_0': profile.beta_0(),
@@ -138,3 +148,23 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
     print('Saved in Directory:' + str(date))
 
     return lambda_a_mesh, k_a_mesh, stability_maps
+
+def track_provenance(func_name, sql_db, call_parameters, date, params):
+    call = func_name
+    for key in call_parameters.keys():
+        call += key + '=' call_parameters[key] + ' '
+    call = call[:-1] + ')'
+    call, git_commit = cp.call_and_git_commit(call=call, call_path=os.getcwd())
+    connection = sqlite3.connect(sql_db)
+    corsor = connection.cursor()
+    cursor.execute("INSERT INTO Runs(datetime, points_core, points_transition"+
+                   ", points_skin, core_radius, transition_width, skin_width,"+
+                   "k_bar, lambda_bar, epsilon, git_commit, python_call)"
+                   "VALUES("+ date +", "+ params['points_core'] + ", " +
+                   params['core_radius'] + ", " + params['transition_width'] +
+                   ", " + params['skin_width'] + ", " + params['k_bar'] + ", "
+                   + params['lambda_bar'] + ", " +
+VALUES, 10, 10, 10, 0.5, 0.5, 0.5, 1.0, 1.2, 4.5, '435rewrew', 'skin_core_un(sgfs)');"")
+    connection.commit()
+    corsor.close()
+    connection.close()
