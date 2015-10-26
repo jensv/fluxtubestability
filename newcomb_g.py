@@ -255,8 +255,8 @@ def newcomb_g_18(r, k, m, b_z, b_theta, p_prime, mu_0, **kwargs):
              f_denom(r, k, m))
     term3 = (2.*k**2*r/f_denom(r, k, m)**2 *
              (k**2*r**2*b_z**2 - m**2*b_theta**2))
-    if type(r) == float:
-        all_f_g.all_g.append([r, term1 + term2 + term3])
+    #if type(r) == float:
+    #    all_f_g.all_g.append([r, term1 + term2 + term3])
     return term1 + term2 + term3
 
 
@@ -304,14 +304,14 @@ def newcomb_g_18_dimless(r, k, m, b_z, p_prime, q, beta_0, **kwargs):
     term4 = 2.*m*k**2*r*b_z**2/q*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
     term5 = 2*k**4*r**3*b_z**2/f_denom(r, k, m)**2
     term6 = -m**2*2.*k**4*r**3*b_z**2/(q**2*f_denom(r, k, m)**2)
-    if type(r) == float:
-        all_f_g.all_g.append([r, term1 + term2 + term3 + term4 + term5 + term6])
-        all_f_g.all_g_term1.append([r, term1])
-        all_f_g.all_g_term2.append([r, term2])
-        all_f_g.all_g_term3.append([r, term3])
-        all_f_g.all_g_term4.append([r, term4])
-        all_f_g.all_g_term5.append([r, term5])
-        all_f_g.all_g_term6.append([r, term6])
+    #if type(r) == float:
+    #    all_f_g.all_g.append([r, term1 + term2 + term3 + term4 + term5 + term6])
+    #    all_f_g.all_g_term1.append([r, term1])
+    #    all_f_g.all_g_term2.append([r, term2])
+    #    all_f_g.all_g_term3.append([r, term3])
+    #    all_f_g.all_g_term4.append([r, term4])
+    #    all_f_g.all_g_term5.append([r, term5])
+    #    all_f_g.all_g_term6.append([r, term6])
     return term1 + term2 + term3 + term4 + term5 + term6
 
 
@@ -355,18 +355,18 @@ def newcomb_g_18_dimless_wo_q(r, k, m, b_z, b_theta, p_prime, beta_0, **kwargs):
     term4 = 2.*m*k*r*b_z*b_theta*(k**2*r**2 + m**2-1.)/(k**2*r**2 + m**2)
     term5 = 2*k**4*r**3*b_z**2/f_denom(r, k, m)**2
     term6 = -2*k**2*m**2*r*b_theta**2/f_denom(r, k, m)**2
-    if type(r) == type(r):
-        all_f_g.all_g.append([r, term1 + term2 + term3 + term4 + term5 + term6])
-        all_f_g.all_g_term1.append([r, term1])
-        all_f_g.all_g_term2.append([r, term2])
-        all_f_g.all_g_term3.append([r, term3])
-        all_f_g.all_g_term4.append([r, term4])
-        all_f_g.all_g_term5.append([r, term5])
-        all_f_g.all_g_term6.append([r, term6])
-        all_f_g.all_pressure_prime.append([r, p_prime])
-        all_f_g.all_b_theta.append([r, b_theta])
-        all_f_g.all_b_z.append([r, b_z])
-        all_f_g.all_beta_0.append([r, beta_0])
-        all_f_g.all_m.append([r, m])
-        all_f_g.all_k.append([r, k])
+    #if type(r) == type(r):
+    #    all_f_g.all_g.append([r, term1 + term2 + term3 + term4 + term5 + term6])
+    #    all_f_g.all_g_term1.append([r, term1])
+    #    all_f_g.all_g_term2.append([r, term2])
+    #    all_f_g.all_g_term3.append([r, term3])
+    #    all_f_g.all_g_term4.append([r, term4])
+    #    all_f_g.all_g_term5.append([r, term5])
+    #    all_f_g.all_g_term6.append([r, term6])
+    #    all_f_g.all_pressure_prime.append([r, p_prime])
+    #    all_f_g.all_b_theta.append([r, b_theta])
+    #    all_f_g.all_b_z.append([r, b_z])
+    #    all_f_g.all_beta_0.append([r, beta_0])
+    #    all_f_g.all_m.append([r, m])
+    #    all_f_g.all_k.append([r, k])
     return term1 + term2 + term3 + term4 + term5 + term6

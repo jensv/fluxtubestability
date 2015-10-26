@@ -53,8 +53,8 @@ def newcomb_f_16(r, k, m, b_z, b_theta, **kwargs):
     """
     params_num = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
     params_denom = {'r': r, 'k': k, 'm': m}
-    if type(r) == float:
-        all_f_g.all_f.append([r, r*f_num_wo_r(**params_num)/f_denom(**params_denom)])
+    #if type(r) == float:
+    #    all_f_g.all_f.append([r, r*f_num_wo_r(**params_num)/f_denom(**params_denom)])
     return r*f_num_wo_r(**params_num)/f_denom(**params_denom)
 
 
