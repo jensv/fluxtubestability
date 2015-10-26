@@ -30,6 +30,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
     saves several 2D numpy arrays (stability maps) to an npz file.
     """
     call_parameters = locals()
+    func_name = 'scan_lambda_k_space'
+
     sing_search_points = 1000
     suydam_end_offset = offset
 
@@ -66,18 +68,16 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                           'b': 'infinity'}
                 params_wo_splines = deepcopy(params)
                 params.update(profile.get_tck_splines())
-    call = 'scan_lambda_k_space('
-    for key in locals().keys():
-        call += key + '=' locals()[key] + ' '
-    call = call[:-1] + ')'
-
-    cp.call_and_git_commit()
                 params.update({'xi_factor': xi_factor,
                                'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio,
                                'beta_0': profile.beta_0(),
                                'core_radius': profile.core_radius,
                                'transition_width': profile.transition_width,
-                               'skin_width': profile.skin_width})
+                               'skin_width': profile.skin_width,
+                               'points_core': profile.points_core,
+                               'points_transition': profile.points_transition,
+                               'points_skin': profile.points_skin,
+                               'epsilon': profile.epsilon})
                 results = new.stability(params, offset, suydam_end_offset,
                                         sing_search_points=sing_search_points,
                                         suppress_output=suppress_output,
@@ -123,14 +123,18 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
     date = datetime.now().strftime('%Y-%m-%d-%H-%M')
     if os.getcwd().endswith('ipython_notebooks'):
         path = '../../output/' + date
+        sql_db = '../../output/output.db'
     else:
         path = '../output/' + date
+        sql_db = '../output/output.db'
     os.mkdir(path)
+
+    track_provenance(sql_db, func_name, call_parameters, date, params,
+                     lambda_a_space, k_a_space)
 
     params_wo_splines.pop('dr', None)
     with open(path+'/params.txt', 'w') as params_file:
         json.dump(params_wo_splines, params_file)
-
     np.savez(path+'/meshes.npz', lambda_a_mesh=lambda_a_mesh,
              k_a_mesh=k_a_mesh,
              external_m_neg_1=stability_maps['external'][-1],
@@ -149,22 +153,42 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
 
     return lambda_a_mesh, k_a_mesh, stability_maps
 
-def track_provenance(func_name, sql_db, call_parameters, date, params):
-    call = func_name
+def track_provenance(sql_db, func_name, call_parameters, date, params,
+                     lambda_a_space, k_a_space):
+    r"""
+    Save parameters, call, and git commit to make results reproducible and allow
+    easy scanning.
+    """
+    call = func_name + '('
     for key in call_parameters.keys():
-        call += key + '=' call_parameters[key] + ' '
-    call = call[:-1] + ')'
+        call += key + '=' + str(call_parameters[key]) + ', '
+    call = call[:-2] + ')'
     call, git_commit = cp.call_and_git_commit(call=call, call_path=os.getcwd())
     connection = sqlite3.connect(sql_db)
-    corsor = connection.cursor()
+    cursor = connection.cursor()
     cursor.execute("INSERT INTO Runs(datetime, points_core, points_transition"+
                    ", points_skin, core_radius, transition_width, skin_width,"+
-                   "k_bar, lambda_bar, epsilon, git_commit, python_call)"
-                   "VALUES("+ date +", "+ params['points_core'] + ", " +
-                   params['core_radius'] + ", " + params['transition_width'] +
-                   ", " + params['skin_width'] + ", " + params['k_bar'] + ", "
-                   + params['lambda_bar'] + ", " +
-VALUES, 10, 10, 10, 0.5, 0.5, 0.5, 1.0, 1.2, 4.5, '435rewrew', 'skin_core_un(sgfs)');"")
+                   "k_bar_start, k_bar_end, k_bar_num, lambda_bar_start," +
+                   "lambda_bar_end, lambda_bar_num, epsilon, git_commit," +
+                   "python_call) " +
+                   "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"+
+                   ")", (
+                         date,
+                         params['points_core'],
+                         params['points_transition'],
+                         params['points_skin'],
+                         params['core_radius'],
+                         params['transition_width'],
+                         params['skin_width'],
+                         k_a_space[0],
+                         k_a_space[1],
+                         int(k_a_space[2]),
+                         lambda_a_space[0],
+                         lambda_a_space[1],
+                         int(lambda_a_space[2]),
+                         params['epsilon'],
+                         git_commit,
+                         call))
     connection.commit()
-    corsor.close()
+    cursor.close()
     connection.close()
