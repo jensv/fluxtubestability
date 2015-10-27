@@ -10,8 +10,8 @@ Do a broad scan of skin geometry, epsilo, and spline knots.
 import numpy as np
 import skin_core_scanner_simple as scss
 
-lambda_bar_space = [0.01, 6., 75]
-k_bar_space = [0.01, 3., 75]
+lambda_bar_space = [0.01, 6., 40]
+k_bar_space = [0.01, 3., 40]
 for skin_width in np.logspace(np.log10(0.001), np.log10(0.9), 5):
     for transition_width in np.logspace(np.log10(0.001),
                                         np.log10((1. - skin_width)/2.), 5):
