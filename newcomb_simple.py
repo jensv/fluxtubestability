@@ -89,16 +89,18 @@ def newcomb_der(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
     """
     y_prime = np.zeros(2)
 
-    g_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r, b_z_spl),
-                'b_z_prime': splev(r, b_z_prime_spl),
-                'b_theta': splev(r, b_theta_spl),
-                'b_theta_prime': splev(r, b_theta_prime_spl),
-                'p_prime': splev(r, p_prime_spl), 'q': splev(r, q_spl),
-                'q_prime': splev(r, q_prime_spl),
+    r_arr = np.asarray(r)
+
+    g_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r_arr, b_z_spl),
+                'b_z_prime': splev(r_arr, b_z_prime_spl),
+                'b_theta': splev(r_arr, b_theta_spl),
+                'b_theta_prime': splev(r_arr, b_theta_prime_spl),
+                'p_prime': splev(r_arr, p_prime_spl), 'q': splev(r_arr, q_spl),
+                'q_prime': splev(r_arr, q_prime_spl),
                 'beta_0': beta_0}
 
-    f_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r, b_z_spl),
-                'b_theta': splev(r, b_theta_spl), 'q': splev(r, q_spl)}
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r_arr, b_z_spl),
+                'b_theta': splev(r_arr, b_theta_spl), 'q': splev(r_arr, q_spl)}
 
     y_prime[0] = y[1] / f_func(**f_params)
     y_prime[1] = y[0]*g_func(**g_params)
