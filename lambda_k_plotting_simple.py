@@ -106,6 +106,7 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
     lambda_bar = np.linspace(0.01, 3., 750)
     k_bar = np.linspace(0.01, 1.5, 750)
     lambda_bar_mesh, k_bar_mesh = np.meshgrid(lambda_bar, k_bar)
+
     if analytic_compare:
         line_labels = FixedFormatter(['-1', '0', '1'])
         if mode_to_plot == 'm_neg_1':

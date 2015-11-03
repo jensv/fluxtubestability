@@ -18,7 +18,6 @@ import call_provenance as cp
 import sqlite3
 
 
-
 def scan_lambda_k_space(lambda_a_space, k_a_space,
                         xi_factor=1., magnetic_potential_energy_ratio=1.,
                         offset=1E-3, r_0=0., init_value=(0.0, 1.0),
@@ -42,7 +41,6 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
     lambda_a_mesh, k_a_mesh = np.meshgrid(lambda_a_points, k_a_points)
 
     mesh_shape = lambda_a_mesh.shape
-
 
     delta_map = {-1: np.zeros(mesh_shape),
                  0: np.zeros(mesh_shape)}
