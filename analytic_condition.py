@@ -19,13 +19,44 @@ def conditions(k_bar, lambda_bar, epsilon, m, delta):
     r"""
     Return analytic stability condition.
     """
-    term1 = (2*k_bar - m*epsilon*lambda_bar)*((delta + 1)*2*k_bar -
-                                              (delta - 1)*m*epsilon*
-                                              lambda_bar)/(k_bar**2 + m**2)
-    term2 = (epsilon**2 - 1) * lambda_bar**2
-    term3 = (m*lambda_bar - 2* k_bar)**2/k_bar * (kv(m, np.abs(k_bar)) /
-                                                  kvp(m, np.abs(k_bar)))
+    term1 = conditions_plasma_term(k_bar, lambda_bar, epsilon, m, delta)
+    term2 = conditions_interface_term(k_bar, lambda_bar, epsilon, m, delta)
+    term3 = conditions_vacuum_term(k_bar, lambda_bar, epsilon, m, delta)
     return term1 + term2 - term3
+
+
+def conditions_without_interface(k_bar, lambda_bar, epsilon, m, delta):
+    r"""
+    Return analytic stability condition minus interface term (term2).
+    """
+    term1 = conditions_plasma_term(k_bar, lambda_bar, epsilon, m, delta)
+    term3 = (m*lambda_bar - 2.*k_bar)**2/k_bar*(kv(m, np.abs(k_bar)) /
+                                                kvp(m, np.abs(k_bar)))
+    return term1 - term3
+
+
+def conditions_plasma_term(k_bar, lambda_bar, epsilon, m, delta):
+    r"""
+    """
+    term1 = (2.*k_bar - m*epsilon*lambda_bar)*((delta + 1)*2.*k_bar -
+                                               (delta - 1)*m*epsilon *
+                                               lambda_bar)/(k_bar**2 + m**2)
+    return term1
+
+
+def conditions_interface_term(k_bar, lambda_bar, epsilon, m, delta):
+    r"""
+    """
+    term2 = (epsilon**2 - 1) * lambda_bar**2
+    return term2
+
+
+def conditions_vacuum_term(k_bar, lambda_bar, epsilon, m, delta):
+    r"""
+    """
+    term3 = (m*lambda_bar - 2.*k_bar)**2/k_bar*(kv(m, np.abs(k_bar)) /
+                                                kvp(m, np.abs(k_bar)))
+    return term3
 
 
 def condition_map(epsilon=0.5, delta=0.):
@@ -61,7 +92,8 @@ def condition_map(epsilon=0.5, delta=0.):
     sns.despine()
 
 
-def condition_map_variable_delta(filename, mode=1, epsilon=0.5):
+def condition_map_variable_delta(filename, mode=1, epsilon=0.5,
+                                 conditions_func=conditions_without_interface):
     r"""
     Draw filled contours of sausage (orange), kink(yellow), and stable (white)
     regions for given epsilon and delta values.
@@ -77,11 +109,11 @@ def condition_map_variable_delta(filename, mode=1, epsilon=0.5):
                                   sns.xkcd_rgb["yellow"],
                                   sns.xkcd_rgb["orange"]])
 
-    stability_kink = conditions(k_bar_mesh, lambda_bar_mesh, epsilon, 1.,
-                                delta_mesh)
+    stability_kink = conditions_func(k_bar_mesh, lambda_bar_mesh, epsilon, 1.,
+                                     delta_mesh)
     stability_kink = stability_kink < 0
-    stability_sausage = conditions(k_bar_mesh, lambda_bar_mesh, epsilon, 0.,
-                                   delta_mesh)
+    stability_sausage = conditions_func(k_bar_mesh, lambda_bar_mesh, epsilon, 0.,
+                                        delta_mesh)
     stability_sausage = stability_sausage < 0
 
     if mode == 0:
