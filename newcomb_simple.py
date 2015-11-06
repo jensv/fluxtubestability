@@ -33,6 +33,62 @@ def stability(params, offset, suydam_offset, suppress_output=False,
               f_func=new_f.newcomb_f_16, g_func=new_g.newcomb_g_18_dimless_wo_q):
     r"""
     Determine external stability.
+
+    Parameters
+    ----------
+    params: dict
+        equilibrium parameters including spline coefficients
+    offset : float
+        offset after which to start integrating after singularties
+    suydam_offset : float
+        offset after which to start integrating after suydam unstable
+        singularties
+    suppress_output: boolean
+        flag to suppress diagnostic print statements
+    method: string
+        integration method to use. Either an integrator in scipy.integate.ode
+        or 'odeint' for scipy.integrate.odeint
+    rtol : float
+        passed to ode solver relative tolerance setting for ODE integrator
+    max_steps: float
+        option passed to ode solver, limit for max step size
+    nsteps: int
+        option passed to ode solder, maximum number of steps allowed during call
+        to solver.
+    xi_given: tuple of floats
+        Initial condition used for xi if equilibrim does not start ar r=0
+    diagnose: bool
+        flag to print out more diagnostc statements during integration
+    f_func: function
+        python function to use to calculate f
+    g_func: function
+        python function to use to calculate g
+    Returns
+    -------
+    stable_external : bool
+        True if delta_w > 0
+    suydam_stable : bool
+        True if all singularties (except r=0) are Suydam stable
+    delta_w : float
+        total perturbed potential energy
+    missing_end_params:
+        diagnostic ouput no longer used.
+    xi : ndarray
+        xi at interval boundary (only last element is relevant)
+    xi_der : ndarray
+        derivative of xi at interval boundary (only last element is relevant)
+    Notes
+    -----
+    Examines the equilibrium. If the equilibrium has a suydam instability, the
+    frobenius method is used to determine a small solution at an r > than
+    instability. If there is no frobenius instability power series solution
+    close to r=0 is chosen or if the integration does not start at r=0 a given
+    xi is used as boundary condition.
+    Only the last interval is integrated.
+    To save time xi and xi_der are only evaluated at r=a (under the hood the
+    integrator is evaluating xi and xi_der across the interval).
+    Xi and Xi_der are plugged into the potential energy equation to determine
+    stability.
     """
     params.update({'f_func': f_func, 'g_func': g_func})
     missing_end_params = None
@@ -85,7 +141,52 @@ def newcomb_der(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
                 b_theta_prime_spl, p_prime_spl, q_spl, q_prime_spl,
                 f_func, g_func, beta_0):
     r"""
-    Return the derivative of y
+    Returns derivatives of Newcomb's Euler-Lagrange equation expressed as a set
+    of 2 first order ODEs.
+
+    Parameters
+    ----------
+    r : floatfirst_element_correction
+        radius for which to find derivative
+    y : ndarray (2)
+        values of :math:`\xi` and :math:`f \xi'`
+    k : float
+        axial periodicity number
+    m : float
+        azimuthal periodicity number
+    b_z_spl : scipy spline tck tuple
+        axial magnetic field
+    b_theta_spl : scipy spline tck tuple
+        azimuthal magnetic field
+    b_theta_prime_spl: scipy spline tck tuple
+        radial derivative of azimuthal magnetic field
+    p_prime_spl : scipy spline tck tuple
+        derivative of pressure
+    q_spl : scipy spline tck tuple
+        safety factor
+    f_func : function
+        function which returns f of Newcomb's Euler-Lagrange equation
+    g_func : function
+        function which returns f of Newcomb's Euler-Lagrange equation
+    beta_0 : float
+        pressure ratio on axis
+
+    Returns
+    -------
+    y_prime : ndarray of floats (2)
+        derivatives of y
+
+    Notes
+    -----
+    The system of ODEs representing the Euler-Lagrange equations is
+
+    .. math::
+
+       \frac{d \xi}{dr} &= \xi' \\
+       \frac{d (f \xi')}{dr} &= g \xi
+    Reference
+    ---------
+    Newcomb (1960) Hydromagnetic Stability of a diffuse linear pinch.
     """
     y_prime = np.zeros(2)
 
