@@ -273,9 +273,10 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
 
     if np.all(np.isfinite(results[-1])):
         (stable_external,
-         delta_w) = ext.external_stability_from_notes(params, xi[-1],
-                                                      xi_der[-1],
-                                                      dim_less=True)
+         delta_w) = ext.external_stability_from_analytic_condition(params,
+                                                                   xi[-1],
+                                                                   xi_der[-1],
+                                                                   dim_less=True)
         #print(delta_w)
     else:
         msg = ("Integration to plasma edge did not succeed. " +
