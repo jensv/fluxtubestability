@@ -383,13 +383,16 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
             params['beta_0'])
 
     if method == 'lsoda_odeint':
-        transition_points = np.asarray([params['core_radius'],
-                                        params['core_radius'] +
-                                        params['transition_width'],
-                                        params['core_radius'] +
-                                        params['transition_width'] +
-                                        params['skin_width']])
-        tcrit = np.asarray(transition_points[np.less(interval[0], transition_points)])
+        if 'core_radius' in params.keys():
+            transition_points = np.asarray([params['core_radius'],
+                                            params['core_radius'] +
+                                            params['transition_width'],
+                                            params['core_radius'] +
+                                            params['transition_width'] +
+                                            params['skin_width']])
+            tcrit = np.asarray(transition_points[np.less(interval[0], transition_points)])
+        else:
+            tcrit = None
 
         integrator_args = {}
         if rtol is not None:
