@@ -220,6 +220,30 @@ def newcomb_der(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
     return y_prime
 
 
+def newcomb_jac(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
+                b_theta_prime_spl, p_prime_spl, q_spl, q_prime_spl,
+                f_func, g_func, beta_0):
+    r"""
+    Jacobian
+    """
+    r_arr = np.asarray(r)
+
+    g_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r_arr, b_z_spl),
+                'b_z_prime': splev(r_arr, b_z_prime_spl),
+                'b_theta': splev(r_arr, b_theta_spl),
+                'b_theta_prime': splev(r_arr, b_theta_prime_spl),
+                'p_prime': splev(r_arr, p_prime_spl), 'q': splev(r_arr, q_spl),
+                'q_prime': splev(r_arr, q_prime_spl),
+                'beta_0': beta_0}
+
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r_arr, b_z_spl),
+                'b_theta': splev(r_arr, b_theta_spl), 'q': splev(r_arr, q_spl)}
+
+    jac = np.zeros((2,2))
+    jac[0,1] = 1. / f_func(**f_params)
+    jac[1,0] = g_func(**g_params)
+    return jac
+
 def newcomb_der_for_odeint(y, r, *args):
     r"""
     odeint uses a derivative function with y and r passed as arguments in
@@ -369,7 +393,7 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
         xi = np.asarray([results[:,0]]).ravel()
         xi_der_f = np.asarray([results[:,1]]).ravel()
     else:
-        integrator = scipy.integrate.ode(newcomb_der)
+        integrator = scipy.integrate.ode(newcomb_der, jac=newcomb_jac)
 
         integrator_args = {}
         if rtol is not None:
@@ -381,6 +405,7 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
 
         integrator.set_integrator(method, **integrator_args)
         integrator.set_f_params(*args)
+        integrator.set_jac_params(*args)
         integrator.set_initial_value(init_value, interval[0])
         results = np.empty((r_array.size, 2))
         results[0] = init_value
