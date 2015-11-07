@@ -303,7 +303,20 @@ class NewcombConstantPressure(EquilSolver):
                         'b_z': self.b_z, 'p_prime': self.p_prime,
                         'pressure': self.pressure, 'q': self.q,
                         'rho': self.rho}
+
         self.set_splines(param_points)
+
+        b_theta_prime = self.splines['b_theta'].derivative()
+        b_theta_prime_prime = b_theta_prime.derivative()
+        b_z_prime = self.splines['b_z'].derivative()
+        q_prime = self.splines['q'].derivative()
+
+        self.splines.update({'b_theta_prime': b_theta_prime,
+                             'b_theta_prime_prime': b_theta_prime_prime,
+                             'b_z_prime': b_z_prime, 'q_prime': q_prime})
+
+
+        self.tck_splines = self.convert_spline_objects_to_tck(self.splines)
 
     def get_j_z(self, r):
         r"""
