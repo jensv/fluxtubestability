@@ -430,6 +430,7 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
             integrator.integrate(r)
             results[i+1, :] = integrator.y
             if not integrator.successful():
+                results[i+1:, :] = [np.nan, np.nan]
                 break
         xi = results[:, 0]
         xi_der_f = results[:, 1]
