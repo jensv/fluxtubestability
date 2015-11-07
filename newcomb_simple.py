@@ -302,7 +302,7 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
             interval[0] = interval[1]
         init_params = deepcopy(params)
         init_params.update({'b_z': splev(interval[0], params['b_z']),
-                           'b_theta': splev(interval[0], params['b_theta']),
+                            'b_theta': splev(interval[0], params['b_theta']),
                             'q': splev((interval[0]), params['q'])})
         init_value = init.init_geometric_sing(interval[0], **init_params)
     else:
@@ -325,7 +325,12 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
             init_value = init.init_xi_given(xi_given, interval[0], **init_params)
 
         else:
-            init_value = init.init_xi_given(xi_given, interval[0], **params)
+            init_params = deepcopy(params)
+            init_params.pop('r')
+            init_params.update({'b_z': splev(interval[0], params['b_z']),
+                                'b_theta': splev(interval[0], params['b_theta']),
+                                'q': splev((interval[0]), params['q'])})
+            init_value = init.init_xi_given(xi_given, interval[0], **init_params)
     return interval, init_value
 
 
