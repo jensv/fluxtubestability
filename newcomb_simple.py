@@ -252,6 +252,15 @@ def newcomb_der_for_odeint(y, r, *args):
     return newcomb_der(r, y, *args)
 
 
+def divide_by_f(r, xi_der_f, k, m, b_z_spl, b_theta_spl, q_spl, f_func):
+    r"""
+    Divides :math:`y[1]=f \xi'` by f to recover :math:`\xi`.
+    """
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r, b_z_spl),
+                'b_theta': splev(r, b_theta_spl), 'q': splev(r, q_spl)}
+    return xi_der_f / f_func(**f_params)
+
+
 def intervals_with_singularties(suppress_output, **sing_params):
     r"""
     Determines if an interval starts with a singularity, is Suydam unstable.
