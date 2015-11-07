@@ -51,7 +51,7 @@ def stability(params, offset, suydam_offset, suppress_output=False,
         or 'odeint' for scipy.integrate.odeint
     rtol : float
         passed to ode solver relative tolerance setting for ODE integrator
-    max_steps: float
+    max_step: float
         option passed to ode solver, limit for max step size
     nsteps: int
         option passed to ode solder, maximum number of steps allowed during call
@@ -80,9 +80,11 @@ def stability(params, offset, suydam_offset, suppress_output=False,
         derivative of xi at interval boundary (only last element is relevant)
     Notes
     -----
-    Examines the equilibrium. If the equilibrium has a suydam instability, the
+    Examines the equilibrium. If the equilibrium has a singularity, the
     frobenius method is used to determine a small solution at an r > than
-    instability. If there is no frobenius instability power series solution
+    instability. If the singularity is suydam unstable no attempt is made to
+    calulate external stability.
+    If there is no frobenius instability power series solution
     close to r=0 is chosen or if the integration does not start at r=0 a given
     xi is used as boundary condition.
     Only the last interval is integrated.
@@ -155,7 +157,7 @@ def newcomb_der(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
 
     Parameters
     ----------
-    r : floatfirst_element_correction
+    r : float
         radius for which to find derivative
     y : ndarray (2)
         values of :math:`\xi` and :math:`f \xi'`
