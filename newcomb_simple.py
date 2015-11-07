@@ -30,7 +30,8 @@ from copy import deepcopy
 def stability(params, offset, suydam_offset, suppress_output=False,
               method='lsoda', rtol=None, max_step=None, nsteps=None,
               xi_given=[0., 1.], diagnose=False, sing_search_points=10000,
-              f_func=new_f.newcomb_f_16, g_func=new_g.newcomb_g_18_dimless_wo_q):
+              f_func=new_f.newcomb_f_16, g_func=new_g.newcomb_g_18_dimless_wo_q,
+              skip_external_stability=False):
     r"""
     Determine external stability.
 
@@ -118,6 +119,14 @@ def stability(params, offset, suydam_offset, suppress_output=False,
                                                     **params)
 
     if not suydam_unstable_interval:
+        if skip_external_stability:
+            (xi, xi_der) = newcomb_int(params, interval,
+                                       init_value, method,
+                                       diagnose, max_step,
+                                       nsteps, rtol,
+                                       skip_external_stability=True)
+            return xi, xi_der
+
         (stable_external, delta_w,
          missing_end_params, xi, xi_der) = newcomb_int(params, interval,
                                                        init_value, method,
