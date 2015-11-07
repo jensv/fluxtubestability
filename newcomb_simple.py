@@ -366,7 +366,7 @@ def check_suydam(r, b_z_spl, b_z_prime_spl, b_theta_spl, b_theta_prime_spl,
 
 
 def newcomb_int(params, interval, init_value, method, diagnose, max_step,
-                nsteps, rtol):
+                nsteps, rtol, skip_external_stability=False):
     r"""
     Integrates newcomb's euler Lagrange equation in a given interval with lsoda
     either with the scipy.ode object oriented interface or with scipy.odeint.
@@ -441,6 +441,8 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
                          params['f_func'])
 
     if np.all(np.isfinite(results[-1])):
+        if skip_external_stability:
+            return  xi, xi_der
         (stable_external,
          delta_w) = ext.external_stability_from_analytic_condition(params,
                                                                    xi[-1],
