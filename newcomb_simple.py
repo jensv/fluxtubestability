@@ -220,6 +220,14 @@ def newcomb_der(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
     return y_prime
 
 
+def newcomb_der_for_odeint(y, r, *args):
+    r"""
+    odeint uses a derivative function with y and r passed as arguments in
+    reverse order.
+    """
+    return newcomb_der(r, y, *args)
+
+
 def intervals_with_singularties(suppress_output, **sing_params):
     r"""
     Determines if an interval starts with a singularity, is Suydam unstable.
@@ -352,11 +360,14 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
             integrator_args['mxstep'] = nsteps
         if max_step is not None:
             integrator_args['hmax'] = max_step
-
-        results, output = scipy.integrate.odeint(newcomb_der, np.asarray(init_value),
-                                                 np.asarray(r_array), args=args, tcrit=tcrit,
-                                                 **integrator_args)
-
+        results = scipy.integrate.odeint(newcomb_der_for_odeint,
+                                         np.asarray(init_value),
+                                         np.asarray(r_array),
+                                         tcrit=tcrit,
+                                         args=args,
+                                         **integrator_args)
+        xi = np.asarray([results[:,0]]).ravel()
+        xi_der_f = np.asarray([results[:,1]]).ravel()
     else:
         integrator = scipy.integrate.ode(newcomb_der)
 
@@ -378,11 +389,17 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
             results[i+1, :] = integrator.y
             if not integrator.successful():
                 break
-        else:
-            results[i+1:-1, :] = [np.nan, np.nan]
-    #print(results)
-    xi = results[:, 0]
-    xi_der = results[:, 1]
+        xi = results[:, 0]
+        xi_der_f = results[:, 1]
+
+    xi_der = divide_by_f(r_array,
+                         xi_der_f,
+                         params['k'],
+                         params['m'],
+                         params['b_z'],
+                         params['b_theta'],
+                         params['q'],
+                         params['f_func'])
 
     if np.all(np.isfinite(results[-1])):
         (stable_external,
