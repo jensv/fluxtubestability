@@ -118,6 +118,7 @@ def stability(params, offset, suydam_offset, suppress_output=False,
 
     interval, init_value = setup_initial_conditions(interval, starts_with_sing,
                                                     offset, suydam_offset,
+                                                    xi_given=xi_given,
                                                     **params)
 
     if not suydam_unstable_interval:
@@ -249,7 +250,7 @@ def intervals_with_singularties(suppress_output, **sing_params):
 
 
 def setup_initial_conditions(interval, starts_with_sing, offset,
-                             suydam_offset, **params):
+                             suydam_offset, xi_given=[0., 1.], **params):
     r"""
     Returns the initial condition to use for integrating an interval.
     """
