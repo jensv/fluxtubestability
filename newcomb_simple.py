@@ -31,7 +31,7 @@ def stability(params, offset, suydam_offset, suppress_output=False,
               method='lsoda', rtol=None, max_step=None, nsteps=None,
               xi_given=[0., 1.], diagnose=False, sing_search_points=10000,
               f_func=new_f.newcomb_f_16, g_func=new_g.newcomb_g_18_dimless_wo_q,
-              skip_external_stability=False, stiff=False):
+              skip_external_stability=False, stiff=False, use_jac=True):
     r"""
     Determine external stability.
 
@@ -127,7 +127,9 @@ def stability(params, offset, suydam_offset, suppress_output=False,
                                        init_value, method,
                                        diagnose, max_step,
                                        nsteps, rtol,
-                                       skip_external_stability=True)
+                                       skip_external_stability=True,
+                                       stiff=stiff,
+                                       use_jac=use_jac)
             return xi, xi_der
 
         (stable_external, delta_w,
@@ -135,7 +137,8 @@ def stability(params, offset, suydam_offset, suppress_output=False,
                                                        init_value, method,
                                                        diagnose, max_step,
                                                        nsteps, rtol,
-                                                       stiff=stiff)
+                                                       stiff=stiff,
+                                                       use_jac=use_jac)
     else:
         if not suppress_output:
             msg = ("Last singularity is suydam unstable." +
@@ -367,7 +370,8 @@ def check_suydam(r, b_z_spl, b_z_prime_spl, b_theta_spl, b_theta_prime_spl,
 
 
 def newcomb_int(params, interval, init_value, method, diagnose, max_step,
-                nsteps, rtol, skip_external_stability=False, stiff=False):
+                nsteps, rtol, skip_external_stability=False, stiff=False,
+                use_jac=True):
     r"""
     Integrates newcomb's euler Lagrange equation in a given interval with lsoda
     either with the scipy.ode object oriented interface or with scipy.odeint.
@@ -402,16 +406,28 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
             integrator_args['mxstep'] = nsteps
         if max_step is not None:
             integrator_args['hmax'] = max_step
-        results = scipy.integrate.odeint(newcomb_der_for_odeint,
-                                         np.asarray(init_value),
-                                         np.asarray(r_array),
-                                         tcrit=tcrit,
-                                         args=args,
-                                         **integrator_args)
+        if use_jac:
+            results = scipy.integrate.odeint(newcomb_der_for_odeint,
+                                             np.asarray(init_value),
+                                             np.asarray(r_array),
+                                             Dfun=newcomb_jac,
+                                             tcrit=tcrit,
+                                             args=args,
+                                             **integrator_args)
+        else:
+            results = scipy.integrate.odeint(newcomb_der_for_odeint,
+                                             np.asarray(init_value),
+                                             np.asarray(r_array),
+                                             tcrit=tcrit,
+                                             args=args,
+                                             **integrator_args)
         xi = np.asarray([results[:,0]]).ravel()
         xi_der_f = np.asarray([results[:,1]]).ravel()
     else:
-        integrator = scipy.integrate.ode(newcomb_der, jac=newcomb_jac)
+        if use_jac:
+            integrator = scipy.integrate.ode(newcomb_der, jac=newcomb_jac)
+        else:
+            integrator = scipy.integrate.ode(newcomb_der)
 
         integrator_args = {}
         if rtol is not None:
