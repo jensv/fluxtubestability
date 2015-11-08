@@ -125,6 +125,11 @@ def analytic_comparison(mode_to_plot, k_bar_mesh, lambda_bar_mesh, epsilon,
     Add red lines indicating stability boundaries from analytical model.
     """
     line_labels = FixedFormatter(['-1', '0', '1'])
+
+    assert (mode_to_plot == 'm_neg_1' or
+            mode_to_plot == 'm_0'), ("Please specify mode_to_plot as either" +
+                                     "m_neg_1 or m_0")
+
     if mode_to_plot == 'm_neg_1':
         m = 1
         color = 'red'
@@ -132,19 +137,21 @@ def analytic_comparison(mode_to_plot, k_bar_mesh, lambda_bar_mesh, epsilon,
         m = 0
         color = 'red'
 
-    stability_kink_d_neg_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
+
+    stability_kink_m_neg_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
                                            epsilon, m, -1.)
-    stability_kink_d_0 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
+    stability_kink_m_0 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
                                        epsilon, m, 0.)
-    stability_kink_d_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
+    stability_kink_m_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
                                        epsilon, m, 1)
 
-    stability_kink = stability_kink_d_neg_1 < 0
+
+    stability_kink = stability_kink_m_neg_1 < 0
     stability_kink = stability_kink.astype(float)
-    stability_kink[stability_kink_d_neg_1 >= 0] = -1.5
-    stability_kink[stability_kink_d_neg_1 < 0] = -0.5
-    stability_kink[stability_kink_d_0 < 0] = 0.5
-    stability_kink[stability_kink_d_1 < 0] = 1.5
+    stability_kink[stability_kink_m_neg_1 >= 0] = -1.5
+    stability_kink[stability_kink_m_neg_1 < 0] = -0.5
+    stability_kink[stability_kink_m_0 < 0] = 0.5
+    stability_kink[stability_kink_m_1 < 0] = 1.5
 
     cs = plt.contour(lambda_bar_mesh, k_bar_mesh, stability_kink,
                      levels=[-1, 0, 1], colors=color, linewidths=5,
