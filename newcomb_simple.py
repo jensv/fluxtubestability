@@ -31,7 +31,7 @@ def stability(params, offset, suydam_offset, suppress_output=False,
               method='lsoda', rtol=None, max_step=None, nsteps=None,
               xi_given=[0., 1.], diagnose=False, sing_search_points=10000,
               f_func=new_f.newcomb_f_16, g_func=new_g.newcomb_g_18_dimless_wo_q,
-              skip_external_stability=False):
+              skip_external_stability=False, stiff=False):
     r"""
     Determine external stability.
 
@@ -134,7 +134,8 @@ def stability(params, offset, suydam_offset, suppress_output=False,
          missing_end_params, xi, xi_der) = newcomb_int(params, interval,
                                                        init_value, method,
                                                        diagnose, max_step,
-                                                       nsteps, rtol)
+                                                       nsteps, rtol,
+                                                       stiff=stiff)
     else:
         if not suppress_output:
             msg = ("Last singularity is suydam unstable." +
@@ -366,7 +367,7 @@ def check_suydam(r, b_z_spl, b_z_prime_spl, b_theta_spl, b_theta_prime_spl,
 
 
 def newcomb_int(params, interval, init_value, method, diagnose, max_step,
-                nsteps, rtol, skip_external_stability=False):
+                nsteps, rtol, skip_external_stability=False, stiff=False):
     r"""
     Integrates newcomb's euler Lagrange equation in a given interval with lsoda
     either with the scipy.ode object oriented interface or with scipy.odeint.
@@ -419,6 +420,8 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
             integrator_args['nsteps'] = nsteps
         if max_step is not None:
             integrator_args['max_step'] = max_step
+        if stiff:
+            integrator_args['method'] = 'bdf'
 
         integrator.set_integrator(method, **integrator_args)
         integrator.set_f_params(*args)
