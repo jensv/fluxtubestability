@@ -23,7 +23,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                         offset=1E-3, r_0=0., init_value=(0.0, 1.0),
                         rtol=None, max_step=1E-2,
                         nsteps=1000, method='lsoda', suppress_output=True,
-                        diagnose=False, stiff=False,
+                        diagnose=False, stiff=False, use_jac=True,
                         **kwargs):
     r"""
     Scans space given by lambda_a_space and k_a_space for m=0, 1 stability and
@@ -83,7 +83,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                                         xi_given=init_value,
                                         rtol=rtol, max_step=max_step,
                                         nsteps=nsteps, method=method,
-                                        diagnose=diagnose, stiff=stiff)
+                                        diagnose=diagnose, stiff=stiff,
+                                        use_jac=use_jac)
                 stable_external = results[0]
                 stable_suydam = results[1]
                 delta_w = results[2]
