@@ -147,7 +147,7 @@ def external_stability_from_analytic_condition(params, xi, xi_der,
     core_radius = params['core_radius']
     b_theta_plasma = splev(core_radius, params['b_theta'])
     epsilon = b_theta_plasma / b_theta_vacuum
-    lambda_bar = 2*b_theta_plasma / (b_z*a)
+    lambda_bar = 2*b_theta_vacuum / (b_z*a)
     delta = xi_der*a / xi
 
     dW = ac.conditions_without_interface(k_bar, lambda_bar, epsilon, m, delta)
