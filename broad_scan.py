@@ -12,25 +12,30 @@ import skin_core_scanner_simple as scss
 
 start_index = 95
 
-lambda_bar_space = [0.01, 6., 40]
-k_bar_space = [0.01, 3., 40]
+lambda_bar_space = [0.01, 3., 50]
+k_bar_space = [0.01, 1.5, 50]
 #for skin_width in np.logspace(np.log10(0.001), np.log10(0.9), 5):
 #    for transition_width in np.logspace(np.log10(0.001),
 #                                        np.log10((1. - skin_width)/2.), 5):
 #        core_radius = 1. - 2.*transition_width - skin_width
 #        for epsilon in np.logspace(np.log10(0.01), np.log10(1.), 5):
 
-skin_widths = np.repeat(np.logspace(np.log10(0.001), np.log10(0.9), 5), 25)
-transition_widths = []
-for skin_width in np.logspace(np.log10(0.001), np.log10(0.9), 5):
-    transition_width = np.logspace(np.log10(0.001),
-                                   np.log10((1. - skin_width)/2.), 5)
-    transition_widths.append(transition_width)
-transition_widths = np.array(transition_widths)
-transition_widths = transition_widths.flatten()
-transition_widths = np.repeat(transition_widths, 5)
+#skin_widths = np.repeat(np.logspace(np.log10(0.001), np.log10(0.1), 30), 5)
+#transition_widths = []
+#for skin_width in np.logspace(np.log10(0.001), np.log10(0.9), 5):
+#    transition_width = np.logspace(np.log10(0.001),
+#                                   np.log10((1. - skin_width)/2.), 5)
+#    transition_widths.append(transition_width)
+#transition_widths = np.array(transition_widths)
+#transition_widths = transition_widths.flatten()
+#transition_widths = np.repeat(transition_widths, 5)
 
-epsilons = np.tile(np.logspace(np.log10(0.01), np.log10(1.), 5), 25)
+
+
+#epsilons = np.tile(np.logspace(np.log10(0.01), np.log10(1.), 5), 25)
+transition_widths = np.logspace(np.log10(0.001), np.log10(0.1), 50)
+skin_widths = np.ones(50) * 0.01
+epsilons = np.tile(np.array([0.1, 0.5]), 25)
 
 skin_widths = skin_widths[start_index:]
 transition_widths = transition_widths[start_index:]
