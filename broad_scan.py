@@ -34,7 +34,7 @@ k_bar_space = [0.01, 1.5, 50]
 
 #epsilons = np.tile(np.logspace(np.log10(0.01), np.log10(1.), 5), 25)
 transition_widths = np.logspace(np.log10(0.001), np.log10(0.1), 50)
-skin_widths = np.ones(50) * 0.01
+skin_widths = np.ones(50) * 0.001
 epsilons = np.tile(np.array([0.1, 0.5]), 25)
 
 skin_widths = skin_widths[start_index:]
