@@ -18,4 +18,4 @@ reload(new)
 								 transition_width_norm=0.033,
 								 skin_width_norm=0.034,
 								 method='lsoda',
-								 max_step=1E-2, nsteps=1000)
+								 max_step=1E-2, nsteps=1000, use_jac=True)
