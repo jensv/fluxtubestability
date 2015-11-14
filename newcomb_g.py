@@ -15,7 +15,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import eigenvalue_goedbloed as eg
 from newcomb_f import f_denom, f_num_wo_r
-import all_f_g
+from numba import jit, float64
 
 
 def jardin_g_8_80(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
@@ -315,7 +315,9 @@ def newcomb_g_18_dimless(r, k, m, b_z, p_prime, q, beta_0, **kwargs):
     return term1 + term2 + term3 + term4 + term5 + term6
 
 
-def newcomb_g_18_dimless_wo_q(r, k, m, b_z, b_theta, p_prime, beta_0, **kwargs):
+#@jit(float64(float64, float64, float64, float64, float64, float64, float64))
+@jit
+def newcomb_g_18_dimless_wo_q(r, k, m, b_z, b_theta, p_prime, beta_0):
     r"""
     Return g from Newcomb's paper in dimensionless form.
 
