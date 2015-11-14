@@ -289,8 +289,8 @@ def intervals_with_singularties(suppress_output, **sing_params):
     if suydam_result.size != 0:
         suydam_stable = False
         if not suppress_output:
+        if sings_wo_0.size > 0 and abs(suydam_result[-1] - sings_wo_0[-1]) < 1e-8:
             print("Profile is Suydam unstable at r =", suydam_result)
-        if sings_wo_0.size > 0 and abs(suydam_result[-1] - sings_wo_0[-1]) < 1e-08:
             suydam_unstable_interval = True
     else:
         suydam_stable = True
