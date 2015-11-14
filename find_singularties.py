@@ -15,10 +15,11 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import numpy as np
 import scipy.optimize as opt
+from scipy.interpolate import splev
 
 
 def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl, offset,
-                          tol):
+                          tol, **kwargs):
     """
     Return list of singular points.
 
@@ -56,17 +57,17 @@ def identify_singularties(a, b, points, k, m, b_z_spl, b_theta_spl, offset,
 
     sign = np.sign(f_relevant_part(r, k, m, b_z_spl, b_theta_spl))
     for i in range(points-1):
-        if np.allclose(sign[i] + sign[i+1], 0.):
+        if abs(sign[i] + sign[i+1]) < 1e-8:
             zero_pos = opt.brentq(f_relevant_part, r[i], r[i+1], args=params)
             zero = f_relevant_part(r[i], k, m, b_z_spl, b_theta_spl)
-            if np.isnan(zero) or abs(zero) > 1e-2:
+            if np.isnan(zero) or abs(zero) > tol:
                 continue
             else:
                 zero_positions.append(zero_pos)
 
     sings = np.array(zero_positions)
 
-    if not sings.size == 0 and sings[0] == 0.:
+    if not sings.size == 0 and abs(sings[0]) < 1e-8:
         sings_wo_0 = np.delete(sings, 0)
     else:
         sings_wo_0 = sings
@@ -110,8 +111,8 @@ def f_relevant_part(r, k, m, b_z_spl, b_theta_spl):
     .. math::
        k r B_{z} + m B_{\theta}
     """
-    b_theta = b_theta_spl(r)
-    b_z = b_z_spl(r)
+    b_theta = splev(r, b_theta_spl)
+    b_z = splev(r, b_z_spl)
     return f_relevant_part_func(r, k, m, b_z, b_theta)
 
 
@@ -148,11 +149,11 @@ def f_relevant_part_func(r, k, m, b_z, b_theta):
     return k*r*b_z + m*b_theta
 
 
-def f_relevant_part_der(r, k, m, b_z_spl, b_theta_spl):
+def f_relevant_part_der(r, k, m, b_z_spl, b_theta_prime_spl):
     r"""
     """
     b_z = b_z_spl(r)
-    b_theta_prime = b_theta_spl.derivative()(r)
+    b_theta_prime = splev(r, b_theta_prime_spl)
     return f_relevant_part_der_func(r, k, m, b_z, b_theta_prime)
 
 
@@ -162,10 +163,10 @@ def f_relevant_part_der_func(r, k, m, b_z, b_theta_prime):
     return k*b_z + m*b_theta_prime
 
 
-def f_relevant_part_der_2(r, m, b_theta_spl):
+def f_relevant_part_der_2(r, m, b_theta_prime_prime_spl):
     r"""
     """
-    b_theta_prime_prime = b_theta_spl.derivative(n=2)(r)
+    b_theta_prime_prime = splev(r, b_theta_prime_prime_spl)
     return f_relevant_part_der_2_func(r, m, b_theta_prime_prime)
 
 

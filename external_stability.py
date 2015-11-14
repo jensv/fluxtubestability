@@ -14,15 +14,16 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatibility"""
 
 import scipy.special as spec
-
+from scipy.interpolate import splev
+import analytic_condition as ac
 
 def external_stability(params, xi, xi_der, dim_less=False):
     r"""
     Returns external external stability and dW.
     """
     a = params['a']
-    b_z = params['b_z'](a)
-    b_theta = params['b_theta'](a)
+    b_z = splev(a, params['b_z'])
+    b_theta = splev(a, params['b_theta'])
     m = params['m']
     k = params['k']
     magnetic_potential_energy_ratio = params['magnetic_potential_energy_ratio']
@@ -98,8 +99,8 @@ def capital_f(a, k, m, b_theta, b_z):
 
 def external_stability_from_notes(params, xi, xi_der, dim_less=False):
     a = params['a']
-    b_z = params['b_z'](a)
-    b_theta = params['b_theta'](a)
+    b_z = splev(a, params['b_z'])
+    b_theta = splev(a, params['b_theta'])
     m = params['m']
     k_bar = params['k']
     magnetic_potential_energy_ratio = params['magnetic_potential_energy_ratio']
@@ -133,3 +134,22 @@ def vacuum_term_from_notes(a, k_bar, m, b_z, b_theta, xi, xi_der):
     term1 = (k_bar*b_z + m*b_theta)**2
     term2 = xi**2/k_bar*k_a/k_a_prime
     return term1*term2
+
+def external_stability_from_analytic_condition(params, xi, xi_der,
+                                               dim_less=False):
+    r"""
+    """
+    a = params['a']
+    b_z = splev(a, params['b_z'])
+    b_theta_vacuum = splev(a, params['b_theta'])
+    m = -params['m']
+    k_bar = params['k']
+    core_radius = params['core_radius']
+    b_theta_plasma = splev(core_radius, params['b_theta'])
+    epsilon = b_theta_plasma / b_theta_vacuum
+    lambda_bar = 2*b_theta_vacuum / (b_z*a)
+    delta = xi_der*a / xi
+
+    dW = ac.conditions_without_interface(k_bar, lambda_bar, epsilon, m, delta)
+    stable = dW > 0
+    return stable, dW

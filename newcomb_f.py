@@ -14,8 +14,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatibility"""
 
 import eigenvalue_goedbloed as eg
-import all_f_g
-
+from numba import jit, float64
 
 
 def newcomb_f_16(r, k, m, b_z, b_theta, **kwargs):
@@ -53,8 +52,8 @@ def newcomb_f_16(r, k, m, b_z, b_theta, **kwargs):
     """
     params_num = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
     params_denom = {'r': r, 'k': k, 'm': m}
-    if type(r) == float:
-        all_f_g.all_f.append([r, r*f_num_wo_r(**params_num)/f_denom(**params_denom)])
+    #if type(r) == float:
+    #    all_f_g.all_f.append([r, r*f_num_wo_r(**params_num)/f_denom(**params_denom)])
     return r*f_num_wo_r(**params_num)/f_denom(**params_denom)
 
 
@@ -121,6 +120,8 @@ def jardin_f_8_78(r, k, m, b_z, b_theta, q):
     return r*b_theta**2*(m - k*q)**2/(k**2*r**2 + m**2)
 
 
+#@jit(float64(float64, float64, float64))
+@jit
 def f_denom(r, k, m):
     r"""
     Return denominator of f from Newcomb's paper.
@@ -150,6 +151,9 @@ def f_denom(r, k, m):
     """
     return k**2*r**2 + m**2
 
+
+#@jit(float64(float64, float64, float64, float64, float64))
+@jit
 def f_num_wo_r(r, k, m, b_z, b_theta):
     r"""
     Return numerator of f without r from Newcomb's paper.
