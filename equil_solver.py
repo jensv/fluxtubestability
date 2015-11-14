@@ -14,7 +14,15 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              str, super, zip)
 """Python 3.x compatability"""
 
+import sys
+sys.path.append('scipy_mod')
+
+import fitpack
+reload(fitpack)
+from fitpack import splev
+
 import numpy as np
+from numpy import atleast_1d
 import sympy as sp
 from collections import OrderedDict
 import scipy.interpolate as interp
@@ -766,7 +774,7 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         """
         b_theta_r_integrator = inte.ode(b_theta_r_prime_func)
         b_theta_r_integrator.set_integrator('lsoda')
-        b_theta_r_integrator.set_f_params(self.splines['j_z'], 1.0)
+        b_theta_r_integrator.set_f_params(self.splines['j_z']._eval_args, 1.0)
         b_theta_r_integrator.set_initial_value(0., t=0.)
         b_theta_integrand_array = np.empty(r.size)
         b_theta_integrand_array[0] = 0.
@@ -812,8 +820,8 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         pressure_integrator = inte.ode(p_prime_func_reverse)
         pressure_integrator.set_integrator('lsoda')
         pressure_integrator.set_initial_value(0., 0.)
-        pressure_integrator.set_f_params(self.splines['j_z'],
-                                         self.splines['b_theta'])
+        pressure_integrator.set_f_params(self.splines['j_z']._eval_args,
+                                         self.splines['b_theta']._eval_args)
         pressure_reverse = np.empty(r.size)
         pressure_reverse[0] = 0.
         r_reverse_diffs = np.cumsum(np.diff(self.r)[::-1])
@@ -1211,17 +1219,21 @@ def b_theta_r_prime_func(r, y, j_z, mu_0):
     r"""
     Return b_theta_r_prime at given r values. To be used for integration.
     """
-    return j_z(r)*r*mu_0
+    r_arr = np.asarray(r)
+    r_arr = atleast_1d(r_arr).ravel()
+    return splev(r_arr, j_z)*r_arr*mu_0
 
 
 def p_prime_func(r, y, j_z, b_theta):
     r"""
     Return pressure_prime at given r values. To be used for integration.
     """
-    return -b_theta(r)*j_z(r)
+    return -splev(r, b_theta)*splev(r, j_z)
 
 def p_prime_func_reverse(r, y, j_z, b_theta):
     r"""
     Return negative pressure_prime at given r values. To be used for reverse integration.
     """
-    return b_theta(1.-r)*j_z(1.-r)
+    r_arr = np.asarray(r)
+    r_arr = atleast_1d(r_arr).ravel()
+    return splev(1.-r_arr, b_theta)*splev(1.-r_arr, j_z)
