@@ -13,9 +13,16 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              str, super, zip)
 """Python 3.x compatibility"""
 
+import sys
+sys.path.append('scipy_mod')
+
+import fitpack
+reload(fitpack)
+from fitpack import splev
+
 import numpy as np
+from numpy import atleast_1d
 import scipy.integrate
-from scipy.interpolate import splev
 
 import newcomb_init as init
 import singularity_frobenius as frob
@@ -23,7 +30,6 @@ import find_singularties as find_sing
 import external_stability as ext
 import newcomb_f as new_f
 import newcomb_g as new_g
-from copy import deepcopy
 
 
 
@@ -207,13 +213,11 @@ def newcomb_der(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
     y_prime = np.zeros(2)
 
     r_arr = np.asarray(r)
+    r_arr = atleast_1d(r_arr).ravel()
 
     g_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r_arr, b_z_spl),
-                'b_z_prime': splev(r_arr, b_z_prime_spl),
                 'b_theta': splev(r_arr, b_theta_spl),
-                'b_theta_prime': splev(r_arr, b_theta_prime_spl),
-                'p_prime': splev(r_arr, p_prime_spl), 'q': splev(r_arr, q_spl),
-                'q_prime': splev(r_arr, q_prime_spl),
+                'p_prime': splev(r_arr, p_prime_spl),
                 'beta_0': beta_0}
 
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r_arr, b_z_spl),
@@ -231,13 +235,10 @@ def newcomb_jac(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
     Jacobian
     """
     r_arr = np.asarray(r)
-
+    r_arr = atleast_1d(r_arr).ravel()
     g_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r_arr, b_z_spl),
-                'b_z_prime': splev(r_arr, b_z_prime_spl),
                 'b_theta': splev(r_arr, b_theta_spl),
-                'b_theta_prime': splev(r_arr, b_theta_prime_spl),
-                'p_prime': splev(r_arr, p_prime_spl), 'q': splev(r_arr, q_spl),
-                'q_prime': splev(r_arr, q_prime_spl),
+                'p_prime': splev(r_arr, p_prime_spl),
                 'beta_0': beta_0}
 
     f_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r_arr, b_z_spl),
@@ -260,8 +261,10 @@ def divide_by_f(r, xi_der_f, k, m, b_z_spl, b_theta_spl, q_spl, f_func):
     r"""
     Divides :math:`y[1]=f \xi'` by f to recover :math:`\xi`.
     """
-    f_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r, b_z_spl),
-                'b_theta': splev(r, b_theta_spl), 'q': splev(r, q_spl)}
+    r_arr = np.asarray(r)
+    r_arr = atleast_1d(r_arr).ravel()
+    f_params = {'r': r, 'k': k, 'm': m, 'b_z': splev(r_arr, b_z_spl),
+                'b_theta': splev(r_arr, b_theta_spl), 'q': splev(r_arr, q_spl)}
     return xi_der_f / f_func(**f_params)
 
 
@@ -287,7 +290,7 @@ def intervals_with_singularties(suppress_output, **sing_params):
         suydam_stable = False
         if not suppress_output:
             print("Profile is Suydam unstable at r =", suydam_result)
-        if sings_wo_0.size > 0 and np.allclose(suydam_result[-1], sings_wo_0[-1]):
+        if sings_wo_0.size > 0 and abs(suydam_result[-1] - sings_wo_0[-1]) < 1e-08:
             suydam_unstable_interval = True
     else:
         suydam_stable = True
@@ -304,10 +307,12 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
         interval[0] += offset
         if interval[0] > interval[1]:
             interval[0] = interval[1]
-        init_params = deepcopy(params)
-        init_params.update({'b_z': splev(interval[0], params['b_z']),
-                            'b_theta': splev(interval[0], params['b_theta']),
-                            'q': splev((interval[0]), params['q'])})
+        init_params = dict(params)
+        r_arr = np.asarray(interval[0])
+        r_arr = atleast_1d(r_arr).ravel()
+        init_params.update({'b_z': splev(r_arr, params['b_z']),
+                            'b_theta': splev(r_arr, params['b_theta']),
+                            'q': splev(r_arr, params['q'])})
         init_value = init.init_geometric_sing(interval[0], **init_params)
     else:
         if starts_with_sing:
@@ -322,18 +327,20 @@ def setup_initial_conditions(interval, starts_with_sing, offset,
                            'beta_0': params['beta_0'], 'r_sing': interval[0]}
             xi_given = frob.sing_small_solution(**frob_params)
             interval[0] += suydam_offset
-            init_params = deepcopy(params)
-            init_params.update({'b_z': splev(interval[0], params['b_z']),
-                                'b_theta': splev(interval[0], params['b_theta']),
-                                'q': splev(interval[0], params['q'])})
-            init_value = init.init_xi_given(xi_given, interval[0], **init_params)
+            init_params = dict(params)
+            r_arr = np.asarray(interval[0])
+            r_arr = atleast_1d(r_arr).ravel()
+            init_params.update({'b_z': splev(r_arr, params['b_z']),
+                                'b_theta': splev(r_arr, params['b_theta']),
+                                'q': splev(r_arr, params['q'])})
+            init_value = init.init_xi_given(xi_given, r_arr, **init_params)
 
         else:
-            init_params = deepcopy(params)
+            init_params = dict(params)
             init_params.pop('r')
-            init_params.update({'b_z': splev(interval[0], params['b_z']),
-                                'b_theta': splev(interval[0], params['b_theta']),
-                                'q': splev((interval[0]), params['q'])})
+            init_params.update({'b_z': splev(r_arr, params['b_z']),
+                                'b_theta': splev(r_arr, params['b_theta']),
+                                'q': splev(r_arr, params['q'])})
             init_value = init.init_xi_given(xi_given, interval[0], **init_params)
     return interval, init_value
 
