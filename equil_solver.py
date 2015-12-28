@@ -16,6 +16,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import sys
 sys.path.append('scipy_mod')
+sys.path.append('../scipy_mod')
 
 import fitpack
 reload(fitpack)
