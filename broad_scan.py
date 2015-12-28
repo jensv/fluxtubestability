@@ -4,7 +4,7 @@ Created on Sun Oct 25 19:43:13 2015
 
 @author: jensv
 
-Do a broad scan of skin geometry, epsilo, and spline knots.
+Do a broad scan of skin geometry, epsilon, and spline knots.
 """
 
 import numpy as np
