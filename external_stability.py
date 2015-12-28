@@ -136,20 +136,30 @@ def vacuum_term_from_notes(a, k_bar, m, b_z, b_theta, xi, xi_der):
     return term1*term2
 
 def external_stability_from_analytic_condition(params, xi, xi_der,
+                                               without_sing=False,
                                                dim_less=False):
     r"""
+    Returns delta_w as given in the analytic condition.
+
+    Optionally remove sing.
+
+    Note
+    ----
+    When xi goes to zero, this condition is singular due to the delta=xi'/xi
+    term.
     """
     a = params['a']
     b_z = splev(a, params['b_z'])
     b_theta_vacuum = splev(a, params['b_theta'])
     m = -params['m']
     k_bar = params['k']
-    core_radius = params['core_radius']
-    b_theta_plasma = splev(core_radius, params['b_theta'])
-    epsilon = b_theta_plasma / b_theta_vacuum
     lambda_bar = 2*b_theta_vacuum / (b_z*a)
     delta = xi_der*a / xi
 
-    dW = ac.conditions_without_interface(k_bar, lambda_bar, epsilon, m, delta)
+    if without_sing:
+        dW = ac.conditions_without_interface_wo_sing(k_bar, lambda_bar, m, xi,
+                                                     xi_der, a)
+    else:
+        dW = ac.conditions_without_interface(k_bar, lambda_bar, m, delta)
     stable = dW > 0
     return stable, dW

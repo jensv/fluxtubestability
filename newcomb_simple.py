@@ -288,9 +288,9 @@ def intervals_with_singularties(suppress_output, **sing_params):
     suydam_result = check_suydam(sings_wo_0, **sing_params)
     if suydam_result.size != 0:
         suydam_stable = False
-        if not suppress_output:
         if sings_wo_0.size > 0 and abs(suydam_result[-1] - sings_wo_0[-1]) < 1e-8:
-            print("Profile is Suydam unstable at r =", suydam_result)
+            if not suppress_output:
+                print("Profile is Suydam unstable at r =", suydam_result)
             suydam_unstable_interval = True
     else:
         suydam_stable = True
@@ -477,6 +477,7 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
          delta_w) = ext.external_stability_from_analytic_condition(params,
                                                                    xi[-1],
                                                                    xi_der[-1],
+                                                                   without_sing=True,
                                                                    dim_less=True)
         #print(delta_w)
     else:

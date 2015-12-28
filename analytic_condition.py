@@ -25,12 +25,23 @@ def conditions(k_bar, lambda_bar, epsilon, m, delta):
     return term1 + term2 - term3
 
 
-def conditions_without_interface(k_bar, lambda_bar, epsilon, m, delta):
+def conditions_without_interface(k_bar, lambda_bar, m, delta):
     r"""
     Return analytic stability condition minus interface term (term2).
     """
-    term1 = conditions_smooth_plasma_term(k_bar, lambda_bar, epsilon, m, delta)
-    term3 = conditions_vacuum_term(k_bar, lambda_bar, epsilon, m, delta)
+    term1 = conditions_smooth_plasma_term(k_bar, lambda_bar, m, delta)
+    term3 = conditions_vacuum_term(k_bar, lambda_bar, m, delta)
+    return term1 - term3
+
+
+def conditions_without_interface_wo_sing(k_bar, lambda_bar, m, xi,
+                                         xi_der, a):
+    r"""
+    Multiply analytic expression with xi squared to avoid singularity.
+    """
+    term1 = conditions_smooth_plasma_term_wo_sing(k_bar, lambda_bar,
+                                                  m, xi, xi_der, a)
+    term3 = conditions_vacuum_term_wo_sing(k_bar, lambda_bar, m, xi)
     return term1 - term3
 
 
@@ -44,7 +55,19 @@ def conditions_plasma_term(k_bar, lambda_bar, epsilon, m, delta):
     return term1
 
 
-def conditions_smooth_plasma_term(k_bar, lambda_bar, epsilon, m, delta):
+def conditions_smooth_plasma_term_wo_sing(k_bar, lambda_bar, m, xi,
+                                          xi_der, a):
+    r"""
+    Multiply analytic expression with xi squared to avoid singularity.
+    """
+    epsilon = 1.
+    term1 = (2.*k_bar - m*epsilon*lambda_bar)*((xi_der*a*xi + xi**2)*2.*k_bar -
+                                               (xi_der*a*xi - xi**2)*m*epsilon*
+                                               lambda_bar)/(k_bar**2 + m**2)
+    return term1
+
+
+def conditions_smooth_plasma_term(k_bar, lambda_bar, m, delta):
     r"""
     Returns plasma term of analytic condition with epsilon set to 1. This
     should be relvant for a profile that smoothly foes to zero current,
@@ -63,12 +86,21 @@ def conditions_interface_term(k_bar, lambda_bar, epsilon, m, delta):
     return term2
 
 
-def conditions_vacuum_term(k_bar, lambda_bar, epsilon, m, delta):
+def conditions_vacuum_term(k_bar, lambda_bar, m, delta):
     r"""
     Returns vacuum term of analytic stability condition.
     """
     term3 = (m*lambda_bar - 2.*k_bar)**2/k_bar*(kv(m, np.abs(k_bar)) /
                                                 kvp(m, np.abs(k_bar)))
+    return term3
+
+
+def conditions_vacuum_term_wo_sing(k_bar, lambda_bar, m, xi):
+    r"""
+    Multiply analytic expression with xi squared to avoid singularity.
+    """
+    term3 = xi**2 * (m*lambda_bar - 2.*k_bar)**2/k_bar*(kv(m, np.abs(k_bar)) /
+                                                     kvp(m, np.abs(k_bar)))
     return term3
 
 
