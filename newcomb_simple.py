@@ -37,7 +37,8 @@ def stability(params, offset, suydam_offset, suppress_output=False,
               method='lsoda', rtol=None, max_step=None, nsteps=None,
               xi_given=[0., 1.], diagnose=False, sing_search_points=10000,
               f_func=new_f.newcomb_f_16, g_func=new_g.newcomb_g_18_dimless_wo_q,
-              skip_external_stability=False, stiff=False, use_jac=True):
+              skip_external_stability=False, stiff=False, use_jac=True,
+              adapt_step_size=False):
     r"""
     Determine external stability.
 
@@ -129,22 +130,22 @@ def stability(params, offset, suydam_offset, suppress_output=False,
 
     if not suydam_unstable_interval:
         if skip_external_stability:
-            (xi, xi_der) = newcomb_int(params, interval,
-                                       init_value, method,
-                                       diagnose, max_step,
-                                       nsteps, rtol,
-                                       skip_external_stability=True,
-                                       stiff=stiff,
-                                       use_jac=use_jac)
+            (xi, xi_der, r_array) = newcomb_int(params, interval,
+                                                init_value, method,
+                                                diagnose, max_step,
+                                                nsteps, rtol,
+                                                skip_external_stability=True,
+                                                stiff=stiff,
+                                                use_jac=use_jac,
+                                                adapt_step_size=adapt_step_size)
             return xi, xi_der
 
         (stable_external, delta_w,
-         missing_end_params, xi, xi_der) = newcomb_int(params, interval,
-                                                       init_value, method,
-                                                       diagnose, max_step,
-                                                       nsteps, rtol,
-                                                       stiff=stiff,
-                                                       use_jac=use_jac)
+         missing_end_params, xi, xi_der,
+         r_array) = newcomb_int(params, interval, init_value, method,
+                                diagnose, max_step, nsteps, rtol,
+                                stiff=stiff, use_jac=use_jac,
+                                adapt_step_size=adapt_step_size)
     else:
         if not suppress_output:
             msg = ("Last singularity is suydam unstable." +
@@ -156,7 +157,7 @@ def stability(params, offset, suydam_offset, suppress_output=False,
         xi = np.asarray([np.nan])
         xi_der = np.asarray([np.nan])
     return (stable_external, suydam_stable, delta_w, missing_end_params, xi,
-            xi_der)
+            xi_der, r_array)
 
 
 def newcomb_der(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
@@ -378,88 +379,109 @@ def check_suydam(r, b_z_spl, b_z_prime_spl, b_theta_spl, b_theta_prime_spl,
 
 def newcomb_int(params, interval, init_value, method, diagnose, max_step,
                 nsteps, rtol, skip_external_stability=False, stiff=False,
-                use_jac=True):
+                use_jac=True, adapt_step_size=False):
     r"""
     Integrates newcomb's euler Lagrange equation in a given interval with lsoda
     either with the scipy.ode object oriented interface or with scipy.odeint.
     """
     missing_end_params = None
     #print('k_bar', params['k'], 'interval:', interval[0], interval[1], init_value)
-    if diagnose:
-        r_array = np.linspace(interval[0], interval[1], 250)
-    else:
-        r_array = np.asarray(interval)
     args = (params['k'], params['m'], params['b_z'], params['b_z_prime'],
             params['b_theta'], params['b_theta_prime'], params['p_prime'],
             params['q'], params['q_prime'], params['f_func'], params['g_func'],
             params['beta_0'])
 
-    if method == 'lsoda_odeint':
-        if 'core_radius' in params.keys():
-            transition_points = np.asarray([params['core_radius'],
-                                            params['core_radius'] +
-                                            params['transition_width'],
-                                            params['core_radius'] +
-                                            params['transition_width'] +
-                                            params['skin_width']])
-            tcrit = np.asarray(transition_points[np.less(interval[0], transition_points)])
-        else:
-            tcrit = None
-
-        integrator_args = {}
-        if rtol is not None:
-            integrator_args['rtol'] = rtol
-        if nsteps is not None:
-            integrator_args['mxstep'] = nsteps
-        if max_step is not None:
-            integrator_args['hmax'] = max_step
-        if use_jac:
-            results = scipy.integrate.odeint(newcomb_der_for_odeint,
-                                             np.asarray(init_value),
-                                             np.asarray(r_array),
-                                             Dfun=newcomb_jac,
-                                             tcrit=tcrit,
-                                             args=args,
-                                             **integrator_args)
-        else:
-            results = scipy.integrate.odeint(newcomb_der_for_odeint,
-                                             np.asarray(init_value),
-                                             np.asarray(r_array),
-                                             tcrit=tcrit,
-                                             args=args,
-                                             **integrator_args)
-        xi = np.asarray([results[:,0]]).ravel()
-        xi_der_f = np.asarray([results[:,1]]).ravel()
+    if adapt_step_size:
+        interval_list = [interval]
+        max_step_list = [10.**(np.floor(np.log10(1 - params['core_radius']))-1)]
+        nsteps_list = [10.**(np.abs(np.log10(max_step_list[0]))+5) * (1 - params['core_radius'])]
+        if interval[0] < params['core_radius']:
+            interval_list.insert(0, [interval[0], params['core_radius']])
+            interval_list[1] = [params['core_radius'], interval[1]]
+            max_step_list.insert(0, max_step)
+            nsteps_list.insert(0, nsteps)
     else:
-        if use_jac:
-            integrator = scipy.integrate.ode(newcomb_der, jac=newcomb_jac)
+        interval_list = [interval]
+        max_step_list = [max_step]
+        nsteps_list = [nsteps]
+
+
+    for i, interval in enumerate(interval_list):
+        max_step = max_step_list[i]
+        nsteps = nsteps_list[i]
+        if diagnose:
+            r_array = np.linspace(interval[0], interval[1], 250)
         else:
-            integrator = scipy.integrate.ode(newcomb_der)
+            r_array = np.asarray(interval)
 
-        integrator_args = {}
-        if rtol is not None:
-            integrator_args['rtol'] = rtol
-        if nsteps is not None:
-            integrator_args['nsteps'] = nsteps
-        if max_step is not None:
-            integrator_args['max_step'] = max_step
-        if stiff:
-            integrator_args['method'] = 'bdf'
 
-        integrator.set_integrator(method, **integrator_args)
-        integrator.set_f_params(*args)
-        integrator.set_jac_params(*args)
-        integrator.set_initial_value(init_value, interval[0])
-        results = np.empty((r_array.size, 2))
-        results[0] = init_value
-        for i, r in enumerate(r_array[1:]):
-            integrator.integrate(r)
-            results[i+1, :] = integrator.y
-            if not integrator.successful():
-                results[i+1:, :] = [np.nan, np.nan]
-                break
-        xi = results[:, 0]
-        xi_der_f = results[:, 1]
+        if method == 'lsoda_odeint':
+            if 'core_radius' in params.keys():
+                transition_points = np.asarray([params['core_radius'],
+                                                params['core_radius'] +
+                                                params['transition_width'],
+                                                params['core_radius'] +
+                                                params['transition_width'] +
+                                                params['skin_width']])
+                tcrit = np.asarray(transition_points[np.less(interval[0], transition_points)])
+            else:
+                tcrit = None
+
+            integrator_args = {}
+            if rtol is not None:
+                integrator_args['rtol'] = rtol
+            if nsteps is not None:
+                integrator_args['mxstep'] = nsteps
+            if max_step is not None:
+                integrator_args['hmax'] = max_step
+            if use_jac:
+                results = scipy.integrate.odeint(newcomb_der_for_odeint,
+                                                 np.asarray(init_value),
+                                                 np.asarray(r_array),
+                                                 Dfun=newcomb_jac,
+                                                 tcrit=tcrit,
+                                                 args=args,
+                                                 **integrator_args)
+            else:
+                results = scipy.integrate.odeint(newcomb_der_for_odeint,
+                                                 np.asarray(init_value),
+                                                 np.asarray(r_array),
+                                                 tcrit=tcrit,
+                                                 args=args,
+                                                 **integrator_args)
+            xi = np.asarray([results[:, 0]]).ravel()
+            xi_der_f = np.asarray([results[:, 1]]).ravel()
+        else:
+            if use_jac:
+                integrator = scipy.integrate.ode(newcomb_der, jac=newcomb_jac)
+            else:
+                integrator = scipy.integrate.ode(newcomb_der)
+
+            integrator_args = {}
+            if rtol is not None:
+                integrator_args['rtol'] = rtol
+            if nsteps is not None:
+                integrator_args['nsteps'] = nsteps
+            if max_step is not None:
+                integrator_args['max_step'] = max_step
+            if stiff:
+                integrator_args['method'] = 'bdf'
+
+            integrator.set_integrator(method, **integrator_args)
+            integrator.set_f_params(*args)
+            integrator.set_jac_params(*args)
+            integrator.set_initial_value(init_value, interval[0])
+            results = np.empty((r_array.size, 2))
+            results[0] = init_value
+            for i, r in enumerate(r_array[1:]):
+                integrator.integrate(r)
+                results[i+1, :] = integrator.y
+                if not integrator.successful():
+                    results[i+1:, :] = [np.nan, np.nan]
+                    break
+            xi = results[:, 0]
+            xi_der_f = results[:, 1]
+        init_value = [xi[-1], xi_der_f[-1]]
 
     xi_der = divide_by_f(r_array,
                          xi_der_f,
@@ -472,7 +494,7 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
 
     if np.all(np.isfinite(results[-1])):
         if skip_external_stability:
-            return  xi, xi_der
+            return xi, xi_der, r_array
         (stable_external,
          delta_w) = ext.external_stability_from_analytic_condition(params,
                                                                    xi[-1],
@@ -487,4 +509,4 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
         missing_end_params = params
         stable_external = None
         delta_w = None
-    return (stable_external, delta_w, missing_end_params, xi, xi_der)
+    return (stable_external, delta_w, missing_end_params, xi, xi_der, r_array)
