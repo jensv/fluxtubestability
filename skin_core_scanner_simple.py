@@ -24,6 +24,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                         rtol=None, max_step=1E-2,
                         nsteps=1000, method='lsoda', suppress_output=True,
                         diagnose=False, stiff=False, use_jac=True,
+                        adapt_step_size=True,
                         **kwargs):
     r"""
     Scans space given by lambda_a_space and k_a_space for m=0, 1 stability and
@@ -55,7 +56,7 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                       'suydam': deepcopy(sub_stability_maps)}
 
     for i, lambda_a in enumerate(lambda_a_points):
-        print('lambda_bar:', lambda_a)
+        print('lambda_bar = %.3f' % lambda_a)
         for j, k_a in enumerate(k_a_points):
             for m in [-1, 0]:
                 profile = es.UnitlessSmoothedCoreSkin(k_bar=k_a,
@@ -84,7 +85,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                                         rtol=rtol, max_step=max_step,
                                         nsteps=nsteps, method=method,
                                         diagnose=diagnose, stiff=stiff,
-                                        use_jac=use_jac)
+                                        use_jac=use_jac,
+                                        adapt_step_size=adapt_step_size)
                 stable_external = results[0]
                 stable_suydam = results[1]
                 delta_w = results[2]
