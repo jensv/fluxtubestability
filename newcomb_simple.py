@@ -147,15 +147,15 @@ def stability(params, offset, suydam_offset, suppress_output=False,
                                 stiff=stiff, use_jac=use_jac,
                                 adapt_step_size=adapt_step_size)
     else:
-        if not suppress_output:
-            msg = ("Last singularity is suydam unstable." +
-                   "Unable to deterime external instability")
-            print(msg)
-            print(params['k'])
+        msg = ("Last singularity is suydam unstable. " +
+               "Unable to deterime external instability at k = %.3f."
+               % params['k'])
+        print(msg)
         delta_w = None
         stable_external = None
         xi = np.asarray([np.nan])
         xi_der = np.asarray([np.nan])
+        r_array = np.asarray([np.nan])
     return (stable_external, suydam_stable, delta_w, missing_end_params, xi,
             xi_der, r_array)
 
@@ -504,7 +504,8 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
         #print(delta_w)
     else:
         msg = ("Integration to plasma edge did not succeed. " +
-               "Can not determine external stability.")
+               "Can not determine external stability at k = %.3f."
+               % params['k'])
         print(msg)
         missing_end_params = params
         stable_external = None
