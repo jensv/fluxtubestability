@@ -38,7 +38,7 @@ def stability(params, offset, suydam_offset, suppress_output=False,
               xi_given=[0., 1.], diagnose=False, sing_search_points=10000,
               f_func=new_f.newcomb_f_16, g_func=new_g.newcomb_g_18_dimless_wo_q,
               skip_external_stability=False, stiff=False, use_jac=True,
-              adapt_step_size=False):
+              adapt_step_size=False, adapt_min_steps=500):
     r"""
     Determine external stability.
 
@@ -137,7 +137,8 @@ def stability(params, offset, suydam_offset, suppress_output=False,
                                                 skip_external_stability=True,
                                                 stiff=stiff,
                                                 use_jac=use_jac,
-                                                adapt_step_size=adapt_step_size)
+                                                adapt_step_size=adapt_step_size,
+                                                adapt_min_steps=adapt_min_steps)
             return xi, xi_der
 
         (stable_external, delta_w,
@@ -145,7 +146,8 @@ def stability(params, offset, suydam_offset, suppress_output=False,
          r_array) = newcomb_int(params, interval, init_value, method,
                                 diagnose, max_step, nsteps, rtol,
                                 stiff=stiff, use_jac=use_jac,
-                                adapt_step_size=adapt_step_size)
+                                adapt_step_size=adapt_step_size,
+                                adapt_min_steps=adapt_min_steps)
     else:
         msg = ("Last singularity is suydam unstable. " +
                "Unable to deterime external instability at k = %.3f."
@@ -379,7 +381,7 @@ def check_suydam(r, b_z_spl, b_z_prime_spl, b_theta_spl, b_theta_prime_spl,
 
 def newcomb_int(params, interval, init_value, method, diagnose, max_step,
                 nsteps, rtol, skip_external_stability=False, stiff=False,
-                use_jac=True, adapt_step_size=False):
+                use_jac=True, adapt_step_size=False, adapt_min_steps=500):
     r"""
     Integrates newcomb's euler Lagrange equation in a given interval with lsoda
     either with the scipy.ode object oriented interface or with scipy.odeint.
@@ -394,7 +396,9 @@ def newcomb_int(params, interval, init_value, method, diagnose, max_step,
     if adapt_step_size:
         interval_list = [interval]
         max_step_list = [10.**(np.floor(np.log10(1 - params['core_radius']))-1)]
-        nsteps_list = [10.**(np.abs(np.log10(max_step_list[0]))+5) * (1 - params['core_radius'])]
+        nsteps_for_list = 10.**(np.abs(np.log10(max_step_list[0]))+.5) * (1 - params['core_radius'])
+        nsteps_for_list = adapt_min_steps if nsteps_for_list < adapt_min_steps else nsteps_for_list
+        nsteps_list = [nsteps_for_list]
         if interval[0] < params['core_radius']:
             interval_list.insert(0, [interval[0], params['core_radius']])
             interval_list[1] = [params['core_radius'], interval[1]]
