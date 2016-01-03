@@ -21,7 +21,7 @@ def conditions(k_bar, lambda_bar, epsilon, m, delta):
     """
     term1 = conditions_plasma_term(k_bar, lambda_bar, epsilon, m, delta)
     term2 = conditions_interface_term(k_bar, lambda_bar, epsilon, m, delta)
-    term3 = conditions_vacuum_term(k_bar, lambda_bar, epsilon, m, delta)
+    term3 = conditions_vacuum_term(k_bar, lambda_bar, m, delta)
     return term1 + term2 - term3
 
 
