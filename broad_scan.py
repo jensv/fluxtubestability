@@ -33,8 +33,8 @@ k_bar_space = [0.01, 1.5, 50]
 
 
 #epsilons = np.tile(np.logspace(np.log10(0.01), np.log10(1.), 5), 25)
-transition_widths = np.logspace(np.log10(0.001), np.log10(0.4), 50)
-skin_widths = np.ones(50) * 0.001
+transition_widths = np.linspace(0.01, 0.4, 50)
+skin_widths = np.ones(50) * 0.01
 epsilons = np.tile(np.array([0.1, 0.5]), 25)
 
 skin_widths = skin_widths[start_index:]
@@ -61,4 +61,4 @@ for i in xrange(skin_widths.size):
                              core_radius_norm=core_radius,
                              epsilon=epsilon,
                              points_core=250, points_skin=250, points_transition=250,
-                             method='losda', use_jac=True, adapt_step_size=True)
+                             method='lsoda', use_jac=True, adapt_step_size=True)
