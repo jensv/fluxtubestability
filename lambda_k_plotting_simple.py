@@ -364,11 +364,14 @@ def single_analytic_comparison(mode_to_plot,
     return cs
 
 def analytic_comparison(mode_to_plot, k_bar_mesh, lambda_bar_mesh, epsilon,
-                        label_pos):
+                        label_pos, lines=None):
     r"""
     Add red lines indicating stability boundaries from analytical model.
     """
-    line_labels = FixedFormatter(['-1', '0', '1'])
+    if not lines:
+        line_labels = FixedFormatter(['-1', '0', '1'])
+    else:
+        line_labels = FixedFormatter([str(line) for line in lines])
 
     assert (mode_to_plot == 'm_neg_1' or
             mode_to_plot == 'm_0'), ("Please specify mode_to_plot as either" +
@@ -381,13 +384,20 @@ def analytic_comparison(mode_to_plot, k_bar_mesh, lambda_bar_mesh, epsilon,
         m = 0
         color = 'red'
 
-
-    stability_kink_m_neg_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
-                                           epsilon, m, -1.)
-    stability_kink_m_0 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
-                                       epsilon, m, 0.)
-    stability_kink_m_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
-                                       epsilon, m, 1)
+    if not lines:
+        stability_kink_m_neg_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
+                                               epsilon, m, -1.)
+        stability_kink_m_0 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
+                                           epsilon, m, 0.)
+        stability_kink_m_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
+                                           epsilon, m, 1)
+    else:
+        stability_kink_m_neg_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
+                                               epsilon, m, lines[0])
+        stability_kink_m_0 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
+                                           epsilon, m, lines[1])
+        stability_kink_m_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
+                                           epsilon, m, lines[2])
 
 
     stability_kink = stability_kink_m_neg_1 < 0
@@ -396,19 +406,24 @@ def analytic_comparison(mode_to_plot, k_bar_mesh, lambda_bar_mesh, epsilon,
     stability_kink[stability_kink_m_neg_1 < 0] = -0.5
     stability_kink[stability_kink_m_0 < 0] = 0.5
     stability_kink[stability_kink_m_1 < 0] = 1.5
-
     cs = plt.contour(lambda_bar_mesh, k_bar_mesh, stability_kink,
                      levels=[-1, 0, 1], colors=color, linewidths=10,
                      linestyles='dotted')
 
-    plt.clabel(cs, fmt={-1: r'$\delta = -1$', 0: r'$\delta = 0$',
-                        1: r'$\delta = 1$'}, fontsize=40, manual=label_pos)
+    if not lines:
+        plt.clabel(cs, fmt={-1: r'$\delta = -1$', 0: r'$\delta = 0$',
+                             1: r'$\delta = 1$'}, fontsize=40, manual=label_pos)
+    else:
+       plt.clabel(cs, fmt={-1: r'$\delta =$ %' % lines[0], 0: r'$\delta =$ %' % lines[1],
+                           1: r'$\delta =$ %' % lines[2]}, fontsize=40, manual=label_pos)
     return cs
 
 def plot_lambda_k_space_delta(filename, mode_to_plot,
                               clip=False, delta_min=-1.5,
                               delta_max=1., levels=None,
-                              interpolate=True):
+                              interpolate=True, compare_analytic=False,
+                              epsilon=None, analytic_label_pos=None, lines=None,
+                              plot_numeric_boundary=False):
     r"""
     Plot values of delta in lambda k space.
     """
@@ -420,16 +435,17 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
     if mode_to_plot == 0:
         color = 'green'
         delta_mesh = data_meshes['delta_m_0']
+        external_sausage = data_meshes['d_w_m_0']
     else:
         #color = sns.xkcd_rgb["dandelion"]
         color = 'green'
         delta_mesh = data_meshes['delta_m_neg_1']
+        external_kink = data_meshes['d_w_m_neg_1']
 
     if interpolate:
         delta_mesh = interpolate_nans(lambda_mesh,
                                       k_mesh,
-                                      delta_mesh
-                                      )
+                                      delta_mesh)
 
 
     if clip:
@@ -445,7 +461,7 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
         plt.contourf(lambda_mesh, k_mesh, delta_mesh, cmap=colors)
 
     cbar = plt.colorbar(label=r'$\delta$')
-    cbar.set_label(label=r'$\delta$', size=45, rotation=0, labelpad=30)
+    cbar.set_label(label=r'$\delta(\bar{\lambda},\bar{k})$', size=45, rotation=0, labelpad=30)
 
     if levels:
         contourlines = plt.contour(lambda_mesh, k_mesh, delta_mesh,
@@ -456,8 +472,26 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
 
     cbar.add_lines(contourlines)
 
-    plt.ylim(0.01, 1.5)
-    plt.xlim(0.01, 3.0)
+
+    if mode_to_plot == 0:
+        mode_to_plot = 'm_0'
+    else:
+        mode_to_plot = 'm_neg_1'
+
+    if compare_analytic:
+        analytic_comparison(mode_to_plot, k_mesh, lambda_mesh, epsilon,
+                            analytic_label_pos, lines=lines)
+
+
+    if plot_numeric_boundary:
+        contour = plt.contour(lambda_mesh,
+                              k_mesh,
+                              external_sausage,
+                              levels=[0],
+                              colors='black')
+
+
+
     axes = plt.gca()
     axes.set_axis_bgcolor(sns.xkcd_rgb['grey'])
     plt.setp(axes.get_xticklabels(), fontsize=40)
@@ -465,5 +499,10 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
     plt.ylabel(r'$\bar{k}$', fontsize=45, rotation='horizontal', labelpad=30)
     plt.xlabel(r'$\bar{\lambda}$', fontsize=45)
     cbar.ax.tick_params(labelsize=40)
+    axes.set_xticks(np.arange(0., 5, 1.))
+    axes.set_yticks(np.arange(0., 2.0, 0.5))
+
+    plt.ylim(0.01, 1.5)
+    plt.xlim(0.01, 3.0)
     sns.despine(ax=axes)
     plt.tight_layout()
