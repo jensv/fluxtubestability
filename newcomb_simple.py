@@ -127,7 +127,6 @@ def stability(params, offset, suydam_offset, suppress_output=False,
                                                     offset, suydam_offset,
                                                     xi_given=xi_given,
                                                     **params)
-
     if not suydam_unstable_interval:
         if skip_external_stability:
             (xi, xi_der, r_array) = newcomb_int(params, interval,
