@@ -71,7 +71,7 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
         values = values / -np.nanmin(values)
         values = np.clip(values, -1., 1.)
     else:
-        values = values / -np.nanmin(values)
+        values = values
 
     if levels:
         if log:
