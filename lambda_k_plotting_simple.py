@@ -524,3 +524,50 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
     plt.xlim(0.01, 3.0)
     sns.despine(ax=axes)
     plt.tight_layout()
+
+def sausage_kink_ratio(filename, xy_limits=None):
+    r"""
+    Plot ratio of sausage and kink potential energies.
+    """
+    meshes = np.load(filename)
+    lambda_bar_mesh = meshes['lambda_a_mesh']
+    k_bar_mesh = meshes['k_a_mesh']
+    external_m_neg_1 = meshes['d_w_m_neg_1']
+    external_sausage = meshes['d_w_m_0']
+    meshes.close()
+
+    sausage_stable_region = np.invert((external_sausage < 0))
+    ratio = np.abs(external_sausage / external_m_neg_1)
+    ratio[sausage_stable_region] = np.nan
+    ratio_log = np.log10(ratio)
+
+    cmap = sns.light_palette(sns.xkcd_rgb['red orange'],
+                             as_cmap=True)
+    contours = plt.contourf(lambda_bar_mesh, k_bar_mesh,
+                 ratio_log, cmap=cmap)
+
+    colorbar = plt.colorbar(format=FormatStrFormatter(r'$10^{%i}$'))
+    colorbar.set_label(r'$\frac{\delta W_{m=0}}{\delta W_{m=-1}}$',
+                       size=35, rotation=0, labelpad=50)
+    lines = plt.contour(lambda_bar_mesh, k_bar_mesh,
+                        ratio_log, colors='grey')
+    colorbar.add_lines(lines)
+
+    if xy_limits:
+        plt.ylim((xy_limits[0], xy_limits[1]))
+        plt.xlim((xy_limits[2], xy_limits[2]))
+
+    axes = plt.gca()
+    axes.plot([0, 3.], [0., 1.5], '--', c='black', lw=5)
+    axes.set_xlabel(r'$\bar{\lambda}$', fontsize=40)
+    plt.setp(axes.get_xticklabels(), fontsize=30)
+    axes.set_xticks(np.arange(0., 4, 1.))
+
+    axes.set_ylabel(r'$\bar{k}$', fontsize=40)
+    plt.setp(axes.get_yticklabels(), fontsize=30)
+    axes.set_yticks(np.arange(0., 2.0, 0.5))
+
+    sns.despine()
+    colorbar.ax.yaxis.set_ticks_position('right')
+
+    plt.show()
