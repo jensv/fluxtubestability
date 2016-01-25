@@ -31,7 +31,8 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
                            analytic_compare=False,
                            label_pos=((0.5, 0.4), (2.1, 0.4), (2.8, 0.2)),
                            delta_values=[-1,0,1],
-                           interpolate=False):
+                           interpolate=False,
+                           cmap=None):
     r"""
     Plot the delta_w of external instabilities in the lambda-k space.
     """
@@ -51,8 +52,14 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
     kink_pal = sns.diverging_palette(73, 182, s=72, l=85, sep=1, n=9, as_cmap=True)
     sausage_pal = sns.blend_palette(['orange', 'white'], 7, as_cmap=True)
     sausage_pal = sns.diverging_palette(49, 181, s=99, l=78, sep=1, n=9, as_cmap=True)
-    instability_palette = {'m_0': sausage_pal,
-                           'm_neg_1': kink_pal}
+
+    if cmap:
+        instability_palette = {'m_0': cmap,
+                               'm_neg_1': cmap}
+    else:
+        instability_palette = {'m_0': sausage_pal,
+                               'm_neg_1': kink_pal}
+
 
 
 
@@ -382,7 +389,7 @@ def single_analytic_comparison(mode_to_plot,
     return cs
 
 def analytic_comparison(mode_to_plot, k_bar_mesh, lambda_bar_mesh, epsilon,
-                        label_pos, lines=None):
+                        label_pos, lines=None, colors=None):
     r"""
     Add red lines indicating stability boundaries from analytical model.
     """
@@ -395,12 +402,19 @@ def analytic_comparison(mode_to_plot, k_bar_mesh, lambda_bar_mesh, epsilon,
             mode_to_plot == 'm_0'), ("Please specify mode_to_plot as either" +
                                      "m_neg_1 or m_0")
 
+
     if mode_to_plot == 'm_neg_1':
         m = 1
-        color = 'red'
+        if not colors:
+            color = 'red'
+        else:
+            color = colors
     if mode_to_plot == 'm_0':
         m = 0
-        color = 'red'
+        if not colors:
+            color = 'red'
+        else:
+            color = colors
 
     if not lines:
         stability_kink_m_neg_1 = ac.conditions(k_bar_mesh, lambda_bar_mesh,
@@ -441,7 +455,7 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
                               delta_max=1., levels=None,
                               interpolate=True, compare_analytic=False,
                               epsilon=None, analytic_label_pos=None, lines=None,
-                              plot_numeric_boundary=False):
+                              plot_numeric_boundary=False, cmap=None, analytic_color=None):
     r"""
     Plot values of delta in lambda k space.
     """
@@ -469,8 +483,11 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
     if clip:
         delta_mesh = np.clip(delta_mesh, delta_min, delta_max)
 
-    colors = sns.light_palette(color, n_colors=6, reverse=True,
-                               as_cmap=True)
+    if cmap:
+        colors = cmap
+    else:
+        colors = sns.light_palette(color, n_colors=6, reverse=True,
+                                   as_cmap=True)
 
     if levels:
         plt.contourf(lambda_mesh, k_mesh, delta_mesh, cmap=colors,
@@ -497,7 +514,11 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
         mode_to_plot = 'm_neg_1'
 
     if compare_analytic:
-        analytic_comparison(mode_to_plot, k_mesh, lambda_mesh, epsilon,
+        if analytic_color:
+            analytic_comparison(mode_to_plot, k_mesh, lambda_mesh, epsilon,
+                            analytic_label_pos, lines=lines, colors=analytic_color)
+        else:
+            analytic_comparison(mode_to_plot, k_mesh, lambda_mesh, epsilon,
                             analytic_label_pos, lines=lines)
 
 
@@ -506,7 +527,8 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
                               k_mesh,
                               external_sausage,
                               levels=[0],
-                              colors='black')
+                              colors='grey',
+                              linestyles='-.')
 
 
 
@@ -525,7 +547,7 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
     sns.despine(ax=axes)
     plt.tight_layout()
 
-def sausage_kink_ratio(filename, xy_limits=None):
+def sausage_kink_ratio(filename, xy_limits=None, cmap=None):
     r"""
     Plot ratio of sausage and kink potential energies.
     """
@@ -541,10 +563,11 @@ def sausage_kink_ratio(filename, xy_limits=None):
     ratio[sausage_stable_region] = np.nan
     ratio_log = np.log10(ratio)
 
-    cmap = sns.light_palette(sns.xkcd_rgb['red orange'],
-                             as_cmap=True)
+    if not cmap:
+        cmap = sns.light_palette(sns.xkcd_rgb['red orange'],
+                                 as_cmap=True)
     contours = plt.contourf(lambda_bar_mesh, k_bar_mesh,
-                 ratio_log, cmap=cmap)
+                            ratio_log, cmap=cmap)
 
     colorbar = plt.colorbar(format=FormatStrFormatter(r'$10^{%i}$'))
     colorbar.set_label(r'$\frac{\delta W_{m=0}}{\delta W_{m=-1}}$',
@@ -569,5 +592,5 @@ def sausage_kink_ratio(filename, xy_limits=None):
 
     sns.despine()
     colorbar.ax.yaxis.set_ticks_position('right')
-
+    colorbar.ax.tick_params(labelsize=30)
     plt.show()
