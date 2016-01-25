@@ -26,8 +26,8 @@ sns.set_context('poster')
 
 
 def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
-                           show_points=False, lim=None, levels=None, log=False,
-                           linthresh=1E-7, bounds=(1.5, 3.0), floor_norm=False,
+                           show_points=False, lim=None, levels=None, log=True,
+                           linthresh=1E-7, bounds=(1.5, 3.0), norm=True,
                            analytic_compare=False,
                            label_pos=((0.5, 0.4), (2.1, 0.4), (2.8, 0.2)),
                            delta_values=[-1,0,1],
@@ -40,12 +40,10 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
     k_a_mesh = epsilon_case['k_a_mesh']
     external_m_neg_1 = epsilon_case['d_w_m_neg_1']
     external_sausage = epsilon_case['d_w_m_0']
-    external_m_neg_1_norm = epsilon_case['d_w_norm_m_neg_1']
-    external_sausage_norm = epsilon_case['d_w_norm_m_0']
     epsilon_case.close()
 
-    instability_map = {'m_0': external_sausage_norm,
-                       'm_neg_1': external_m_neg_1_norm}
+    instability_map = {'m_0': external_sausage,
+                       'm_neg_1': external_m_neg_1}
 
 
     kink_pal = sns.blend_palette([sns.xkcd_rgb["dandelion"],
@@ -66,10 +64,8 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
 
     values = instability_map[mode_to_plot]
 
-    if floor_norm:
-        values = np.clip(values, -100., 100.)
-        values = values / -np.nanmin(values)
-        values = np.clip(values, -1., 1.)
+    if norm:
+        values = values / np.nanmax(np.abs(values))
     else:
         values = values
 
@@ -78,6 +74,14 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
                                 cmap=instability_palette[mode_to_plot],
                                 levels=levels, norm=SymLogNorm(linthresh))
+            cbar = plt.colorbar(label=r'$\delta W$',
+                                format=FormatStrFormatter('%.0e'))
+            cbar.set_label(label=r'$\delta W$', size=45, rotation=0, labelpad=30)
+            contourlines = plt.contour(lambda_a_mesh, k_a_mesh,
+                                      values, levels=levels,
+                                      colors='grey',
+                                      norm=SymLogNorm(linthresh))
+
         else:
             norm = BoundaryNorm(levels, 256)
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
@@ -86,20 +90,34 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
             cbar = plt.colorbar(label=r'$\delta W$',
                                 format=FormatStrFormatter('%.0e'))
             cbar.set_label(label=r'$\delta W$', size=45, rotation=0, labelpad=30)
-            contourlines = plt.contour(lambda_a_mesh, k_a_mesh, values,
-                                       levels=levels[:-1], colors='grey')
-            cbar.add_lines(contourlines)
+            contourlines = plt.contour(lambda_a_mesh, k_a_mesh,
+                                       values, levels=levels,
+                                       colors='grey')
     else:
         if log:
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
                                 cmap=instability_palette[mode_to_plot],
                                 norm=SymLogNorm(linthresh))
+            cbar = plt.colorbar(label=r'$\delta W$',
+                                format=FormatStrFormatter('%.0e'))
+            cbar.set_label(label=r'$\delta W$', size=45, rotation=0, labelpad=30)
+            contourlines = plt.contour(lambda_a_mesh, k_a_mesh,
+                                       values, colors='grey',
+                                       norm=SymLogNorm(linthresh))
         else:
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
                                 cmap=instability_palette[mode_to_plot])
+            cbar = plt.colorbar(label=r'$\delta W$',
+                                format=FormatStrFormatter('%.0e'))
+            cbar.set_label(label=r'$\delta W$', size=45, rotation=0, labelpad=30)
+            contourlines = plt.contour(lambda_a_mesh, k_a_mesh,
+                                       values, colors='grey')
 
     if lim:
         plot.set_clim(lim)
+
+    cbar.add_lines(contourlines)
+
     plt.plot([0.01, 0.1, 1.0, 2.0, 3.0],
              [0.005, 0.05, 0.5, 1.0, 1.5], color='black')
 
