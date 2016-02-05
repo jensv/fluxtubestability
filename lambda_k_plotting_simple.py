@@ -20,6 +20,8 @@ from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm, BoundaryNorm
 from matplotlib.ticker import FormatStrFormatter, FixedFormatter
+import matplotlib.patches as patches
+import matplotlib.ticker as ticker
 import seaborn as sns
 sns.set_style('white')
 sns.set_context('poster')
@@ -32,7 +34,7 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
                            label_pos=((0.5, 0.4), (2.1, 0.4), (2.8, 0.2)),
                            delta_values=[-1,0,1],
                            interpolate=False,
-                           cmap=None):
+                           cmap=None, hatch=False):
     r"""
     Plot the delta_w of external instabilities in the lambda-k space.
     """
@@ -81,8 +83,7 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
                                 cmap=instability_palette[mode_to_plot],
                                 levels=levels, norm=SymLogNorm(linthresh))
-            cbar = plt.colorbar(label=r'$\delta W$',
-                                format=FormatStrFormatter('%.0e'))
+            cbar = plt.colorbar(label=r'$\delta W$')
             cbar.set_label(label=r'$\delta W$', size=45, rotation=0, labelpad=30)
             contourlines = plt.contour(lambda_a_mesh, k_a_mesh,
                                       values, levels=levels,
@@ -94,8 +95,7 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
                                 cmap=instability_palette[mode_to_plot],
                                 levels=levels, norm=norm)
-            cbar = plt.colorbar(label=r'$\delta W$',
-                                format=FormatStrFormatter('%.0e'))
+            cbar = plt.colorbar(label=r'$\delta W$')
             cbar.set_label(label=r'$\delta W$', size=45, rotation=0, labelpad=30)
             contourlines = plt.contour(lambda_a_mesh, k_a_mesh,
                                        values, levels=levels,
@@ -105,8 +105,7 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
                                 cmap=instability_palette[mode_to_plot],
                                 norm=SymLogNorm(linthresh))
-            cbar = plt.colorbar(label=r'$\delta W$',
-                                format=FormatStrFormatter('%.0e'))
+            cbar = plt.colorbar(label=r'$\delta W$')
             cbar.set_label(label=r'$\delta W$', size=45, rotation=0, labelpad=30)
             contourlines = plt.contour(lambda_a_mesh, k_a_mesh,
                                        values, colors='grey',
@@ -114,8 +113,7 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
         else:
             plot = plt.contourf(lambda_a_mesh, k_a_mesh, values,
                                 cmap=instability_palette[mode_to_plot])
-            cbar = plt.colorbar(label=r'$\delta W$',
-                                format=FormatStrFormatter('%.0e'))
+            cbar = plt.colorbar(label=r'$\delta W$')
             cbar.set_label(label=r'$\delta W$', size=45, rotation=0, labelpad=30)
             contourlines = plt.contour(lambda_a_mesh, k_a_mesh,
                                        values, colors='grey')
@@ -129,27 +127,50 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
              [0.005, 0.05, 0.5, 1.0, 1.5], color='black')
 
     axes = plt.gca()
-    axes.set_axis_bgcolor(sns.xkcd_rgb['grey'])
+    axes.set_axis_bgcolor(sns.xkcd_rgb['white'])
 
-    lambda_bar = np.linspace(0.01, 3., 750)
-    k_bar = np.linspace(0.01, 1.5, 750)
-    lambda_bar_mesh, k_bar_mesh = np.meshgrid(lambda_bar, k_bar)
+    lambda_bar_analytic = np.linspace(0.01, 3., 750)
+    k_bar_analytic = np.linspace(0.01, 1.5, 750)
+    (lambda_bar_mesh_analytic,
+     k_bar_mesh_analytic) = np.meshgrid(lambda_bar_analytic, k_bar_analytic)
 
     if analytic_compare:
-        analytic_comparison(mode_to_plot, k_bar_mesh, lambda_bar_mesh, epsilon,
-                            label_pos)
+        analytic_comparison(mode_to_plot, k_bar_mesh_analytic,
+                            lambda_bar_mesh_analytic, epsilon, label_pos)
 
     if show_points:
         plt.scatter(lambda_a_mesh, k_a_mesh, marker='o', c='b', s=5)
+
     plt.ylim(0.01, bounds[0])
     plt.xlim(0.01, bounds[1])
     axes = plt.gca()
-    plt.setp(axes.get_xticklabels(), fontsize=40)
-    plt.setp(axes.get_yticklabels(), fontsize=40)
-    plt.ylabel(r'$\bar{k}$', fontsize=45, rotation='horizontal', labelpad=30)
-    plt.xlabel(r'$\bar{\lambda}$', fontsize=45)
-    cbar.ax.tick_params(labelsize=40)
+    axes.set_xticks(np.arange(0., 4.5, 1.))
+    axes.set_yticks(np.arange(0., 2.0, 0.5))
+    plt.setp(axes.get_xticklabels(), fontsize=30)
+    plt.setp(axes.get_yticklabels(), fontsize=30)
+    plt.ylabel(r'$\bar{k}$', fontsize=40, rotation='horizontal', labelpad=30)
+    plt.xlabel(r'$\bar{\lambda}$', fontsize=40)
+    cbar.ax.tick_params(labelsize=30)
+    def my_formatter_fun(x):
+        if x == 0:
+            return r'$0$'
+        if np.sign(x) > 0:
+            return r'$10^{%i}$' % np.int(np.log10(x))
+        else:
+            return r'$-10^{%i}$' % np.int(np.log10(np.abs(x)))
+    labels = [my_formatter_fun(level) for level in levels]
+    cbar.ax.set_yticklabels(labels)
     sns.despine(ax=axes)
+
+    if hatch:
+        xmin, xmax = axes.get_xlim()
+        ymin, ymax = axes.get_ylim()
+        xy = (xmin,ymin)
+        width = xmax - xmin
+        height = ymax - ymin
+        p = patches.Rectangle(xy, width, height, hatch='+', fill=None, zorder=-10)
+        axes.add_patch(p)
+
     plt.tight_layout()
     plt.savefig('../../output/plots/' + name + '.png')
     plt.show()
@@ -576,19 +597,19 @@ def sausage_kink_ratio(filename, xy_limits=None, cmap=None):
                         ratio_log, colors='grey')
     colorbar.add_lines(lines)
 
-    if xy_limits:
-        plt.ylim((xy_limits[0], xy_limits[1]))
-        plt.xlim((xy_limits[2], xy_limits[2]))
-
     axes = plt.gca()
     axes.plot([0, 3.], [0., 1.5], '--', c='black', lw=5)
     axes.set_xlabel(r'$\bar{\lambda}$', fontsize=40)
     plt.setp(axes.get_xticklabels(), fontsize=30)
-    axes.set_xticks(np.arange(0., 4, 1.))
+    axes.set_xticks(np.arange(0., 4.5, 0.5))
 
     axes.set_ylabel(r'$\bar{k}$', fontsize=40)
     plt.setp(axes.get_yticklabels(), fontsize=30)
     axes.set_yticks(np.arange(0., 2.0, 0.5))
+
+    if xy_limits:
+        axes.set_ylim((xy_limits[0], xy_limits[1]))
+        axes.set_xlim((xy_limits[2], xy_limits[3]))
 
     sns.despine()
     colorbar.ax.yaxis.set_ticks_position('right')
