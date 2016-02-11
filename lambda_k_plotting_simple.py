@@ -34,10 +34,14 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
                            label_pos=((0.5, 0.4), (2.1, 0.4), (2.8, 0.2)),
                            delta_values=[-1,0,1],
                            interpolate=False,
-                           cmap=None, hatch=False):
+                           cmap=None, hatch=False,
+                           figsize=None,
+                           save_as=None):
     r"""
     Plot the delta_w of external instabilities in the lambda-k space.
     """
+    if figsize:
+        fig = plt.figure(figsize=figsize)
     epsilon_case = np.load(filename)
     lambda_a_mesh = epsilon_case['lambda_a_mesh']
     k_a_mesh = epsilon_case['k_a_mesh']
@@ -173,6 +177,8 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
 
     plt.tight_layout()
     plt.savefig('../../output/plots/' + name + '.png')
+    if save_as:
+        plt.savefig(save_as)
     plt.show()
 
 
@@ -568,7 +574,8 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
     sns.despine(ax=axes)
     plt.tight_layout()
 
-def sausage_kink_ratio(filename, xy_limits=None, cmap=None):
+def sausage_kink_ratio(filename, xy_limits=None, cmap=None, save_as=None,
+                       levels=None):
     r"""
     Plot ratio of sausage and kink potential energies.
     """
@@ -587,14 +594,22 @@ def sausage_kink_ratio(filename, xy_limits=None, cmap=None):
     if not cmap:
         cmap = sns.light_palette(sns.xkcd_rgb['red orange'],
                                  as_cmap=True)
-    contours = plt.contourf(lambda_bar_mesh, k_bar_mesh,
-                            ratio_log, cmap=cmap)
+    if levels:
+        contours = plt.contourf(lambda_bar_mesh, k_bar_mesh,
+                                ratio_log, cmap=cmap, levels=levels)
+    else:
+        contours = plt.contourf(lambda_bar_mesh, k_bar_mesh,
+                                ratio_log, cmap=cmap)
 
     colorbar = plt.colorbar(format=FormatStrFormatter(r'$10^{%i}$'))
     colorbar.set_label(r'$\frac{\delta W_{m=0}}{\delta W_{m=-1}}$',
                        size=35, rotation=0, labelpad=50)
-    lines = plt.contour(lambda_bar_mesh, k_bar_mesh,
-                        ratio_log, colors='grey')
+    if levels:
+        lines = plt.contour(lambda_bar_mesh, k_bar_mesh,
+                            ratio_log, colors='grey', levels=levels)
+    else:
+        lines = plt.contour(lambda_bar_mesh, k_bar_mesh,
+                            ratio_log, colors='grey')
     colorbar.add_lines(lines)
 
     axes = plt.gca()
@@ -614,4 +629,7 @@ def sausage_kink_ratio(filename, xy_limits=None, cmap=None):
     sns.despine()
     colorbar.ax.yaxis.set_ticks_position('right')
     colorbar.ax.tick_params(labelsize=30)
+    plt.tight_layout()
+    if save_as:
+        plt.savefig(save_as)
     plt.show()
