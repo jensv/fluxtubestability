@@ -1079,6 +1079,7 @@ class UnitlessTanhCoreSkin(EquilSolver):
                 pressure_integrator.integrate(t=position)
                 pressure_reverse[i+1] = pressure_integrator.y
             else:
+                print('integration failed')
                 break
         pressure = pressure_reverse[::-1]
         self.B = 1./pressure[0]
