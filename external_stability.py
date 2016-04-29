@@ -136,12 +136,12 @@ def vacuum_term_from_notes(a, k_bar, m, b_z, b_theta, xi, xi_der):
     return term1*term2
 
 def external_stability_from_analytic_condition(params, xi, xi_der,
-                                               without_sing=False,
+                                               without_sing=True,
                                                dim_less=False):
     r"""
     Returns delta_w as given in the analytic condition.
 
-    Optionally remove sing.
+    Optionally remove singularity by mutiplying by xi^2.
 
     Note
     ----
