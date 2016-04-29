@@ -36,7 +36,9 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
                            interpolate=False,
                            cmap=None, hatch=False,
                            figsize=None,
-                           save_as=None):
+                           save_as=None,
+                           return_ax=False,
+                           axes=None):
     r"""
     Plot the delta_w of external instabilities in the lambda-k space.
     """
@@ -176,10 +178,13 @@ def plot_lambda_k_space_dw(filename, epsilon, name, mode_to_plot='m_neg_1',
         axes.add_patch(p)
 
     plt.tight_layout()
-    plt.savefig('../../output/plots/' + name + '.png')
-    if save_as:
-        plt.savefig(save_as)
-    plt.show()
+    if return_ax:
+        return axes, cbar
+    else:
+        plt.savefig('../../output/plots/' + name + '.png')
+        if save_as:
+            plt.savefig(save_as)
+        plt.show()
 
 
 def interpolate_nans(lambda_a, k_a, quantity):
@@ -575,7 +580,7 @@ def plot_lambda_k_space_delta(filename, mode_to_plot,
     plt.tight_layout()
 
 def sausage_kink_ratio(filename, xy_limits=None, cmap=None, save_as=None,
-                       levels=None):
+                       levels=None, return_ax=False):
     r"""
     Plot ratio of sausage and kink potential energies.
     """
@@ -630,6 +635,9 @@ def sausage_kink_ratio(filename, xy_limits=None, cmap=None, save_as=None,
     colorbar.ax.yaxis.set_ticks_position('right')
     colorbar.ax.tick_params(labelsize=30)
     plt.tight_layout()
-    if save_as:
-        plt.savefig(save_as)
-    plt.show()
+    if return_ax:
+        return axes, colobar
+    else:
+        if save_as:
+            plt.savefig(save_as)
+        plt.show()
