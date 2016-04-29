@@ -316,7 +316,7 @@ def newcomb_g_18_dimless(r, k, m, b_z, p_prime, q, beta_0, **kwargs):
 
 
 #@jit(float64(float64, float64, float64, float64, float64, float64, float64))
-@jit
+#@jit
 def newcomb_g_18_dimless_wo_q(r, k, m, b_z, b_theta, p_prime, beta_0):
     r"""
     Return g from Newcomb's paper in dimensionless form.
