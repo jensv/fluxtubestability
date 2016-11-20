@@ -24,7 +24,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
                         rtol=None, max_step=1E-2,
                         nsteps=1000, method='lsoda', suppress_output=True,
                         diagnose=False, stiff=False, use_jac=True,
-                        adapt_step_size=True,
+                        adapt_step_size=True, sing_search_points=1000,
+                        profile_type='default',
                         **kwargs):
     r"""
     Scans space given by lambda_a_space and k_a_space for m=0, 1 stability and
@@ -33,7 +34,6 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
     call_parameters = locals()
     func_name = 'scan_lambda_k_space'
 
-    sing_search_points = 1000
     suydam_end_offset = offset
 
     k_a_points = np.linspace(k_a_space[0], k_a_space[1], num=k_a_space[2])
@@ -59,25 +59,46 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
         print('lambda_bar = %.3f' % lambda_a)
         for j, k_a in enumerate(k_a_points):
             for m in [-1, 0]:
-                profile = es.UnitlessSmoothedCoreSkin(k_bar=k_a,
-                                                      lambda_bar=lambda_a,
-                                                      **kwargs)
+                results = None
+                if profile_type == 'default':
+                    profile = es.UnitlessSmoothedCoreSkin(k_bar=k_a,
+                                                          lambda_bar=lambda_a,
+                                                          **kwargs)
 
 
-                params = {'k': k_a, 'm': float(m), 'r_0': r_0, 'a': 1.,
-                          'b': 'infinity'}
-                params_wo_splines = deepcopy(params)
-                params.update(profile.get_tck_splines())
-                params.update({'xi_factor': xi_factor,
-                               'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio,
-                               'beta_0': profile.beta_0(),
-                               'core_radius': profile.core_radius,
-                               'transition_width': profile.transition_width,
-                               'skin_width': profile.skin_width,
-                               'points_core': profile.points_core,
-                               'points_transition': profile.points_transition,
-                               'points_skin': profile.points_skin,
-                               'epsilon': profile.epsilon})
+                    params = {'k': k_a, 'm': float(m), 'r_0': r_0, 'a': 1.,
+                              'b': 'infinity'}
+                    params_wo_splines = deepcopy(params)
+                    params.update(profile.get_tck_splines())
+                    params.update({'xi_factor': xi_factor,
+                                   'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio,
+                                   'beta_0': profile.beta_0(),
+                                   'core_radius': profile.core_radius,
+                                   'transition_width': profile.transition_width,
+                                   'skin_width': profile.skin_width,
+                                   'points_core': profile.points_core,
+                                   'points_transition': profile.points_transition,
+                                   'points_skin': profile.points_skin,
+                                   'epsilon': profile.epsilon})
+
+                elif profile_type == 'diffuse_core_skin':
+                    profile = es.UnitlessExponentialDecaySkin(k_bar=k_a,
+                                                              lambda_bar=lambda_a,
+                                                              **kwargs)
+                    params = {'k': k_a, 'm': float(m), 'r_0': r_0, 'a': 1.,
+                               'b': 'infinity'}
+                    params_wo_splines = deepcopy(params)
+                    params.update(profile.get_tck_splines())
+                    params.update({'xi_factor': xi_factor,
+                                   'magnetic_potential_energy_ratio': magnetic_potential_energy_ratio,
+                                   'beta_0': profile.beta_0(),
+                                   'core_radius': profile.core_radius,
+                                   'transition_width': None,
+                                   'skin_width': profile.skin_width,
+                                   'points_core': profile.points_core,
+                                   'points_transition': None,
+                                   'points_skin': profile.points_skin,
+                                   'epsilon': profile.epsilon})
                 results = new.stability(params, offset, suydam_end_offset,
                                         sing_search_points=sing_search_points,
                                         suppress_output=suppress_output,

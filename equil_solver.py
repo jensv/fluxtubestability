@@ -861,6 +861,111 @@ class UnitlessSmoothedCoreSkin(EquilSolver):
         return q_to_return
 
 
+class UnitlessExponentialDecaySkin(UnitlessSmoothedCoreSkin):
+    r"""
+    Creates splines describing a smooth skin and core current profile.
+    """
+    def __init__(self, points_core=20, points_skin=20, k_bar=1.,
+                 epsilon=0.3, lambda_bar=0.5):
+        r"""
+        Initialize parameters defining smooth skin and core profile
+        and create splines.
+        """
+        self.points_core = points_core
+        self.points_skin = points_skin
+        self.core_radius = 0.6
+        self.skin_width = 0.4
+        self.r_bar = self.core_radius + self.skin_width
+        self.r = self.r_points()
+
+        self.k_bar = k_bar
+        self.epsilon = epsilon
+        self.lambda_bar = lambda_bar
+
+        self.splines = {}
+
+        self.b_z0 = 1.
+        self.make_spline('b_z', self.r, self.b_z(self.r))
+
+        self.j_core = 1.
+        self.j_skin = self.get_j_skin_norm(epsilon)
+        self.make_spline('j_z', self.r, self.j_z(self.r))
+
+        self.b_theta_integrand_array = self.b_theta_integrand(self.r)
+
+        self.A = self.get_A()
+
+        self.make_spline('b_theta', self.r, self.b_theta(self.r))
+
+        self.make_spline('pressure', self.r, self.pressure(self.r))
+        self.make_spline('p_prime', self.r, self.p_prime(self.r))
+
+        self.q_0 = self.get_q_0()
+        self.make_spline('q', self.r, self.q(self.r))
+        self.make_spline('beta', self.r, self.beta(self.r))
+
+        self.make_spline('rho', self.r, self.rho(self.r))
+
+        b_theta_prime = self.splines['b_theta'].derivative()
+        b_theta_prime_prime = b_theta_prime.derivative()
+        b_z_prime = self.splines['b_z'].derivative()
+        q_prime = self.splines['q'].derivative()
+
+        self.splines.update({'b_theta_prime': b_theta_prime,
+                             'b_theta_prime_prime': b_theta_prime_prime,
+                             'b_z_prime': b_z_prime, 'q_prime': q_prime})
+
+        self.tck_splines = self.convert_spline_objects_to_tck(self.splines)
+
+    def r_points(self):
+        r"""
+        """
+        (points_core,
+         points_skin) = (self.points_core,
+                         self.points_skin)
+        (core_radius,
+         skin_width) = (self.core_radius,
+                        self.skin_width)
+        self.r1 = np.linspace(0., core_radius, points_core, endpoint=False)
+        self.r2 = np.linspace(core_radius, core_radius + skin_width,
+                              points_skin)
+        #print('r_points_build', core_radius, poin)
+        r = np.concatenate((self.r1, self.r2))
+        return r
+
+    def get_j_skin_norm(self, epsilon,
+                        i_core=0.806207671074,
+                        slope=1.0053096491487337,
+                        offset=0.18521395596186707):
+        r"""
+        Returns j_z_skin based on j_z_core, geometry and epsilon of pinch.
+        """
+        return (i_core/epsilon - i_core - offset) / slope
+
+    def j_z(self, dummy_r):
+        r"""
+
+        """
+        r = self.r
+        (core_radius,
+         skin_width) = (self.core_radius,
+                        self.skin_width)
+        skin_peak = skin_width/2
+        skin_peak_radius = core_radius + skin_peak
+        radius = core_radius + skin_width
+        core = self.j_core * np.exp(-2*r**2)
+        skin = interp.PiecewisePolynomial([core_radius,
+                                           skin_peak_radius,
+                                           radius],
+                                          [[np.exp(-2*core_radius**2),
+                                            -4*core_radius*np.exp(-2*core_radius**2)],
+                                           [self.j_skin, 0.], [0.,0.]])
+        j_z = core
+        indexes = np.where(r >= core_radius)
+        j_z[indexes] = skin(r[indexes])
+        return j_z
+
+
 class UnitlessTanhCoreSkin(EquilSolver):
     r"""
     Creates splines describing a smooth skin and core current profile.
