@@ -13,7 +13,6 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              str, super, zip)
 """Python 3.x compatibility"""
 
-import eigenvalue_goedbloed as eg
 from newcomb_f import f_denom, f_num_wo_r
 from numba import jit, float64
 
@@ -158,52 +157,6 @@ def newcomb_g_17(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime, q,
                                        2.*k**2*r*b_z**2 -
                                        2.*m**2*b_theta*b_theta_prime)
     return term1 + term2 - term3 - der_term1 - der_term2
-
-
-def goedbloed_g_9_107(r, k, m, b_z, b_z_prime, b_theta, b_theta_prime, p_prime,
-                      q, q_prime):
-    r"""
-    Return g from Newcomb's paper.
-
-    Parameters
-    ----------
-    r : ndarray of floats
-        radius
-    k : float
-        axial periodicity number
-    m : float
-        azimuthal periodicity number
-    b_z : ndarray of floats
-        axial magnetic field
-    b_theta : ndarray of floats
-        azimuthal mangetic field
-    b_theta_prime: ndarray of floats
-        azimuthal magnetic field
-    p_prime : ndarray of floats
-        pressure prime
-    q : ndarray of floats
-        safety factor
-    q_prime : ndarray of floats
-        derivative of safety factor
-    mu_0 : float
-        magnetic permeability of free space
-
-    Returns
-    -------
-    g : ndarray of floats
-        g from Newcomb's paper
-
-    Reference
-    ---------
-    Goedbloed (2004) Principles of Magnetohydrodynamics
-    Equation (9.107)
-    """
-    params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
-    f = eg.f(**params)
-    term1 = 2.*k**2*r**2/(m**2 + k**2*r**2)*p_prime
-    term2 = (m**2 + k**2*r**2 - 1)/(m**2 + k**2*r**2)*r*f**2
-    term3 = 2.*k**2*r**3*(m*b_theta/r - k*b_z)/(m**2 + k**2*r**2)**2*f
-    return term1 + term2 - term3
 
 
 def newcomb_g_18(r, k, m, b_z, b_theta, p_prime, mu_0, **kwargs):
