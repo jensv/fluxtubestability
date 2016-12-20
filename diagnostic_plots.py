@@ -13,14 +13,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatibility"""
 
 import sys
-sys.path.append('scipy_mod')
 
-import fitpack
-reload(fitpack)
-from fitpack import splev
-
-import numpy as np
-from numpy import atleast_1d
 import scipy.integrate
 
 import singularity_frobenius as frob
@@ -33,6 +26,21 @@ sns.set_context('poster')
 def plot_all_profiles_suydam(profile, normalize=False,
                              mu_0=None, axes=None, title=None):
     r"""
+    Plot radial profiles of current, magnetic field, pressure, safety_factor,
+    and Suydam criterion.
+
+    Parameters
+    ----------
+    profiles : profile_object
+        profile created with equil_solver
+    normalize : bool
+        boolean flag to normalize profiles to max values
+    mu_0 : float
+         magnetic permeability value (used for non-dimensionless profiles)
+    axes : matplotlib axes
+        plotting axes to use
+    title :
+        plot title
     """
     if not axes:
         axes = plt.gca()
@@ -90,6 +98,14 @@ def plot_all_profiles_suydam(profile, normalize=False,
 
 def plot_suydam(profile, normalize=False):
     r"""
+    Plot suydam stability conditions.
+
+    Parameters
+    ----------
+    profiles : profile_object
+        profile created with equil_solver
+    normalize : bool
+        boolean flag to normalize profiles to max value
     """
     axes = plt.gca()
     r = np.linspace(0, 1, 250)
