@@ -64,7 +64,7 @@ def beta_func(b_z, b_theta, p_prime, beta_0, **kwargs):
     beta : ndarray of floats
         beta of quadratic equation for the exponents of the Forbenius solutions
     """
-    return beta_0*b_theta**2/(b_theta**2 + b_z**2) * p_prime
+    return 2.*beta_0*b_theta**2/(b_theta**2 + b_z**2) * p_prime
 
 
 def nu_1_2(alpha, beta, imaginary=False, **kwargs):
