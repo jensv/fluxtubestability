@@ -13,7 +13,6 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
                              str, super, zip)
 """Python 3.x compatibility"""
 
-import eigenvalue_goedbloed as eg
 from numba import jit, float64
 
 
@@ -55,37 +54,6 @@ def newcomb_f_16(r, k, m, b_z, b_theta, **kwargs):
     #if type(r) == float:
     #    all_f_g.all_f.append([r, r*f_num_wo_r(**params_num)/f_denom(**params_denom)])
     return r*f_num_wo_r(**params_num)/f_denom(**params_denom)
-
-
-def goedbloed_f_9_106(r, k, m, b_z, b_theta):
-    r"""
-    Return f from Newcomb's paper.
-
-    Parameters
-    ----------
-    r : ndarray of floats
-        radius
-    k : float
-        axial periodicity number
-    m : float
-        azimuthal periodicity number
-    b_z : ndarray of floats
-        axial magnetic field
-    b_theta : ndarray of floats
-        azimuthal mangetic field
-    Returns
-    -------
-    f : ndarray of floats
-        f from Newcomb's paper
-
-    Reference
-    ---------
-    Goedbloed (2004) Principles of Magnetohydrodynamics
-    Equation (9.106)
-    """
-    params = {'r': r, 'k': k, 'm': m, 'b_z': b_z, 'b_theta': b_theta}
-    f = eg.f(**params)
-    return r**3*f**2/(m**2 + k**2*r**2)
 
 
 def jardin_f_8_78(r, k, m, b_z, b_theta, q):
