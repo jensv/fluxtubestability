@@ -3,23 +3,24 @@
 Created on Sun Feb 15 22:05:21 2015
 
 @author: jensv
+
+Script to scan k_bar-lambda_bar stability space of profile type.
 """
 
 import equil_solver as es
-import newcomb_simple as new
+import newcomb as new
 import numpy as np
 from copy import deepcopy
 from datetime import datetime
 import os
 import json
 import sys
-sys.path.append('../../provenance_scripts/')
 import call_provenance as cp
 import sqlite3
 import argparse
 
 
-def scan_lambda_k_space(lambda_a_space, k_a_space,
+def scan_lambda_k_space(lambda_bar_space, k_bar_space,
                         xi_factor=1., magnetic_potential_energy_ratio=1.,
                         offset=1E-3, r_0=0., init_value=(0.0, 1.0),
                         rtol=None, max_step=1E-2,
@@ -32,6 +33,8 @@ def scan_lambda_k_space(lambda_a_space, k_a_space,
     Scans space given by lambda_a_space and k_a_space for m=0, 1 stability and
     saves several 2D numpy arrays (stability maps) to an npz file.
     """
+    lambda_a_space = lambda_bar_space
+    k_a_space = k_bar_space
     call_parameters = locals()
     func_name = 'scan_lambda_k_space'
 
@@ -189,6 +192,8 @@ def track_provenance(sql_db, func_name, call_parameters, date, params,
         call += key + '=' + str(call_parameters[key]) + ', '
     call = call[:-2] + ')'
     call, git_commit = cp.call_and_git_commit(call=call, call_path=os.getcwd())
+    assert os.path.exists(sql_db), ("Run database does not exist."
+                                    "Try running init_database.py")
     connection = sqlite3.connect(sql_db)
     cursor = connection.cursor()
     cursor.execute("INSERT INTO Runs(datetime, points_core, points_transition"+
@@ -217,3 +222,80 @@ def track_provenance(sql_db, func_name, call_parameters, date, params,
     connection.commit()
     cursor.close()
     connection.close()
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="scan specified"
+                                     "k_bar-lambda_bar space for specified"
+                                     "profiles")
+    parser.add_argument('--k_bar_space', help='specify k_bar space',
+                        nargs=3, type=float, metavar=('START', 'END', 'POINTS'),
+                        default=[0.01, 1.5, 50])
+    parser.add_argument('--lambda_bar_space',
+                        help="specify lambda_bar space:",
+                        metavar=('START', 'END', 'POINTS'),
+                        nargs=3, type=float, default=[0.01, 5.0, 50])
+    parser.add_argument('--epsilon', help='core current to total current ratio',
+                        type=float, default=0.5)
+    parser.add_argument('--core_radius_norm', help='normalized core radius',
+                        type=float, default=0.6)
+    parser.add_argument('--transition_width_norm',
+                        help='normalized transition width',
+                        type=float, default=0.175)
+    parser.add_argument('--skin_width_norm', help='normalized skin width',
+                        type=float, default=0.05)
+    parser.add_argument('--points_core', help="number of points from which"
+                                              "to build core region splines",
+                        type=int, default=50)
+    parser.add_argument('--points_transition',
+                        help="number of points from which to build"
+                        "transition splines", type=int, default=50)
+    parser.add_argument('--points_skin',
+                        help="number of points from which to build"
+                        "skin splines", type=int, default=50)
+    parser.add_argument('--offset', help="offset after singularities at which"
+                                         "to continue integrating from"
+                                         "power series solutions",
+                        type=float, default=1e-3)
+    parser.add_argument('--rtol', help="relative tolerance setting for"
+                                       "integrator",
+                        type=float, default=None)
+    parser.add_argument('--max_step', help="max step for integrator",
+                        type=float, default=1e-2)
+    parser.add_argument('--nsteps', help='number of steps for integrator',
+                        type=int, default=1000)
+    parser.add_argument('--method', help="integration method"
+                        "from scipy.integrate.ode", type=str, default='lsoda')
+    parser.add_argument('--suppress_output', help="flag to suppress output",
+                        default=False, action='store_true')
+    parser.add_argument('--diagnose', help="flag to make code try to integrate"
+                                           "over whole fluxtube radius.",
+                        default=False, action='store_true')
+    parser.add_argument('--stiff', help="flag to pass stiff flag to integrator",
+                        default=False, action='store_true')
+    parser.add_argument('--use_jac', help="flag to use Jacobian"
+                                          "with integrator",
+                        action="store_true")
+    parser.add_argument('--adapt_step_size',
+                        help="flag to adapt the stepsize requirements"
+                        "for the integrator to the fluxtube region", 
+                        action="store_true")
+    parser.add_argument('--sing_search_points',
+                        help="number of points to divide fluxtube radius by in"
+                             "search for singularities",
+                        type=int, default=1000)
+
+    args = parser.parse_args()
+    args.k_bar_space[2] = int(args.k_bar_space[2])
+    args.lambda_bar_space[2] = int(args.lambda_bar_space[2])
+    return args
+
+def main(args):
+    r"""
+    Run skin_core_scanner from command line call. 
+    """
+    scan_lambda_k_space(**vars(args))
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args)
+

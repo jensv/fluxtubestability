@@ -7,19 +7,37 @@ import seaborn as sns
 sns.set_style('ticks')
 sns.set_context('paper')
 
-
-import lambda_k_plotting_simple as plot
+import argparse
+import os
+import lambda_k_plotting as plot
 reload(plot)
 import analytic_condition as ac
 from analytic_condition import conditions
 import equil_solver as es
+
+
+parser = argparse.ArgumentParser(description='make paper plots')
+parser.add_argument('high_epsilon_path',
+                    help="path of high epsilon profile stability results")
+parser.add_argument('mid_epsilon_path',
+                    help="path of mid epsilon profile stability results")
+parser.add_argument('low_epsilon_path',
+                    help="path of low epsilon profile stability results")
+args = parser.parse_args()
+high_epsilon_path = os.path.join(args.high_epsilon_path,
+                                 'meshes.npz')
+mid_epsilon_path = os.path.join(args.mid_epsilon_path,
+                                'meshes.npz')
+low_epsilon_path = os.path.join(args.low_epsilon_path,
+                                'meshes.npz')
+
 
 ## Figure 1 ##
 ##############
 
 fig, axes = plt.subplots(2, 2,
                          figsize=(6.69, 6.69),
-                         sharex=False, 
+                         sharex=False,
                          sharey=False)
 
 example_ax = axes[0][0]
@@ -59,17 +77,17 @@ cmap = colors.ListedColormap(['white',
 
 example_ax.contourf(lambda_bar_mesh, k_bar_mesh, stability, cmap=cmap,
                     levels=[0., 0.5, 1.5, 2.], hatches=[None, '/', 'x'])
-contour_lines = example_ax.contour(lambda_bar_mesh, k_bar_mesh, stability, 
+contour_lines = example_ax.contour(lambda_bar_mesh, k_bar_mesh, stability,
                                    levels=[0., 1.5, 2.], colors='black', linewidths=2)
 
-example_ax.clabel(contour_lines, 
-                  manual=([1.5, 1.1],  
+example_ax.clabel(contour_lines,
+                  manual=([1.5, 1.1],
                           [2.5, 0.75]),
                   fmt={0.: ' Kink Boundary ', 1.5: ' Sausage Boundary '}, fontsize=10)
 
 kruskal_shafranov = lambda_bar_mesh > 2 * k_bar_mesh
 
-contour_lines = example_ax.contour(lambda_bar_mesh, k_bar_mesh, kruskal_shafranov, 
+contour_lines = example_ax.contour(lambda_bar_mesh, k_bar_mesh, kruskal_shafranov,
                                    levels=[0.5], colors='black', linewidths=2)
 contour_lines.collections[0].set_linestyle('--')
 example_ax.clabel(contour_lines,
@@ -109,27 +127,27 @@ for i, epsilon in enumerate(np.arange(0.1, 1.9, 0.3)):
                           m=1,
                           delta=delta)
 
-    stability_epsilon = d_w_kink < 0 
+    stability_epsilon = d_w_kink < 0
     stability[stability_epsilon] = epsilon
 
 levels = np.arange(0.1, 1.9, 0.3)
-contour = kink_ax.contourf(lambda_bar_mesh, 
-                           k_bar_mesh, 
+contour = kink_ax.contourf(lambda_bar_mesh,
+                           k_bar_mesh,
                            stability,
                            levels=levels)
 contour.cmap.set_over(sns.xkcd_rgb['red brown'])
 contour.cmap.set_under('white')
 contour.set_clim(-0.1, 0.)
 colors_list = ['grey', 'white', 'white', 'white', 'white']
-contour_lines = kink_ax.contour(lambda_bar_mesh, 
-                               k_bar_mesh, 
+contour_lines = kink_ax.contour(lambda_bar_mesh,
+                               k_bar_mesh,
                                stability,
-                               levels=levels, 
+                               levels=levels,
                                colors=colors_list,
                                linewidths=2)
-kink_ax.clabel(contour_lines, 
-                              manual=([1.6, 1.3], 
-                                      [2.1, 1.2], 
+kink_ax.clabel(contour_lines,
+                              manual=([1.6, 1.3],
+                                      [2.1, 1.2],
                                       [2.3, 1.1],
                                       [2.4, 0.8],
                                       [2.4, 0.5]),
@@ -137,12 +155,12 @@ kink_ax.clabel(contour_lines,
                                fontsize=12)
 for line in contour_lines.collections:
     line.set_linestyle('solid')
-    
+
 line_x = np.linspace(0, 3, 50)
 line_y = np.linspace(0, 1.5, 50)
-    
-line_y_masked = np.ma.masked_inside(line_y, 1.05, 1.18)    
-    
+
+line_y_masked = np.ma.masked_inside(line_y, 1.05, 1.18)
+
 kink_ax.plot(line_x, line_y_masked, '--', c='black', lw=2)
 
 
@@ -171,12 +189,12 @@ for i, epsilon in enumerate(np.arange(0, 1.2, 0.2)):
                             m=0,
                             delta=delta)
 
-    stability_epsilon = d_w_sausage < 0 
+    stability_epsilon = d_w_sausage < 0
     stability[stability_epsilon] = epsilon
 
 levels = np.arange(0., 1.2, 0.2)
-contour = sausage_ax.contourf(lambda_bar_mesh, 
-                              k_bar_mesh, 
+contour = sausage_ax.contourf(lambda_bar_mesh,
+                              k_bar_mesh,
                               stability,
                               levels=levels)
 contour.cmap.set_over('darkgreen')
@@ -185,23 +203,23 @@ contour.set_clim(-0.2, -0.1)
 
 colors_list = ['grey', 'white', 'white', 'white']
 
-contour_lines = sausage_ax.contour(lambda_bar_mesh, 
-                                   k_bar_mesh, 
+contour_lines = sausage_ax.contour(lambda_bar_mesh,
+                                   k_bar_mesh,
                                    stability,
-                                   levels=levels, 
+                                   levels=levels,
                                    colors=colors_list,
                                    linewidths=2)
 for line in contour_lines.collections:
     line.set_linestyle('solid')
-    
-    
-sausage_ax.clabel(contour_lines, 
+
+
+sausage_ax.clabel(contour_lines,
                               manual=([2.3, 1.3],
                                       [1.75, 0.55],
                                       [2.0, 0.4],
                                       [2.1, 0.2]),
                                fmt=r'$ \epsilon = %.1f$', fontsize=12)
-    
+
 sausage_ax.plot([0, 3.], [0., 1.5], '--', c='black', lw=2)
 sausage_ax.set_xlabel(r'$\bar{\lambda}$')
 #sausage_ax.xaxis.labelpad = 20
@@ -227,12 +245,12 @@ for i, delta in enumerate(np.arange(-1.0, 1.6, 0.5)):
                            m=0,
                            delta=delta)
 
-    stability_delta = d_w_delta < 0 
+    stability_delta = d_w_delta < 0
     stability[stability_delta] = delta
 
 levels = np.arange(-1.0, 1.6, 0.5)
-contour = delta_ax.contourf(lambda_bar_mesh, 
-                            k_bar_mesh, 
+contour = delta_ax.contourf(lambda_bar_mesh,
+                            k_bar_mesh,
                             stability,
                             levels=levels,
                             extend='both')
@@ -240,10 +258,10 @@ levels = np.arange(-1.0, 1.6, 0.5)
 
 colors_list = ['grey', 'white', 'white', 'white', 'white']
 
-contour_lines = delta_ax.contour(lambda_bar_mesh, 
-                                 k_bar_mesh, 
+contour_lines = delta_ax.contour(lambda_bar_mesh,
+                                 k_bar_mesh,
                                  stability,
-                                 levels=levels, 
+                                 levels=levels,
                                  colors=colors_list,
                                  linewidths=2)
 contour.cmap.set_over('darkgreen')
@@ -252,8 +270,8 @@ contour.set_clim(-1.3, -1.0)
 
 for line in contour_lines.collections:
     line.set_linestyle('solid')
-    
-sausage_ax.clabel(contour_lines, 
+
+sausage_ax.clabel(contour_lines,
                   manual=([2., 0.85],
                           [2.4, 0.75],
                           [2.8, 0.65],
@@ -261,7 +279,7 @@ sausage_ax.clabel(contour_lines,
                           [3.3, 0.45]),
                   fmt=r' $ \delta = \mathbf{%.1f}$ ',
                   colors=colors_list, fontsize=12)
-    
+
 delta_ax.plot([0, 3.], [0., 1.5], '--', c='black', lw=2)
 delta_ax.set_xlabel(r'$\bar{\lambda}$')
 #delta_ax.xaxis.labelpad = 20
@@ -291,14 +309,14 @@ def normalized_single_plot(profile, axes, ylim, letter, styles=['-', '--', '-.']
     splines = profile.get_splines()
     beta_spl = profile.beta(profile.r)
     r1 = np.linspace(0, 1., 250)
-    
+
     j_skin = profile.j_skin
     b_z0 = profile.b_z0
-    
-    
+
+
     axes.yaxis.tick_left()
     axes.xaxis.tick_bottom()
-    
+
     j_z_line = axes.plot(r1, splines['j_z'](r1)/j_skin, lw=2.5, label=r'$\bar{j}_z$', ls=styles[0])
     b_theta_line = axes.plot(r1, splines['b_theta'](r1), lw=2.5, label=r'$\bar{B}_\theta$', ls=styles[1])
     p_line = axes.plot(r1, splines['pressure'](r1), lw=2.5, label=r'$\bar{p}$', ls=styles[2])
@@ -306,27 +324,27 @@ def normalized_single_plot(profile, axes, ylim, letter, styles=['-', '--', '-.']
     #b_theta_line = axes.plot(r1, splines['b_theta'](r1), lw=2.5, ls=styles[1])
     #p_line = axes.plot(r1, splines['pressure'](r1), lw=2.5, ls=styles[2])
     axes.set_xlim(0, 1.)
-    
+
     axes.set_ylim(0., ylim)
-    
+
     if legend_loc:
-        lgd = axes.legend(bbox_to_anchor=legend_loc, 
+        lgd = axes.legend(bbox_to_anchor=legend_loc,
                     loc='upper center', borderaxespad=0.25, ncol=3, frameon=True,
                     handlelength=1.2, columnspacing=0.5, fancybox=True)
     else:
         lgd = None
-    
+
     #axes.annotate('core', xy=(0.27, ylim*4.5/7.))
     #axes.annotate('transition', xy=(0.624, ylim*4.5/7.))
     #axes.annotate('skin', xy=(0.772, ylim*4.5/7.))
     #axes.annotate('transition', xy=(0.85, ylim*4.5/7.))
-    
+
     axes.set_xlabel(r'$r$')
     axes.axvline(x=0.6, color='grey', ls='--', lw=2.5, alpha=0.5)
     axes.axvline(x=0.775, color='grey', ls='--', lw=2.5, alpha=0.5)
     axes.axvline(x=0.825, color='grey', ls='--', lw=2.5, alpha=0.5)
     axes.yaxis.set_ticks(np.arange(0.0, 1.8, 0.7))
-    
+
     plt.setp(axes.get_xticklabels())
     plt.setp(axes.get_yticklabels())
     return lgd
@@ -338,30 +356,30 @@ axes3 = plt.subplot2grid((3, 2), (2, 0), colspan=2, rowspan=1)
 fig.subplots_adjust(wspace=0.05)
 fig.subplots_adjust(hspace=0.5)
 
-profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.7, 
+profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.7,
                                       core_radius_norm=0.6,
                                       transition_width_norm=0.175,
-                                      skin_width_norm=0.05) 
+                                      skin_width_norm=0.05)
 
 lgd = normalized_single_plot(profile, axes1, 1.8, 'a', legend_loc=[0.4, 1.5])
 
-profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.5, 
+profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.5,
                                       core_radius_norm=0.6,
                                       transition_width_norm=0.175,
-                                      skin_width_norm=0.05) 
+                                      skin_width_norm=0.05)
 
 normalized_single_plot(profile, axes2, 1.8, 'b')
 
-profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.3, 
+profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.3,
                                       core_radius_norm=0.6,
                                       transition_width_norm=0.175,
-                                      skin_width_norm=0.05) 
+                                      skin_width_norm=0.05)
 
 normalized_single_plot(profile, axes3, 1.8, 'c')
 #axes1.legend(loc='best')
 #axes2.legend(loc='best')
 #axes3.legend(loc='best')
-#plt.figlegend([l1, l2, l3], 
+#plt.figlegend([l1, l2, l3],
 #           [r'$\bar{j}_z$',
 #            r'$\bar{B}_\theta$',
 #            r'$\bar{p}$'], 'upper left',
@@ -398,7 +416,7 @@ def plot_lambda_k_space_dw(axes, filename, epsilon, name, mode_to_plot='m_neg_1'
                            cmap=None, hatch=False,
                            figsize=None,
                            save_as=None,
-                           return_ax=False, 
+                           return_ax=False,
                            hatch_sausage_gap=False):
 
     epsilon_case = np.load(filename)
@@ -407,7 +425,7 @@ def plot_lambda_k_space_dw(axes, filename, epsilon, name, mode_to_plot='m_neg_1'
     external_m_neg_1 = epsilon_case['d_w_m_neg_1']
     external_sausage = epsilon_case['d_w_m_0']
     epsilon_case.close()
-    
+
     if hatch_sausage_gap:
         external_sausage_gap = np.where((lambda_a_mesh > 3.) & (external_sausage > 0))
         external_sausage[external_sausage_gap] = np.nan
@@ -496,12 +514,12 @@ def plot_lambda_k_space_dw(axes, filename, epsilon, name, mode_to_plot='m_neg_1'
 
     if lim:
         plot.set_clim(lim)
-    
+
     cbar.add_lines(contourlines)
-    
+
     cbar_lines = cbar.lines[0]
     number_of_lines = len(cbar_lines.get_linewidths())
-    
+
     linewidths = []
     linestyles = []
     cbar_zero_line = 4
@@ -512,10 +530,10 @@ def plot_lambda_k_space_dw(axes, filename, epsilon, name, mode_to_plot='m_neg_1'
         elif line == cbar_zero_line:
             linewidths.append(0.8)
             linestyles.append('-')
-        else:  
+        else:
             linewidths.append(0.8)
             linestyles.append('-')
-            
+
     cbar_lines.set_linewidths(linewidths)
     cbar_lines.set_linestyles(linestyles)
 
@@ -573,7 +591,7 @@ def plot_lambda_k_space_dw(axes, filename, epsilon, name, mode_to_plot='m_neg_1'
         width = xmax - xmin
         height = ymax - ymin
         p = patches.Rectangle(xy, width, height, hatch='X'*3, fill=None, zorder=-10, edgecolor='green')
-        axes.add_patch(p)    
+        axes.add_patch(p)
     cbar.ax.yaxis.set_ticks_position('right')
 
 
@@ -588,10 +606,10 @@ sausage_ax3 = plt.subplot2grid((9, 6), (6, 3), colspan=3, rowspan=3)
 
 
 ## High epsilon
-plot_lambda_k_space_dw(kink_ax1, '../output/2016-04-29-17-15/meshes.npz', 
-                       1., 'ep12-m1', mode_to_plot='m_neg_1', 
-                       levels=[-1, -1e-1, -1e-2, -1e-3, 
-                               0, 1e-3, 1e-2, 1e-1, 1], 
+plot_lambda_k_space_dw(kink_ax1, high_epsilon_path,
+                       1., 'ep12-m1', mode_to_plot='m_neg_1',
+                       levels=[-1, -1e-1, -1e-2, -1e-3,
+                               0, 1e-3, 1e-2, 1e-1, 1],
                        norm=True, analytic_compare=False,
                        log=True,
                        label_pos=None,
@@ -600,10 +618,10 @@ plot_lambda_k_space_dw(kink_ax1, '../output/2016-04-29-17-15/meshes.npz',
                        bounds=(1.5, 4.3))
 
 
-plot_lambda_k_space_dw(sausage_ax1, '../output/2016-04-29-17-15/meshes.npz', 
-                       1., 'ep12-m1', mode_to_plot='m_0', 
-                       levels=[-1, -1e-1, -1e-2, -1e-3, 
-                               0, 1e-3, 1e-2, 1e-1, 1], 
+plot_lambda_k_space_dw(sausage_ax1, high_epsilon_path,
+                       1., 'ep12-m1', mode_to_plot='m_0',
+                       levels=[-1, -1e-1, -1e-2, -1e-3,
+                               0, 1e-3, 1e-2, 1e-1, 1],
                        norm=True, analytic_compare=False,
                        log=True,
                        label_pos=None,
@@ -614,10 +632,10 @@ plot_lambda_k_space_dw(sausage_ax1, '../output/2016-04-29-17-15/meshes.npz',
 
 
 ## Mid epsilon
-plot_lambda_k_space_dw(kink_ax2, '../output/2016-04-29-11-13/meshes.npz', 
-                       1., 'ep12-m1', mode_to_plot='m_neg_1', 
-                       levels=[-1, -1e-1, -1e-2, -1e-3, 
-                               0, 1e-3, 1e-2, 1e-1, 1], 
+plot_lambda_k_space_dw(kink_ax2, mid_epsilon_path,
+                       1., 'ep12-m1', mode_to_plot='m_neg_1',
+                       levels=[-1, -1e-1, -1e-2, -1e-3,
+                               0, 1e-3, 1e-2, 1e-1, 1],
                        norm=True, analytic_compare=False,
                        log=True,
                        label_pos=None,
@@ -626,10 +644,10 @@ plot_lambda_k_space_dw(kink_ax2, '../output/2016-04-29-11-13/meshes.npz',
                        bounds=(1.5, 4.3))
 
 
-plot_lambda_k_space_dw(sausage_ax2, '../output/2016-04-29-11-13/meshes.npz', 
-                       1., 'ep12-m1', mode_to_plot='m_0', 
-                       levels=[-1, -1e-1, -1e-2, -1e-3, 
-                               0, 1e-3, 1e-2, 1e-1, 1], 
+plot_lambda_k_space_dw(sausage_ax2, mid_epsilon_path,
+                       1., 'ep12-m1', mode_to_plot='m_0',
+                       levels=[-1, -1e-1, -1e-2, -1e-3,
+                               0, 1e-3, 1e-2, 1e-1, 1],
                        norm=True, analytic_compare=False,
                        log=True,
                        label_pos=None,
@@ -641,10 +659,10 @@ plot_lambda_k_space_dw(sausage_ax2, '../output/2016-04-29-11-13/meshes.npz',
 
 
 ## Low epsilon
-plot_lambda_k_space_dw(kink_ax3, '../output/2016-04-29-11-36/meshes.npz', 
-                       1., 'ep12-m1', mode_to_plot='m_neg_1', 
-                       levels=[-1, -1e-1, -1e-2, -1e-3, 
-                               0, 1e-3, 1e-2, 1e-1, 1], 
+plot_lambda_k_space_dw(kink_ax3, low_epsilon_path,
+                       1., 'ep12-m1', mode_to_plot='m_neg_1',
+                       levels=[-1, -1e-1, -1e-2, -1e-3,
+                               0, 1e-3, 1e-2, 1e-1, 1],
                        norm=True, analytic_compare=False,
                        log=True,
                        label_pos=None,
@@ -652,10 +670,10 @@ plot_lambda_k_space_dw(kink_ax3, '../output/2016-04-29-11-36/meshes.npz',
                        bounds=(1.5, 4.3),
                        hatch=True)
 
-plot_lambda_k_space_dw(sausage_ax3, '../output/2016-04-29-11-36/meshes.npz', 
-                       1., 'ep12-m1', mode_to_plot='m_0', 
-                       levels=[-1, -1e-1, -1e-2, -1e-3, 
-                                    0, 1e-3, 1e-2, 1e-1, 1], 
+plot_lambda_k_space_dw(sausage_ax3, low_epsilon_path,
+                       1., 'ep12-m1', mode_to_plot='m_0',
+                       levels=[-1, -1e-1, -1e-2, -1e-3,
+                                    0, 1e-3, 1e-2, 1e-1, 1],
                        norm=True, analytic_compare=False,
                        log=True,
                        label_pos=None,
@@ -709,8 +727,8 @@ def sausage_kink_ratio(axes, filename, xy_limits=None, cmap=None, save_as=None,
     divider = make_axes_locatable(axes)
     cax = divider.append_axes("right", size="5%", pad=0.1)
     colorbar = plt.colorbar(contours, cax=cax, format=FormatStrFormatter(r'$10^{%i}$'))
-    colorbar.set_label(r'$\frac{\delta W_{m=0}}{\delta W_{m=1}}$', rotation=0, 
-                       labelpad=10, 
+    colorbar.set_label(r'$\frac{\delta W_{m=0}}{\delta W_{m=1}}$', rotation=0,
+                       labelpad=10,
                        fontsize=10)
     if levels:
         lines = axes.contour(lambda_bar_mesh, k_bar_mesh,
@@ -720,10 +738,10 @@ def sausage_kink_ratio(axes, filename, xy_limits=None, cmap=None, save_as=None,
                             ratio_log, colors='black', linewidths=1)
     plt.setp(lines.collections[zero_line], linewidth=2)
     colorbar.add_lines(lines)
-    
+
     cbar_lines = colorbar.lines[0]
     number_of_lines = len(cbar_lines.get_linewidths())
-    
+
     linewidths = []
     linestyles = []
     for line in xrange(number_of_lines):
@@ -733,10 +751,10 @@ def sausage_kink_ratio(axes, filename, xy_limits=None, cmap=None, save_as=None,
         elif line == cbar_zero_line:
             linewidths.append(2)
             linestyles.append('-')
-        else:  
+        else:
             linewidths.append(1)
             linestyles.append('-')
-    
+
     cbar_lines.set_linewidths(linewidths)
     cbar_lines.set_linestyles(linestyles)
 
@@ -748,10 +766,10 @@ def sausage_kink_ratio(axes, filename, xy_limits=None, cmap=None, save_as=None,
     axes.set_ylabel(r'$\bar{k}$', rotation='horizontal', fontsize=10)
     plt.setp(axes.get_yticklabels(), fontsize=10)
     axes.set_yticks(np.arange(0., 2.0, 0.5))
-    
+
     if label_lines:
         plt.clabel(lines)
-    
+
     if xy_limits:
         axes.set_ylim((xy_limits[0], xy_limits[1]))
         axes.set_xlim((xy_limits[2], xy_limits[3]))
@@ -768,18 +786,18 @@ ratio_ax1 = plt.subplot2grid((9, 3), (0, 0), colspan=3, rowspan=3)
 ratio_ax2 = plt.subplot2grid((9, 3), (3, 0), colspan=3, rowspan=3)
 ratio_ax3 = plt.subplot2grid((9, 3), (6, 0), colspan=3, rowspan=3)
 
-sausage_kink_ratio(ratio_ax1, '../output/2016-04-29-17-15/meshes.npz',
+sausage_kink_ratio(ratio_ax1, high_epsilon_path,
                    cmap="Greys",
-                   zero_line=2, label_lines=False, 
+                   zero_line=2, label_lines=False,
                    cbar_zero_line=2)
 
-sausage_kink_ratio(ratio_ax2, '../output/2016-04-29-11-13/meshes.npz',
+sausage_kink_ratio(ratio_ax2, mid_epsilon_path,
                    cmap="Greys",
                    zero_line=1, label_lines=False,
                    cbar_zero_line=1)
 
-sausage_kink_ratio(ratio_ax3, '../output/2016-04-29-11-36/meshes.npz',
-                   cmap="Greys", 
+sausage_kink_ratio(ratio_ax3, low_epsilon_path,
+                   cmap="Greys",
                    levels=[-4, -2, 0, 2, 4, 6, 15],
                    zero_line=2, label_lines=False,
                    cbar_zero_line=2)
