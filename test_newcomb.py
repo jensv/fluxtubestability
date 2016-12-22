@@ -35,7 +35,7 @@ class TestParabolic(object):
         Create a parabolic axial current equilibrium profile.
         """
         import equil_solver as es
-        parabolic = es.Parabolic_nu2()
+        parabolic = es.ParabolicNu2()
         params = {'mu0': 1.0, 'k': (2*math.pi)/1.0, 'n': 1.0, 'm': 1.0,
                   'a': 1.0, 'b': 10.0, 'omega_sq': -5.0, 'gamma': 1.0,
                   'constant': 1.0}
@@ -70,32 +70,6 @@ class TestParabolic(object):
         assert_allclose(f.jardin_f_8_78(**f_params),
                         f.newcomb_f_16(**f_params), rtol=0.5)
 
-    def test_jardin_f_goedbloed_f(self):
-        r"""
-        Test that the jardin_f and goedbloed_f expressions are equivalent.
-        """
-        k, m, b_z, b_theta, q = map(self.params.get, ['k', 'm', 'b_z',
-                                                      'b_theta', 'q'])
-        r = np.linspace(0, 1, 100)
-        f_params = {'r': r, 'k': d1(k), 'm': d1(m),
-                    'b_z': b_z(r), 'b_theta': b_theta(r), 'q': q(r)}
-
-        assert_allclose(f.jardin_f_8_78(**f_params),
-                        f.goedbloed_f_9_106(**f_params), rtol=0.5)
-
-
-    def test_goedbloed_f_newcomb_f(self):
-        r"""
-        Test that the goedbloed_f and newcomb_f expressions are equivalent.
-        """
-        k, m, b_z, b_theta, q = map(self.params.get, ['k', 'm', 'b_z',
-                                                      'b_theta', 'q'])
-        r = np.linspace(0, 1, 100)
-        f_params = {'r': r, 'k': d1(k), 'm': d1(m),
-                    'b_z': b_z(r), 'b_theta': b_theta(r), 'q': q(r)}
-        assert_allclose(f.goedbloed_f_9_106(**f_params),
-                        f.newcomb_f_16(**f_params), rtol=0.5)
-
     def test_jardin_g_8_79_and_8_80(self):
         r"""
         Test that the jardin equation (8.79) and jardin (8.80) equation
@@ -114,25 +88,6 @@ class TestParabolic(object):
 
         assert_allclose(g.jardin_g_8_79(**g_params),
                         g.jardin_g_8_80(**g_params), rtol=0.5)
-
-    def test_jardin_g_8_80_goedbloed_g(self):
-        r"""
-        Test that the jardin g (8.80) and goedbloed g expressions are
-        equivalent.
-        """
-        (k, m, b_z, b_theta,
-         q, p_prime) = map(self.params.get, ['k', 'm', 'b_z', 'b_theta', 'q',
-                                             'p_prime'])
-        r = np.linspace(0, 1, 100)
-        g_params = {'r': r, 'k': d1(k), 'm': d1(m),
-                    'b_z': b_z(r), 'b_z_prime': b_z.derivative()(r),
-                    'b_theta': b_theta(r),
-                    'b_theta_prime': b_theta.derivative()(r),
-                    'p_prime': p_prime(r), 'q': q(r),
-                    'q_prime': q.derivative()(r)}
-
-        assert_allclose(g.jardin_g_8_80(**g_params),
-                        g.goedbloed_g_0(**g_params), rtol=0.5)
 
     def test_jardin_g_8_80_newcomb_g_18(self):
         r"""
@@ -153,44 +108,6 @@ class TestParabolic(object):
 
         assert_allclose(g.jardin_g_8_80(**g_params),
                         g.newcomb_g_18(**g_params), rtol=0.5)
-
-    def test_goedbloed_g_newcomb_g_18(self):
-        r"""
-        Test that the goedbloed g and newcomb g (18) expressions are
-        equivalent.
-        """
-        (k, m, b_z, b_theta,
-         q, p_prime) = map(self.params.get, ['k', 'm', 'b_z', 'b_theta', 'q',
-                                             'p_prime'])
-        r = np.linspace(0, 1, 100)
-        g_params = {'r': r, 'k': d1(k), 'm': d1(m),
-                    'b_z': b_z(r), 'b_z_prime': b_z.derivative()(r),
-                    'b_theta': b_theta(r),
-                    'b_theta_prime': b_theta.derivative()(r),
-                    'p_prime': p_prime(r), 'q': q(r),
-                    'q_prime': q.derivative()(r)}
-
-        assert_allclose(g.goedbloed_g_0(**g_params),
-                        g.newcomb_g_18(**g_params), rtol=0.5)
-
-    def test_jardin_g_8_79_goedbloed_g(self):
-        r"""
-        Test that the jardin g (8.79) and goedbloed g expressions are
-        equivalent.
-        """
-        (k, m, b_z, b_theta,
-         q, p_prime) = map(self.params.get, ['k', 'm', 'b_z', 'b_theta', 'q',
-                                             'p_prime'])
-        r = np.linspace(0, 1, 100)
-        g_params = {'r': r, 'k': d1(k), 'm': d1(m),
-                    'b_z': b_z(r), 'b_z_prime': b_z.derivative()(r),
-                    'b_theta': b_theta(r),
-                    'b_theta_prime': b_theta.derivative()(r),
-                    'p_prime': p_prime(r), 'q': q(r),
-                    'q_prime': q.derivative()(r)}
-
-        assert_allclose(g.jardin_g_8_79(**g_params),
-                        g.goedbloed_g_0(**g_params), rtol=0.5)
 
     def test_jardin_g_8_79_newcomb_g_18(self):
         r"""
