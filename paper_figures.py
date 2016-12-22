@@ -329,8 +329,12 @@ def normalized_single_plot(profile, axes, ylim, letter, styles=['-', '--', '-.']
 
     if legend_loc:
         lgd = axes.legend(bbox_to_anchor=legend_loc,
-                    loc='upper center', borderaxespad=0.25, ncol=3, frameon=True,
-                    handlelength=1.2, columnspacing=0.5, fancybox=True)
+                          loc='upper center',
+                          borderaxespad=0.25,
+                          ncol=3,
+                          frameon=True,
+                          handlelength=1.8,
+                          columnspacing=1.1)
     else:
         lgd = None
 
@@ -361,7 +365,7 @@ profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.7,
                                       transition_width_norm=0.175,
                                       skin_width_norm=0.05)
 
-lgd = normalized_single_plot(profile, axes1, 1.8, 'a', legend_loc=[0.4, 1.5])
+lgd = normalized_single_plot(profile, axes1, 1.8, 'a', legend_loc=[0.51, 1.8])
 
 profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.5,
                                       core_radius_norm=0.6,
@@ -370,7 +374,7 @@ profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.5,
 
 normalized_single_plot(profile, axes2, 1.8, 'b')
 
-profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.3,
+profile = es.UnitlessSmoothedCoreSkin(k_bar=1, lambda_bar=1, epsilon=0.1,
                                       core_radius_norm=0.6,
                                       transition_width_norm=0.175,
                                       skin_width_norm=0.05)
@@ -394,7 +398,6 @@ fig.subplots_adjust(hspace=0.75)
 sns.despine()
 plt.savefig('../figures/figure2.eps', dpi=300,
             bbox_extra_artists=(lgd,), bbox_inches='tight')
-
 
 ## Fig 3 Numerical Stability Space ##
 #####################################
