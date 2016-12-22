@@ -56,7 +56,7 @@ def scan_lambda_k_space(lambda_bar_space, k_bar_space,
 
     stability_maps = {'external': deepcopy(sub_stability_maps),
                       'd_w': deepcopy(sub_stability_maps),
-                      'd_w_norm': deepcopy(sub_stability_maps),
+                      'd_w_raw': deepcopy(sub_stability_maps),
                       'suydam': deepcopy(sub_stability_maps)}
 
     for i, lambda_a in enumerate(lambda_a_points):
@@ -124,10 +124,10 @@ def scan_lambda_k_space(lambda_bar_space, k_bar_space,
 
                 if delta_w is not None:
                     stability_maps['d_w'][m][j][i] = delta_w
-                    stability_maps['d_w_norm'][m][j][i] = delta_w
+                    stability_maps['d_w_raw'][m][j][i] = delta_w
                 else:
                     stability_maps['d_w'][m][j][i] = np.nan
-                    stability_maps['d_w_norm'][m][j][i] = np.nan
+                    stability_maps['d_w_raw'][m][j][i] = np.nan
 
                 if not stable_external:
                     stability_maps['external'][m][j][i] = 0.
@@ -169,8 +169,8 @@ def scan_lambda_k_space(lambda_bar_space, k_bar_space,
              external_m_0=stability_maps['external'][0],
              d_w_m_neg_1=stability_maps['d_w'][-1],
              d_w_m_0=stability_maps['d_w'][0],
-             d_w_norm_m_neg_1=stability_maps['d_w_norm'][-1],
-             d_w_norm_m_0=stability_maps['d_w_norm'][0],
+             d_w_raw_m_neg_1=stability_maps['d_w_raw'][-1],
+             d_w_raw_m_0=stability_maps['d_w_raw'][0],
              suydam_m_0=stability_maps['suydam'][0],
              suydam_m_neg_1=stability_maps['suydam'][-1],
              delta_m_0=delta_map[0],
