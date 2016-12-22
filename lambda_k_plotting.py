@@ -3,6 +3,8 @@
 Created on Mon Feb 16 00:30:53 2015
 
 @author: jensv
+
+Module for examining stability spaces.
 """
 
 from __future__ import print_function, unicode_literals, division
@@ -380,6 +382,9 @@ def single_analytic_comparison(mode_to_plot,
                                epsilon,
                                delta_value,
                                label_pos):
+    """
+    Add contour of analytic stability condition. 
+    """
 
     line_labels = FixedFormatter(delta_value)
 

@@ -3,6 +3,8 @@
 Created on Mon Sep 08 20:42:30 2014
 
 @author: Jens von der Linden
+
+Calculate dW and determine external stability.
 """
 
 from __future__ import print_function

@@ -14,11 +14,7 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatibility"""
 
 import sys
-sys.path.append('scipy_mod')
-
-import fitpack
-reload(fitpack)
-from fitpack import splev
+from scipy.interpolate import splev
 
 import numpy as np
 from numpy import atleast_1d
@@ -67,10 +63,22 @@ def stability(params, offset, suydam_offset, suppress_output=False,
         Initial condition used for xi if equilibrim does not start ar r=0
     diagnose: bool
         flag to print out more diagnostc statements during integration
+    sing_search_points: int
+        number of points to divide domain by in search for singularities
     f_func: function
         python function to use to calculate f
     g_func: function
-        python function to use to calculate g
+        python function to use to calculate given
+    skip_external_stability: bool
+        flag to skip external stability
+    stiff: bool
+        flag to indicate stiff equation to integrator
+    use_jac: bool
+        flag to have integrator use Jacobian
+    adapt_step_size: bool
+        flag to use adaptive step size integrator
+    adapt_min_steps: int
+        specify minimum number of steps
     Returns
     -------
     stable_external : bool
@@ -85,19 +93,21 @@ def stability(params, offset, suydam_offset, suppress_output=False,
         xi at interval boundary (only last element is relevant)
     xi_der : ndarray
         derivative of xi at interval boundary (only last element is relevant)
+    r_array : ndarray
+        array of r values at which xi is integrated
     Notes
     -----
     Examines the equilibrium. If the equilibrium has a singularity, the
-    frobenius method is used to determine a small solution at an r > than
+    Frobenius method is used to determine a small solution at an r > than
     instability. If the singularity is suydam unstable no attempt is made to
     calulate external stability.
-    If there is no frobenius instability power series solution
+    If there is no Frobenius instability power series solution
     close to r=0 is chosen or if the integration does not start at r=0 a given
     xi is used as boundary condition.
     Only the last interval is integrated.
     To save time xi and xi_der are only evaluated at r=a (under the hood the
     integrator is evaluating xi and xi_der across the interval).
-    Xi and Xi_der are plugged into the potential energy equation to determine
+    Xi and xi_der are plugged into the potential energy equation to determine
     stability.
     """
     params.update({'f_func': f_func, 'g_func': g_func})
@@ -234,7 +244,7 @@ def newcomb_jac(r, y, k, m, b_z_spl, b_z_prime_spl, b_theta_spl,
                 b_theta_prime_spl, p_prime_spl, q_spl, q_prime_spl,
                 f_func, g_func, beta_0):
     r"""
-    Jacobian
+    Jacobian of Newcomb's Euler-Lagrange equation.
     """
     r_arr = np.asarray(r)
     r_arr = atleast_1d(r_arr).ravel()

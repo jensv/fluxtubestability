@@ -3,6 +3,9 @@
 Created on Mon Sep 22 20:27:04 2014
 
 @author: Jens von der Linden
+
+Identify singularities in Euler-Lagrange
+by searching for zeros of f.
 """
 
 from __future__ import print_function
@@ -151,6 +154,7 @@ def f_relevant_part_func(r, k, m, b_z, b_theta):
 
 def f_relevant_part_der(r, k, m, b_z_spl, b_theta_prime_spl):
     r"""
+    Prefunction to derivative of f_relvent_part.
     """
     b_z = b_z_spl(r)
     b_theta_prime = splev(r, b_theta_prime_spl)
@@ -159,12 +163,14 @@ def f_relevant_part_der(r, k, m, b_z_spl, b_theta_prime_spl):
 
 def f_relevant_part_der_func(r, k, m, b_z, b_theta_prime):
     r"""
+    Derivative of f_relevant_part.
     """
     return k*b_z + m*b_theta_prime
 
 
 def f_relevant_part_der_2(r, m, b_theta_prime_prime_spl):
     r"""
+    Prefunction to Second derivative of f_relvent_part.
     """
     b_theta_prime_prime = splev(r, b_theta_prime_prime_spl)
     return f_relevant_part_der_2_func(r, m, b_theta_prime_prime)
@@ -172,5 +178,6 @@ def f_relevant_part_der_2(r, m, b_theta_prime_prime_spl):
 
 def f_relevant_part_der_2_func(r, m, b_theta_prime_prime):
     r"""
+    Second derivative of f_relevant_part.
     """
     return m*b_theta_prime_prime
