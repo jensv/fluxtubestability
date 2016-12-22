@@ -2,6 +2,10 @@
 This code determines the ideal MHD stability limit of current-carrying magnetic flux tubes / cylindrical screw pinches.
 The code integrates Newcomb's Euler-Lagrange equation to determine the external stability of current profiles with a discrete core and skin current.
 
+Flux tube experiments can be classified by the flux tube’s evolution in a configuration space described by a normalized inverse aspect-ratio $\bar{k}$ and current-to-magnetic flux ratio $\bar{\lambda}$. A lengthening current-carrying magnetic flux tube traverses this $\bar{k}$ - $\bar{\lambda}$ space and crosses stability boundaries. We derive a single general criterion for the onset of the sausage and kink instabilities in idealized magnetic flux tubes with core and skin currents. The criterion indicates a dependence of the stability boundaries on current
+profiles and shows overlapping kink and sausage unstable regions in the $\bar{k}$ - $\bar{\lambda}$ space with two free parameters. Numerical investigation of the stability criterion reduces the number of free parameters to a single one that describes the current profile, and
+confirms the overlapping sausage and kink unstable regions in $\bar{k}$ - $\bar{\lambda}$ space with an inverse dependence on current profile. A lengthening, ideal current-carrying magnetic flux tube can therefore become sausage unstable after it becomes kink unstable.
+
 ### Dependencies ###
 python 2.7.12
 numpy 1.11.2
