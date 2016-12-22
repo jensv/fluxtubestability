@@ -3,6 +3,15 @@
 Created on Fri May 23 10:19:28 2014
 
 @author: Jens von der Linden
+
+Create various profiles.
+The analysis in the paper exclusivly focuses on UnitlessSmoothedCoreSkin
+profile.
+
+ParbolicNu2,  NuCurrentProfile recreate the profiles from Wesson's
+Tokamak book. In the large aspect ratio limit k->0 these should
+allow to recreate his stability plots.
+The HardCoreZPinch is discussed in Freidberg's Ideal MHD book.
 """
 
 
@@ -15,15 +24,9 @@ from future.builtins import (ascii, bytes, chr, dict, filter, hex, input,
 """Python 3.x compatability"""
 
 import sys
-sys.path.append('scipy_mod')
-sys.path.append('../scipy_mod')
-
-import fitpack
-reload(fitpack)
-from fitpack import splev
-
 import numpy as np
 from numpy import atleast_1d
+from scipy.interpolate import splev
 import sympy as sp
 from collections import OrderedDict
 import scipy.interpolate as interp
@@ -33,7 +36,7 @@ import scipy.integrate as inte
 class EquilSolver(object):
     r"""
     General Equilibrium Solver parent implements spline generation and safety
-    factor calculation.
+    factor calculation for various profiles.
     """
 
     def set_splines(self, param_points):
@@ -175,7 +178,9 @@ class ParabolicNu2(EquilSolver):
 
 
 class NuCurrentConstructor(object):
-
+    r"""
+    Constructors for arbitrary nu current profiles.
+    """
     def __init__(self, a=1., nu=2):
         j0, r, mu_0, k, b_z, q0, qa = sp.symbols('j_0 r mu_0 k b_z \
                                                   q_0 q_a')
@@ -211,6 +216,8 @@ class NuCurrentConstructor(object):
 
 class NuCurrentProfile(EquilSolver):
     r"""
+    Nu current profiles as described in Wesson's Tokamak book under
+    large aspect ratio tokamak limit.
     """
 
     def __init__(self, nu_constructor=NuCurrentConstructor(), nu=2, a=1,
