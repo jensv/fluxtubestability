@@ -36,7 +36,7 @@ The paper figures can be generated with `python paper_fgiures ../output/[timesta
 Where `[timestamp]` is the dated directory name. The order should be from oldest to newest date.
 
 ### newcomb.py description ###
-Examines the equilibrium. If the equilibrium has a singularity, the Frobenius method is used to determine a small solution at an r > than instability. If the singularity is suydam unstable no attempt is made to calulate external stability. If there is no Frobenius instability power series solution close to r=0 is chosen or if the integration does not start at r=0 a given xi is used as boundary condition. Only the last interval is integrated. X:i and xi_der are plugged into the potential energy equation to determine stability.
+Examines the equilibrium. If the equilibrium has a singularity, the Frobenius method is used to determine a small solution at an r > than instability. If the singularity is suydam unstable no attempt is made to calulate external stability. If there is no Frobenius instability power series solution close to r=0 is chosen or if the integration does not start at r=0 a given xi is used as boundary condition. Only the last interval is integrated. Xi and xi_der are plugged into the potential energy equation to determine stability.
 
 ### Contact ###
 Jens von der Linden jensv@uw.edu
