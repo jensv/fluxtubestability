@@ -27,7 +27,7 @@ def scan_lambda_k_space(lambda_bar_space, k_bar_space,
                         nsteps=1000, method='lsoda', suppress_output=True,
                         diagnose=False, stiff=False, use_jac=True,
                         adapt_step_size=True, sing_search_points=1000,
-                        profile_type='default',
+                        profile_type='default', no_git=False,
                         **kwargs):
     r"""
     Scans space given by lambda_a_space and k_a_space for m=0, 1 stability and
@@ -191,7 +191,10 @@ def track_provenance(sql_db, func_name, call_parameters, date, params,
     for key in call_parameters.keys():
         call += key + '=' + str(call_parameters[key]) + ', '
     call = call[:-2] + ')'
-    call, git_commit = cp.call_and_git_commit(call=call, call_path=os.getcwd())
+    if  no_git:
+        git_commit = None
+    else:
+        call, git_commit = cp.call_and_git_commit(call=call, call_path=os.getcwd())
     assert os.path.exists(sql_db), ("Run database does not exist."
                                     "Try running init_database.py")
     connection = sqlite3.connect(sql_db)
@@ -227,6 +230,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="scan specified"
                                      "k_bar-lambda_bar space for specified"
                                      "profiles")
+    parser.add_argument('--no_git', help='Do not record git commit',
+                        action='store_true', default=False)
     parser.add_argument('--k_bar_space', help='specify k_bar space',
                         nargs=3, type=float, metavar=('START', 'END', 'POINTS'),
                         default=[0.01, 1.5, 50])
