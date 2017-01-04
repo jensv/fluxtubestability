@@ -182,7 +182,7 @@ def scan_lambda_k_space(lambda_bar_space, k_bar_space,
     return lambda_a_mesh, k_a_mesh, stability_maps
 
 def track_provenance(sql_db, func_name, call_parameters, date, params,
-                     lambda_a_space, k_a_spacei, no_git):
+                     lambda_a_space, k_a_space, no_git):
     r"""
     Save parameters, call, and git commit to make results reproducible and allow
     easy scanning.
