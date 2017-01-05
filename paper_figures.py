@@ -584,7 +584,9 @@ def plot_lambda_k_space_dw(axes, filename, epsilon, name, mode_to_plot='m_neg_1'
         xy = (xmin,ymin+0.1)
         width = xmax - xmin
         height = ymax - ymin
-        p = patches.Rectangle(xy, width, height, hatch='X'*3, fill=None, zorder=-10, edgecolor='#d5b60a')
+        p = patches.Rectangle(xy, width, height, hatch='X',
+                              zorder=-10, edgecolor='#FEFFE0',
+                              facecolor='#6C2605')
         axes.add_patch(p)
     if hatch_sausage_gap:
         xmin, xmax = axes.get_xlim()
@@ -593,7 +595,9 @@ def plot_lambda_k_space_dw(axes, filename, epsilon, name, mode_to_plot='m_neg_1'
         xy = (xmin, ymin+0.01)
         width = xmax - xmin
         height = ymax - ymin
-        p = patches.Rectangle(xy, width, height, hatch='X'*3, fill=None, zorder=-10, edgecolor='green')
+        p = patches.Rectangle(xy, width, height, hatch='X',
+                              zorder=-10, edgecolor='#FEFFE0',
+                              facecolor='#005B31')
         axes.add_patch(p)
     cbar.ax.yaxis.set_ticks_position('right')
 
