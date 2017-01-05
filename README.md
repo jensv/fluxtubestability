@@ -10,14 +10,14 @@ Numerical investigation of the stability criterion reduces the number of free pa
 A lengthening, ideal current-carrying magnetic flux tube can therefore become sausage unstable after it becomes kink unstable.
 
 ### Dependencies ###
-python 2.7.12
-numpy 1.11.2
-numba 0.30.0
-scipy 0.18.1
-matplotlib 1.5.3
-seaborn 0.7.1
-sqlite 3.13
-gitpython 2.1.0
+* python 2.7.12
+* numpy 1.11.2
+* numba 0.30.0
+* scipy 0.18.1
+* matplotlib 1.5.3
+* seaborn 0.7.1
+* sqlite 3.13
+* gitpython 2.1.0
 
 The dependencies can be installed with the anaconda python distribution.
 gitpython can be installed with pip.
