@@ -1,4 +1,7 @@
 # README #
+[![DOI](https://zenodo.org/badge/77184734.svg)](https://zenodo.org/badge/latestdoi/77184734)
+
+
 This code determines the ideal MHD stability limit of current-carrying magnetic flux tubes / cylindrical screw pinches.
 The code integrates Newcomb's Euler-Lagrange equation to determine the external stability of current profiles with a discrete core and skin current.
 
